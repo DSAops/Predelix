@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import { Auth } from "./pages/authentication/Auth";
 import { Navbar } from "./pages/common/Navbar";
+import Predict from "./pages/Predict";
 
 function ProtectedRoute({ isLoggedIn, openAuth, children }) {
   const location = useLocation();
@@ -59,6 +60,14 @@ export default function AppRouter() {
       />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route
+          path="/predict"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn} openAuth={() => setAuthOpen(true)}>
+              <Predict />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/about"
           element={

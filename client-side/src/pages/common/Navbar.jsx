@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Home as HomeIcon,
   User,
-  MoreHorizontal,
-  Code2,
+  BarChart2,
   LogIn as LogInIcon,
   User as UserIcon,
   LogOut as LogOutIcon,
@@ -14,20 +13,25 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
+  { title: 'Predict', icon: <BarChart2 className="h-5 w-5 mr-2" />, to: '/predict' },
   { title: 'About', icon: <User className="h-5 w-5 mr-2" />, to: '/about' },
-  { title: 'More', icon: <MoreHorizontal className="h-5 w-5 mr-2" />, to: '/more' },
-  { title: 'Code', icon: <Code2 className="h-5 w-5 mr-2" />, to: '/code' },
 ];
 
 export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
-  // Force remount TextRoll every 3000ms
-  const [logoKey, setLogoKey] = useState(0);
   const [cookieName, setCookieName] = useState('');
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
     const match = document.cookie.match(new RegExp('(^| )predelix_name=([^;]+)'));
     setCookieName(match ? decodeURIComponent(match[2]) : '');
   }, [isLoggedIn, user]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setKey(prev => prev + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Set a fixed width and height for the logo wrapper and login button/profile wrapper to prevent layout shift
   return (
@@ -38,14 +42,15 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         style={{ minWidth: 160, minHeight: 40, justifyContent: 'flex-start' }}
       >
         <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center' }}>
-          <TextRoll
-            key={logoKey}
-            className="text-2xl font-extrabold text-purple-600"
-            loop
-            loopDelay={100}
-          >
-            {['Predelix']}
-          </TextRoll>
+          <div key={key}>
+            <TextRoll
+              className="text-2xl font-extrabold text-purple-600"
+              loop
+              loopDelay={3000}
+            >
+              {['Predelix']}
+            </TextRoll>
+          </div>
         </div>
       </div>
       {/* Center: Nav Items */}
