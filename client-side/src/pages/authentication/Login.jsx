@@ -10,6 +10,7 @@ function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [devStatus, setDevStatus] = useState('');
 
   // Autofill from cookies on mount
   useEffect(() => {
@@ -27,35 +28,55 @@ function Login({ onLogin }) {
     ) {
       setError('');
       if (onLogin) onLogin();
-      alert('Login successful!');
+      // Removed alert('Login successful!');
     } else {
       setError('Invalid email or password');
     }
   }
 
+  function handleDevLogin() {
+    setEmail('teamdsa@gmail.com');
+    setPassword('teamdsa');
+    setDevStatus('These are test credentials meant to be used for Walmart Sparkathon.');
+    setError('');
+  }
+
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4 text-white" onSubmit={handleSubmit}>
       <input
         type="email"
         placeholder="Email"
-        className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-base text-zinc-900 focus:ring-2 focus:ring-fuchsia-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-white focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white placeholder:text-zinc-400"
         value={email}
         onChange={e => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
-        className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-base text-zinc-900 focus:ring-2 focus:ring-fuchsia-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-white focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white placeholder:text-zinc-400"
         value={password}
         onChange={e => setPassword(e.target.value)}
       />
       {error && <div className="text-red-500 text-sm">{error}</div>}
-      <button
-        type="submit"
-        className="inline-flex items-center justify-center self-end rounded-lg bg-fuchsia-600 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-700"
-      >
-        Log In
-      </button>
+      {devStatus && (
+        <div className="text-green-400 text-xs mb-1">{devStatus}</div>
+      )}
+      <div className="flex gap-2 justify-end">
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-lg bg-emerald-900 border border-emerald-400 px-6 py-2 text-xs font-medium text-white hover:bg-emerald-800 transition-all"
+          style={{ minWidth: '110px' }}
+          onClick={handleDevLogin}
+        >
+          DevLogin
+        </button>
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+        >
+          Log In
+        </button>
+      </div>
     </form>
   );
 }

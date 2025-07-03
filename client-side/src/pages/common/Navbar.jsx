@@ -6,8 +6,8 @@ import {
   MoreHorizontal,
   Code2,
 } from 'lucide-react';
-import { TextEffect } from '../../../components/motion-primitives/text-effect';
-import { Auth } from '../authentication/auth'; // Adjust path if needed
+import { TextRoll } from '../../../components/motion-primitives/text-roll';
+import { Auth } from '../authentication/auth';
 
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
@@ -18,12 +18,16 @@ const navItems = [
 
 export function Navbar() {
   return (
-    <nav className="w-full bg-white/80 dark:bg-neutral-900/80 shadow-lg px-8 py-3 flex items-center justify-between fixed top-0 left-0 z-50 backdrop-blur-md">
-      {/* Left: Animated App Name */}
+    <nav className="w-full bg-zinc-900/60 backdrop-blur-xl shadow-lg px-8 py-3 flex items-center justify-between fixed top-0 left-0 z-50 border-b border-emerald-700/40">
+      {/* Left: Animated App Name with looping TextRoll */}
       <div className="flex items-center">
-        <TextEffect per="char" preset="fade" className="text-2xl font-extrabold text-fuchsia-600 dark:text-fuchsia-300">
-          Predelix
-        </TextEffect>
+        <TextRoll
+          className="text-2xl font-extrabold text-emerald-800 dark:text-emerald-400"
+          loop
+          loopDelay={100}
+        >
+          {['Predelix']}
+        </TextRoll>
       </div>
       {/* Center: Nav Items */}
       <div className="flex gap-6">
@@ -31,7 +35,7 @@ export function Navbar() {
           <Link
             key={idx}
             to={item.to}
-            className="flex items-center px-4 py-2 rounded-lg text-neutral-700 dark:text-neutral-200 font-medium hover:bg-fuchsia-100 dark:hover:bg-neutral-800 transition"
+            className="flex items-center px-4 py-2 rounded-lg text-white font-medium hover:bg-emerald-800/20 hover:text-emerald-400 transition"
           >
             {item.icon}
             <span>{item.title}</span>
