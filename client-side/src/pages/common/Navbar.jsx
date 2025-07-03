@@ -5,6 +5,7 @@ import {
   User,
   MoreHorizontal,
   Code2,
+  LogIn as LogInIcon, // Import a login icon from lucide-react
 } from 'lucide-react';
 import { TextRoll } from '../../../components/motion-primitives/text-roll';
 
@@ -62,10 +63,11 @@ export function Navbar({ onLoginClick, isLoggedIn }) {
       <div style={{ width: 110, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
         {!isLoggedIn ? (
           <button
-            className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition w-full"
+            className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition w-full flex items-center justify-center"
             onClick={onLoginClick}
             style={{ minWidth: 100, minHeight: 36 }}
           >
+            <LogInIcon className="h-5 w-5 mr-2" />
             Login
           </button>
         ) : (
