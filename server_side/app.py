@@ -6,6 +6,13 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
 
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "message": "✅ App is working as expected!",
+        "note": "You are at home. Please refer to /api/predict for predictions."
+    })
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
     if 'file' not in request.files:
