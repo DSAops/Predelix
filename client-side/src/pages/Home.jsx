@@ -1,5 +1,4 @@
 import { TextEffect } from '../../components/motion-primitives/text-effect';
-import { Navbar } from './common/Navbar'; 
 
 function HomePage() {
   return (
@@ -11,9 +10,6 @@ function HomePage() {
           background: 'radial-gradient(ellipse at 50% 40%, rgba(16,185,129,0.18) 0%, rgba(0,0,0,0.95) 70%)',
         }}
       />
-      {/* Navbar at the top */}
-      <Navbar />
-
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center w-full z-10">
         <div className="bg-zinc-900/60 backdrop-blur-xl rounded-xl shadow-lg p-10 text-center max-w-xl border border-emerald-700/40">

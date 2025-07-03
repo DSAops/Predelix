@@ -9,24 +9,25 @@ import {
 } from '../../../components/motion-primitives/dialog';
 import Login from './login';
 import Signup from './Signup';
-import { useState } from 'react';
+import React from 'react';
 
-export function Auth() {
-  const [mode, setMode] = useState('login');
-  const [open, setOpen] = useState(false);
+export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
+  const [mode, setMode] = React.useState('login');
 
-  // Handler to close dialog after login
+  // Pass onLogin to Login component
   function handleLoginSuccess() {
-    setOpen(false);
+    if (onLogin) onLogin();
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition">
-          {mode === 'login' ? 'Login' : 'Sign Up'}
-        </button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <button className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition">
+            {mode === 'login' ? 'Login' : 'Sign Up'}
+          </button>
+        </DialogTrigger>
+      )}
       <DialogContent
         className={`
           w-full max-w-md p-6 shadow-[0_4px_24px_#000a] bg-zinc-900/90 backdrop-blur-xl border border-emerald-700/40 relative text-white

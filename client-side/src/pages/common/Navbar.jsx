@@ -7,7 +7,6 @@ import {
   Code2,
 } from 'lucide-react';
 import { TextRoll } from '../../../components/motion-primitives/text-roll';
-import { Auth } from '../authentication/auth';
 
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
@@ -16,7 +15,7 @@ const navItems = [
   { title: 'Code', icon: <Code2 className="h-5 w-5 mr-2" />, to: '/code' },
 ];
 
-export function Navbar() {
+export function Navbar({ onLoginClick, isLoggedIn }) {
   return (
     <nav className="w-full bg-zinc-900/60 backdrop-blur-xl shadow-lg px-8 py-3 flex items-center justify-between fixed top-0 left-0 z-50 border-b border-emerald-700/40">
       {/* Left: Animated App Name with looping TextRoll */}
@@ -42,9 +41,18 @@ export function Navbar() {
           </Link>
         ))}
       </div>
-      {/* Right: Login Dialog Button */}
+      {/* Right: Login Dialog Button or empty div if logged in */}
       <div>
-        <Auth />
+        {!isLoggedIn ? (
+          <button
+            className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition"
+            onClick={onLoginClick}
+          >
+            Login
+          </button>
+        ) : (
+          <div />
+        )}
       </div>
     </nav>
   );
