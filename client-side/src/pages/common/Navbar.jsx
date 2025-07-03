@@ -31,7 +31,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
 
   // Set a fixed width and height for the logo wrapper and login button/profile wrapper to prevent layout shift
   return (
-    <nav className="w-full bg-zinc-900/60 backdrop-blur-xl shadow-lg px-8 py-[13px] flex items-center justify-between fixed top-0 left-0 z-50 border-b border-emerald-700/40">
+    <nav className="w-full bg-white backdrop-blur-xl shadow-lg px-8 py-[13px] flex items-center justify-between fixed top-0 left-0 z-50 border-b border-purple-300/40">
       {/* Left: Animated App Name with looping TextRoll */}
       <div
         className="flex items-center"
@@ -40,7 +40,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center' }}>
           <TextRoll
             key={logoKey}
-            className="text-2xl font-extrabold text-emerald-800 dark:text-emerald-400"
+            className="text-2xl font-extrabold text-purple-600"
             loop
             loopDelay={100}
           >
@@ -54,7 +54,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
           <Link
             key={idx}
             to={item.to}
-            className="flex items-center px-4 py-2 rounded-lg text-white font-medium hover:bg-emerald-800/20 hover:text-emerald-400 transition"
+            className="flex items-center px-4 py-2 rounded-lg text-zinc-700 font-medium hover:bg-purple-50 hover:text-purple-600 transition"
           >
             {item.icon}
             <span>{item.title}</span>
@@ -65,7 +65,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       <div style={{ width: 110, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
         {!isLoggedIn ? (
           <button
-            className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition w-full flex items-center justify-center"
+            className="px-5 py-2 rounded-lg bg-purple-500 text-white font-semibold shadow hover:bg-purple-600 transition w-full flex items-center justify-center"
             onClick={onLoginClick}
             style={{ minWidth: 100, minHeight: 36 }}
           >
@@ -74,25 +74,25 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
           </button>
         ) : (
           <Popover className="relative">
-            <PopoverButton className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-800 hover:bg-emerald-900 transition focus:outline-none">
+            <PopoverButton className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500 hover:bg-purple-600 transition focus:outline-none">
               <UserIcon className="h-6 w-6 text-white" />
             </PopoverButton>
             <PopoverPanel
               anchor="bottom"
-              className="absolute right-0 mt-2 w-48 rounded-xl bg-zinc-900/70 backdrop-blur-xl shadow-lg ring-1 ring-emerald-700/40 p-0 z-50"
+              className="absolute right-0 mt-2 w-48 rounded-xl bg-white backdrop-blur-xl shadow-lg ring-1 ring-purple-300/40 p-0 z-50"
             >
               <div className="flex flex-col justify-center items-center">
-                <div className="px-4 pt-4 pb-2 text-white text-lg font-bold text-center">
+                <div className="px-4 pt-4 pb-2 text-zinc-800 text-lg font-bold text-center">
                   Hi there {cookieName || user?.name || 'User'}
                 </div>
                 <hr className="border-zinc-700 my-1" />
                 <button
-                  className="flex items-center gap-2 w-full px-4 py-2 rounded-b-xl text-sm text-zinc-300 hover:text-white hover:bg-emerald-900/60 transition font-medium"
+                  className="flex items-center gap-2 w-full px-4 py-2 rounded-b-xl text-sm text-zinc-600 hover:text-purple-600 hover:bg-purple-50 transition font-medium"
                   onClick={onLogout}
                   style={{ background: 'none', border: 'none' }}
                 >
                   <LogOutIcon className="h-6 w-6" />
-                  <span className="text-zinc-300 text-base">Logout</span>
+                  <span className="text-zinc-600 text-base">Logout</span>
                 </button>
               </div>
             </PopoverPanel>

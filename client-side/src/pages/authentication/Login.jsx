@@ -75,14 +75,14 @@ function Login({ onLogin }) {
       <input
         type="email"
         placeholder="Email"
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-white focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white placeholder:text-zinc-400"
+        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
         value={email}
         onChange={e => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-white focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white placeholder:text-zinc-400"
+        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
         value={password}
         onChange={e => setPassword(e.target.value)}
       />
@@ -96,7 +96,7 @@ function Login({ onLogin }) {
       <div className="flex gap-2 justify-end">
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-950 border border-emerald-400 px-6 py-2 text-sm font-medium text-white hover:bg-emerald-900 transition-all"
+          className="inline-flex items-center justify-center rounded-lg bg-purple-50 border border-purple-300 px-6 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-all"
           style={{ minWidth: '110px' }}
           onClick={handleDevLogin}
         >
@@ -104,7 +104,7 @@ function Login({ onLogin }) {
         </button>
         <button
           type="submit"
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+          className="inline-flex items-center justify-center rounded-lg bg-purple-500 px-4 py-2 text-sm font-medium text-white hover:bg-purple-600"
         >
           Log In
         </button>

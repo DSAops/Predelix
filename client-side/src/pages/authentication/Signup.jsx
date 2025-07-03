@@ -22,27 +22,27 @@ function Signup({ onSignup }) {
       <input
         type="text"
         placeholder="Name"
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-emerald-100 focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white"
+        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
         value={name}
         onChange={e => setName(e.target.value)}
       />
       <input
         type="email"
         placeholder="Email"
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-emerald-100 focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white"
+        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
         value={email}
         onChange={e => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-zinc-900/60 px-3 text-base text-emerald-100 focus:ring-2 focus:ring-emerald-400 dark:border-emerald-700 dark:bg-zinc-800 dark:text-white"
+        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
         value={password}
         onChange={e => setPassword(e.target.value)}
       />
       <button
         type="submit"
-        className="inline-flex items-center justify-center self-end rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-900"
+        className="inline-flex items-center justify-center self-end rounded-lg bg-purple-500 px-4 py-2 text-sm font-medium text-white hover:bg-purple-600"
       >
         Sign Up
       </button>

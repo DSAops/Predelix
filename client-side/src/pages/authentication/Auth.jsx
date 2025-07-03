@@ -23,23 +23,23 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       {showTrigger && (
         <DialogTrigger asChild>
-          <button className="px-5 py-2 rounded-lg bg-emerald-800 text-white font-semibold shadow hover:bg-emerald-900 transition">
+          <button className="px-5 py-2 rounded-lg bg-purple-500 text-white font-semibold shadow hover:bg-purple-600 transition">
             {mode === 'login' ? 'Login' : 'Sign Up'}
           </button>
         </DialogTrigger>
       )}
       <DialogContent
         className={`
-          w-full max-w-md p-6 shadow-[0_4px_24px_#000a] bg-zinc-900/90 backdrop-blur-xl border border-emerald-700/40 relative text-white
+          w-full max-w-md p-6 shadow-[0_4px_24px_#0002] bg-white/90 backdrop-blur-xl border border-purple-300/40 relative text-zinc-800
           transition-all duration-0
           ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
         `}
       >
         <DialogHeader>
-          <DialogTitle className="text-white text-2xl font-bold">
+          <DialogTitle className="text-zinc-800 text-2xl font-bold">
             {mode === 'login' ? 'Welcome to Predelix' : 'Create your Predelix account'}
           </DialogTitle>
-          <DialogDescription className="text-white">
+          <DialogDescription className="text-zinc-600">
             {mode === 'login'
               ? 'Please log in to continue.'
               : 'Sign up to get started.'}
@@ -53,7 +53,7 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
         </div>
         <div className="mt-4 flex justify-between items-center text-sm">
           <button
-            className="text-white hover:underline"
+            className="text-zinc-600 hover:text-purple-500 hover:underline"
             onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
             type="button"
           >
@@ -63,7 +63,7 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
           </button>
         </div>
         <DialogClose asChild>
-          <button className="absolute top-4 right-4 text-white hover:text-emerald-400 text-2xl font-bold" aria-label="Close">
+          <button className="absolute top-4 right-4 text-zinc-600 hover:text-purple-500 text-2xl font-bold" aria-label="Close">
             ×
           </button>
         </DialogClose>
