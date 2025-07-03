@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import { Auth } from "./pages/authentication/auth";
+import { Auth } from "./pages/authentication/Auth";
 import { Navbar } from "./pages/common/Navbar";
 
 function ProtectedRoute({ isLoggedIn, openAuth, children }) {
@@ -17,12 +17,7 @@ function ProtectedRoute({ isLoggedIn, openAuth, children }) {
 export default function AppRouter() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-
-  // Use a custom hook to get navigate outside of Router children
-  function useGlobalNavigate() {
-    const navigate = useNavigate();
-    return navigate;
-  }
+  const [user, setUser] = useState(null);
 
   // Handler for dialog open/close
   function handleAuthOpenChange(open) {
@@ -33,14 +28,29 @@ export default function AppRouter() {
     }
   }
 
-  function handleLoginSuccess() {
+  // Called on successful login, expects userData object with at least a name property
+  function handleLoginSuccess(userData) {
     setIsLoggedIn(true);
+    setUser(userData);
     setAuthOpen(false);
+  }
+
+  // Called on logout
+  function handleLogout() {
+    setIsLoggedIn(false);
+    setUser(null);
+    setAuthOpen(false);
+    window.location.pathname = '/';
   }
 
   return (
     <BrowserRouter>
-      <Navbar onLoginClick={() => setAuthOpen(true)} isLoggedIn={isLoggedIn} />
+      <Navbar
+        onLoginClick={() => setAuthOpen(true)}
+        isLoggedIn={isLoggedIn}
+        user={user}
+        onLogout={handleLogout}
+      />
       <Auth
         open={authOpen}
         onOpenChange={handleAuthOpenChange}

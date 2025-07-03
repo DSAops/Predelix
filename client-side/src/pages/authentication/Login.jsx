@@ -6,6 +6,11 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[2]) : '';
 }
 
+// Helper to set a cookie
+function setCookie(name, value) {
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
+}
+
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,13 +27,37 @@ function Login({ onLogin }) {
 
   function handleSubmit(e) {
     e.preventDefault();
+    let loginName = '';
     if (
       (email === 'teamdsa@gmail.com' && password === 'teamdsa') ||
       (email === getCookie('predelix_email') && password === getCookie('predelix_password'))
     ) {
       setError('');
-      if (onLogin) onLogin();
-      // Removed alert('Login successful!');
+      // For teamdsa creds, set name to "Team DSA"
+      if (email === 'teamdsa@gmail.com' && password === 'teamdsa') {
+        loginName = 'Team DSA';
+      } else {
+        // If no name exists, use email before @
+        loginName = getCookie('predelix_name');
+        if (!loginName) {
+          loginName = email.split('@')[0];
+        }
+      }
+      // If any of the two fields changed, update all cookies; else, clear others
+      const prevEmail = getCookie('predelix_email');
+      const prevPassword = getCookie('predelix_password');
+      const prevName = getCookie('predelix_name');
+      if (email !== prevEmail || password !== prevPassword || loginName !== prevName) {
+        setCookie('predelix_email', email);
+        setCookie('predelix_password', password);
+        setCookie('predelix_name', loginName);
+      } else {
+        // If not all match, clear others
+        if (email !== prevEmail) setCookie('predelix_name', '');
+        if (password !== prevPassword) setCookie('predelix_name', '');
+        if (loginName !== prevName) setCookie('predelix_email', '');
+      }
+      if (onLogin) onLogin({ name: loginName, email });
     } else {
       setError('Invalid email or password');
     }
