@@ -57,18 +57,21 @@ function Login({ onLogin }) {
         value={password}
         onChange={e => setPassword(e.target.value)}
       />
-      {error && <div className="text-red-500 text-sm">{error}</div>}
-      {devStatus && (
-        <div className="text-green-400 text-xs mb-1">{devStatus}</div>
-      )}
+      {/* Reserve space for error and devStatus */}
+      <div style={{ minHeight: '1.5em' }}>
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+        {!error && devStatus && (
+          <div className="text-green-400 text-xs mb-1">{devStatus}</div>
+        )}
+      </div>
       <div className="flex gap-2 justify-end">
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-900 border border-emerald-400 px-6 py-2 text-xs font-medium text-white hover:bg-emerald-800 transition-all"
+          className="inline-flex items-center justify-center rounded-lg bg-emerald-950 border border-emerald-400 px-6 py-2 text-sm font-medium text-white hover:bg-emerald-900 transition-all"
           style={{ minWidth: '110px' }}
           onClick={handleDevLogin}
         >
-          DevLogin
+          Use Default credentials
         </button>
         <button
           type="submit"
