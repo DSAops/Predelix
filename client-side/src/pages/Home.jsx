@@ -1,20 +1,14 @@
 import { TextEffect } from '../../components/motion-primitives/text-effect';
-import { AnimatedBackground } from '../../components/motion-primitives/animated-background';
 import { useState } from 'react';
-import { Home, PhoneCall, Settings, User } from 'lucide-react';
-
-const TABS = [
-  { label: 'Home', icon: <Home className="h-5 w-5" /> },
-  { label: 'About', icon: <User className="h-5 w-5" /> },
-  { label: 'Services', icon: <Settings className="h-5 w-5" /> },
-  { label: 'Contact', icon: <PhoneCall className="h-5 w-5" /> },
-];
+import { Navbar } from './common/Navbar'; 
 
 function HomePage() {
-  const [active, setActive] = useState(TABS[0].label);
 
   return (
-    <div className="fixed inset-0 min-h-screen w-full bg-black flex flex-col items-center justify-center bg-black">
+    <div className="fixed inset-0 min-h-screen w-full bg-black flex flex-col items-center">
+      {/* Dock Navbar at the top */}
+      <Navbar />
+
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center w-full">
         <div className="bg-white/10 rounded-xl shadow-lg p-10 text-center max-w-xl border border-zinc-800">
@@ -26,40 +20,6 @@ function HomePage() {
           </p>
         </div>
       </main>
-
-      {/* Animated Tabs at the bottom */}
-      <div className="absolute  bottom-8 left-0 w-full flex justify-center">
-        <div className="flex space-x-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-2 shadow-lg">
-          <AnimatedBackground
-            defaultValue={active}
-            onValueChange={setActive}
-            className="rounded-lg bg-zinc-800"
-            transition={{
-              type: 'spring',
-              bounce: 0.2,
-              duration: 0.3,
-            }}
-            enableHover
-          >
-            {TABS.map((tab) => (
-              <button
-                key={tab.label}
-                data-id={tab.label}
-                type="button"
-                className={`inline-flex h-9 w-9 items-center justify-center text-zinc-400 transition-colors duration-100 focus-visible:outline-2 ${
-                  active === tab.label
-                    ? 'text-white'
-                    : 'hover:text-purple-400'
-                }`}
-                onClick={() => setActive(tab.label)}
-                aria-label={tab.label}
-              >
-                {tab.icon}
-              </button>
-            ))}
-          </AnimatedBackground>
-        </div>
-      </div>
     </div>
   );
 }
