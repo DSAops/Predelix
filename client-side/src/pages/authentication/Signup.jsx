@@ -1,20 +1,44 @@
-function Signup() {
+import { useState } from 'react';
+
+function Signup({ onSignup }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    // Save to cookies (expires in 7 days)
+    document.cookie = `predelix_name=${encodeURIComponent(name)}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    document.cookie = `predelix_email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    document.cookie = `predelix_password=${encodeURIComponent(password)}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    setName('');
+    setEmail('');
+    setPassword('');
+    if (onSignup) onSignup();
+  }
+
   return (
-    <form className="flex flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <input
         type="text"
         placeholder="Name"
         className="h-10 w-full rounded-lg border border-zinc-200 bg-white/90 px-3 text-base text-zinc-900 focus:ring-2 focus:ring-fuchsia-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        value={name}
+        onChange={e => setName(e.target.value)}
       />
       <input
         type="email"
         placeholder="Email"
         className="h-10 w-full rounded-lg border border-zinc-200 bg-white/90 px-3 text-base text-zinc-900 focus:ring-2 focus:ring-fuchsia-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
         className="h-10 w-full rounded-lg border border-zinc-200 bg-white/90 px-3 text-base text-zinc-900 focus:ring-2 focus:ring-fuchsia-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
       />
       <button
         type="submit"

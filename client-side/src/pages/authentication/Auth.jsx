@@ -8,20 +8,27 @@ import {
   DialogClose,
 } from '../../../components/motion-primitives/dialog';
 import Login from './login';
-import Signup from './Signup'; // Create this file as shown below
+import Signup from './Signup';
 import { useState } from 'react';
 
 export function Auth() {
   const [mode, setMode] = useState('login');
+  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button className="px-5 py-2 rounded-lg bg-fuchsia-600 text-white font-semibold shadow hover:bg-fuchsia-700 transition">
           {mode === 'login' ? 'Login' : 'Sign Up'}
         </button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-md p-6 shadow-[0_4px_24px_#000a] bg-black/80 backdrop-blur-md border border-fuchsia-700/30 relative">
+      <DialogContent
+        className={`
+          w-full max-w-md p-6 shadow-[0_4px_24px_#000a] bg-black/80 backdrop-blur-md border border-fuchsia-700/30 relative
+          transition-all duration-0
+          ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
+        `}
+      >
         <DialogHeader>
           <DialogTitle className="text-fuchsia-400 text-2xl font-bold">
             {mode === 'login' ? 'Welcome to Predelix' : 'Create your Predelix account'}
@@ -33,7 +40,10 @@ export function Auth() {
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6 flex flex-col space-y-4">
-          {mode === 'login' ? <Login /> : <Signup />}
+          {mode === 'login'
+            ? <Login />
+            : <Signup onSignup={() => setMode('login')} />
+          }
         </div>
         <div className="mt-4 flex justify-between items-center text-sm">
           <button
