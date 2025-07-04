@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Truck, Package, Globe, BarChart2, Zap, Shield } from 'lucide-react';
+import LogisticsStoryAnimation from '../../components/LogisticsStoryAnimation';
 
 // Animated logistics-themed floating objects
 const FloatingLogisticsObjects = ({ scrollY }) => {
@@ -264,6 +265,100 @@ function HomePage() {
             <div className="text-5xl font-bold text-sky-500 mb-2 animate-count-up">{efficiency}%</div>
             <div className="text-sky-700 font-medium text-center">Efficiency Boost</div>
             <div className="text-xs text-sky-500 mt-1 opacity-70">Automated Operations</div>
+          </div>
+        </div>
+      </section>
+
+      {/* STORY ANIMATION SECTION */}
+      <section className="relative py-24 px-4 md:px-8 bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-50">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 bg-clip-text text-transparent">
+              How Predelix Transforms Logistics
+            </h2>
+            <p className="text-xl text-sky-600 max-w-3xl mx-auto">
+              Watch our AI-powered solution solve complex logistics challenges in real-time
+            </p>
+          </div>
+
+          {/* Story Animation Container */}
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Animation */}
+            <div className="flex-1 flex justify-center">
+              <div className="relative">
+                <div className="absolute -inset-8 bg-gradient-to-br from-cyan-400/10 to-blue-500/10 rounded-full blur-2xl animate-pulse"></div>
+                <LogisticsStoryAnimation size="large" />
+              </div>
+            </div>
+
+            {/* Story Steps Description */}
+            <div className="flex-1 space-y-8">
+              <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-red-200 hover:border-red-300 transition-all duration-300 hover:shadow-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold text-lg">1</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">The Challenge</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  Traditional logistics face chaotic parcel management, inefficient routes, and wasted resources. 
+                  Packages get lost, deliveries are delayed, and costs spiral out of control.
+                </p>
+              </div>
+
+              <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 hover:border-blue-300 transition-all duration-300 hover:shadow-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold text-lg">2</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">AI Analysis</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  Our advanced AI algorithms analyze millions of data points, identifying patterns, 
+                  predicting demand, and calculating optimal solutions in real-time.
+                </p>
+              </div>
+
+              <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-green-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold text-lg">3</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Smart Organization</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  Parcels are automatically sorted and organized using intelligent algorithms, 
+                  ensuring perfect categorization and streamlined workflow.
+                </p>
+              </div>
+
+              <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-cyan-200 hover:border-cyan-300 transition-all duration-300 hover:shadow-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold text-lg">4</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Route Optimization</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  Delivery routes are optimized in real-time, considering traffic, weather, and priority, 
+                  ensuring maximum efficiency and minimum cost.
+                </p>
+              </div>
+
+              <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-emerald-200 hover:border-emerald-300 transition-all duration-300 hover:shadow-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold text-lg">5</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Perfect Delivery</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  The result: Fast, efficient, and cost-effective logistics that delight customers 
+                  and maximize your business potential.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

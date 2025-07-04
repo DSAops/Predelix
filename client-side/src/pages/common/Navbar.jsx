@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { TextRoll } from '../../../components/motion-primitives/text-roll';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import LogisticsStoryAnimation from '../../../components/LogisticsStoryAnimation';
+import CartoonishLogisticsStory from '../../../components/CartoonishLogisticsStory';
 
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
@@ -96,7 +98,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
 
   // Set a fixed width and height for the logo wrapper and login button/profile wrapper to prevent layout shift
   return (
-    <nav className={`w-full transition-all duration-300 px-8 py-[13px] flex items-center justify-between fixed top-0 left-0 z-50 border-b overflow-hidden ${
+    <nav className={`w-full transition-all duration-300 px-4 py-[13px] flex items-center fixed top-0 left-0 z-50 border-b overflow-hidden ${
       isScrolled 
         ? 'bg-white/95 backdrop-blur-xl shadow-xl border-sky-200/50' 
         : 'bg-white/90 backdrop-blur-xl shadow-lg border-cyan-300/40'
@@ -107,12 +109,14 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/30 via-blue-50/20 to-sky-50/30 opacity-50"></div>
       
-      {/* Left: Enhanced Animated App Name with looping TextRoll */}
-      <div
-        className="flex items-center relative z-10"
-        style={{ minWidth: 160, minHeight: 40, justifyContent: 'flex-start' }}
-      >
-        <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center' }}>
+      {/* Left Side: Cartoonish Story Animation */}
+      <div className="flex-1 max-w-xs relative z-10">
+        <CartoonishLogisticsStory />
+      </div>
+      
+      {/* Center: Logo and App Name */}
+      <div className="flex items-center relative z-10" style={{ minWidth: 160, minHeight: 40 }}>
+        <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* Animated logo background */}
           <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-full blur animate-pulse"></div>
           <div className="relative flex items-center space-x-2">
@@ -133,29 +137,31 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         </div>
       </div>
       
-      {/* Center: Enhanced Nav Items */}
-      <div className="flex gap-6 relative z-10">
-        {navItems.map((item, idx) => (
-          <Link
-            key={idx}
-            to={item.to}
-            className="group flex items-center px-4 py-2 rounded-lg text-sky-700 font-medium hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:text-cyan-600 transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
-          >
-            {/* Animated background on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative z-10 flex items-center">
-              <div className="transform group-hover:scale-110 transition-transform duration-300">
-                {item.icon}
+      {/* Right Side: Nav Items and Auth */}
+      <div className="flex items-center gap-6 relative z-10">
+        {/* Nav Items */}
+        <div className="flex gap-4">
+          {navItems.map((item, idx) => (
+            <Link
+              key={idx}
+              to={item.to}
+              className="group flex items-center px-3 py-2 rounded-lg text-sky-700 font-medium hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:text-cyan-600 transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
+            >
+              {/* Animated background on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="transform group-hover:scale-110 transition-transform duration-300">
+                  {item.icon}
+                </div>
+                <span className="transform group-hover:translate-x-1 transition-transform duration-300">{item.title}</span>
               </div>
-              <span className="transform group-hover:translate-x-1 transition-transform duration-300">{item.title}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
-      
-      {/* Right: Enhanced Login Dialog Button or Profile Dropdown */}
-      <div style={{ width: 110, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }} className="relative z-10">
-        {!isLoggedIn ? (
+            </Link>
+          ))}
+        </div>
+        
+        {/* Auth Section */}
+        <div style={{ width: 110, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          {!isLoggedIn ? (
           <button
             className="group relative px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center overflow-hidden"
             onClick={onLoginClick}
@@ -173,7 +179,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
             <PopoverButton className="group flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-110 focus:outline-none shadow-lg hover:shadow-xl relative overflow-hidden">
               {/* Animated background pulse */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
-              <UserIcon className="h-6 w-6 text-white relative z-10 animate-pulse" />
+              <UserIcon className="h-5 w-5 text-white relative z-10" />
             </PopoverButton>
             <PopoverPanel
               anchor="bottom"
@@ -188,17 +194,18 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                 </div>
                 <hr className="border-sky-200 my-1 w-full" />
                 <button
-                  className="group flex items-center gap-2 w-full px-4 py-2 rounded-b-xl text-sm text-sky-600 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 font-medium transform hover:scale-105"
+                  className="group flex items-center justify-center gap-2 w-full px-4 py-2 rounded-b-xl text-sm text-sky-600 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 font-medium transform hover:scale-105"
                   onClick={onLogout}
                   style={{ background: 'none', border: 'none' }}
                 >
-                  <LogOutIcon className="h-6 w-6 group-hover:animate-bounce" />
-                  <span className="text-sky-600 text-base">Logout</span>
+                  <LogOutIcon className="h-4 w-4 group-hover:animate-bounce" />
+                  <span className="text-sky-600 text-sm">Logout</span>
                 </button>
               </div>
             </PopoverPanel>
           </Popover>
         )}
+        </div>
       </div>
       
       {/* Custom navbar animations */}
