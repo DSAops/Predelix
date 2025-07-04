@@ -66,7 +66,7 @@ function HomePage() {
 
           {/* How We Help Section */}
           <div className="w-full max-w-7xl z-20 mb-24">
-            <Parallax translateY={[20, -20]} opacity={[0.8, 1]}>
+            <Parallax translateY={[20, -20]} opacity={[0.8, 1]} speed={5}>
               <h2 className="text-3xl md:text-4xl font-bold text-center text-purple-600 mb-12">
                 Transforming Inventory Management
               </h2>
@@ -102,7 +102,7 @@ function HomePage() {
 
             {/* Process Timeline */}
             <div className="relative mb-24">
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-purple-200"></div>
+              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-purple-300 to-purple-100"></div>
               {[
                 {
                   title: 'Data Integration',
@@ -120,19 +120,41 @@ function HomePage() {
                   icon: '📈'
                 }
               ].map((step, i) => (
-                <Parallax key={i} translateX={i % 2 === 0 ? [-100, 0] : [100, 0]} opacity={[0.5, 1]}>
-                  <div className={`flex items-center mb-12 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
-                    <div className={`w-1/2 ${i % 2 === 0 ? 'pr-8 text-right' : 'pl-8'}`}>
-                      <div className="bg-white/90 backdrop-blur-xl rounded-xl p-6 border border-purple-200 shadow-lg">
-                        <div className="text-3xl mb-3">{step.icon}</div>
-                        <h3 className="text-xl font-bold text-purple-600 mb-2">{step.title}</h3>
-                        <p className="text-zinc-600">{step.description}</p>
+                <div key={i} className="relative">
+                  <Parallax 
+                    translateX={i % 2 === 0 ? [-20, 0] : [20, 0]} 
+                    opacity={[0, 1]}
+                    speed={5}
+                    easing="easeInOutQuad"
+                    startScroll={-500}
+                    shouldAlwaysCompleteAnimation={true}
+                    className="relative"
+                  >
+                    <div 
+                      className={`flex items-center mb-12 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
+                      style={{
+                        transform: `translateX(${i % 2 === 0 ? '0' : '0'}%)`,
+                        transition: 'transform 0.3s ease-out'
+                      }}
+                    >
+                      <div className={`w-1/2 ${i % 2 === 0 ? 'pr-8 text-right' : 'pl-8'}`}>
+                        <div className="bg-white/90 backdrop-blur-xl rounded-xl p-6 border border-purple-200 shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-purple-200/50">
+                          <div className="text-3xl mb-3">{step.icon}</div>
+                          <h3 className="text-xl font-bold text-purple-600 mb-2">{step.title}</h3>
+                          <p className="text-zinc-600">{step.description}</p>
+                        </div>
                       </div>
+                      <div 
+                        className="relative w-10 h-10"
+                      >
+                        <div className="absolute inset-0 rounded-full bg-purple-600/20 animate-ping"></div>
+                        <div className="absolute inset-0 rounded-full bg-purple-600 border-4 border-white shadow-lg z-10 transform transition-transform duration-500 hover:scale-110">
+                        </div>
+                      </div>
+                      <div className="w-1/2"></div>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-purple-600 border-4 border-white shadow-lg z-10"></div>
-                    <div className="w-1/2"></div>
-                  </div>
-                </Parallax>
+                  </Parallax>
+                </div>
               ))}
             </div>
           </div>
@@ -423,6 +445,36 @@ function HomePage() {
         body:not(.scrolled) .navbar-overlay {
           box-shadow: none !important;
           background: transparent !important;
+        }
+
+        /* Smooth scrolling for the entire page */
+        html {
+          scroll-behavior: smooth;
+        }
+
+        /* Custom scrolling behavior */
+        body {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Enhanced smooth scroll with custom timing function */
+        * {
+          scroll-behavior: smooth;
+          scroll-timeline: none;
+          scroll-snap-type: none;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+          html {
+            scroll-behavior: smooth;
+            --scroll-timeline: scroll;
+            --scroll-timing-function: cubic-bezier(0.45, 0.05, 0.35, 1);
+          }
+          
+          body {
+            transition: transform 0.8s var(--scroll-timing-function);
+          }
         }
       `}</style>
         </div>
