@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LogIn, Mail, Lock, Zap } from 'lucide-react';
 
 // Helper to get a cookie value by name
 function getCookie(name) {
@@ -71,42 +72,78 @@ function Login({ onLogin }) {
   }
 
   return (
-    <form className="flex flex-col gap-4 text-white" onSubmit={handleSubmit}>
-      <input
-        type="email"
-        placeholder="Email"
-        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        className="h-10 w-full rounded-lg border border-purple-300 bg-white px-3 text-base text-zinc-800 focus:ring-2 focus:ring-purple-400 placeholder:text-zinc-400"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      />
-      {/* Reserve space for error and devStatus */}
-      <div style={{ minHeight: '1.5em' }}>
-        {error && <div className="text-red-500 text-sm">{error}</div>}
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+      {/* Enhanced Email Input */}
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500">
+          <Mail className="w-5 h-5" />
+        </div>
+        <input
+          type="email"
+          placeholder="Email"
+          className="h-12 w-full rounded-xl border border-cyan-200 bg-gradient-to-r from-white to-cyan-50/30 pl-12 pr-4 text-base text-sky-800 placeholder:text-sky-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-300 hover:border-cyan-300"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+      </div>
+
+      {/* Enhanced Password Input */}
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500">
+          <Lock className="w-5 h-5" />
+        </div>
+        <input
+          type="password"
+          placeholder="Password"
+          className="h-12 w-full rounded-xl border border-blue-200 bg-gradient-to-r from-white to-blue-50/30 pl-12 pr-4 text-base text-sky-800 placeholder:text-sky-400 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 hover:border-blue-300"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+      </div>
+
+      {/* Enhanced Error/Status Messages */}
+      <div style={{ minHeight: '1.5em' }} className="relative">
+        {error && (
+          <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3 flex items-center space-x-2">
+            <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">!</span>
+            </div>
+            <span>{error}</span>
+          </div>
+        )}
         {!error && devStatus && (
-          <div className="text-green-400 text-xs mb-1">{devStatus}</div>
+          <div className="text-green-600 text-sm bg-green-50 border border-green-200 rounded-lg p-3 flex items-center space-x-2">
+            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+              <Zap className="w-2 h-2 text-white" />
+            </div>
+            <span>{devStatus}</span>
+          </div>
         )}
       </div>
-      <div className="flex gap-2 justify-end">
+
+      {/* Enhanced Buttons */}
+      <div className="flex gap-3 justify-end">
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-lg bg-purple-50 border border-purple-300 px-6 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-all"
-          style={{ minWidth: '110px' }}
+          className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 px-6 py-3 text-sm font-medium text-cyan-700 hover:from-cyan-100 hover:to-blue-100 hover:border-cyan-300 transition-all duration-300 transform hover:scale-105"
+          style={{ minWidth: '140px' }}
           onClick={handleDevLogin}
         >
-          Use Default credentials
+          <div className="flex items-center space-x-2">
+            <Zap className="w-4 h-4 group-hover:animate-pulse" />
+            <span>Demo Credentials</span>
+          </div>
         </button>
+        
         <button
           type="submit"
-          className="inline-flex items-center justify-center rounded-lg bg-purple-500 px-4 py-2 text-sm font-medium text-white hover:bg-purple-600"
+          className="group inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
         >
-          Log In
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative flex items-center space-x-2">
+            <LogIn className="w-4 h-4 group-hover:animate-bounce" />
+            <span>Log In</span>
+          </div>
         </button>
       </div>
     </form>
