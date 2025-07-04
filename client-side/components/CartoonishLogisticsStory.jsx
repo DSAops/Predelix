@@ -131,7 +131,7 @@ const CartoonishLogisticsStory = () => {
   );
 
   return (
-    <div className="w-full h-16 relative overflow-hidden bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200 shadow-sm">
+    <div className="max-w-48 h-16 relative overflow-hidden bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200 shadow-sm">
       {/* Story Label */}
       <div className="absolute top-1 left-1 text-xs text-gray-500 font-medium z-20">
         {steps[currentStep].title}

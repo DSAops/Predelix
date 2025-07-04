@@ -98,7 +98,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
 
   // Set a fixed width and height for the logo wrapper and login button/profile wrapper to prevent layout shift
   return (
-    <nav className={`w-full transition-all duration-300 px-4 py-[13px] flex items-center fixed top-0 left-0 z-50 border-b overflow-hidden ${
+    <nav className={`w-full transition-all duration-300 px-4 py-[13px] grid grid-cols-3 items-center fixed top-0 left-0 z-50 border-b overflow-hidden ${
       isScrolled 
         ? 'bg-white/95 backdrop-blur-xl shadow-xl border-sky-200/50' 
         : 'bg-white/90 backdrop-blur-xl shadow-lg border-cyan-300/40'
@@ -110,12 +110,14 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/30 via-blue-50/20 to-sky-50/30 opacity-50"></div>
       
       {/* Left Side: Cartoonish Story Animation */}
-      <div className="flex-1 max-w-xs relative z-10">
-        <CartoonishLogisticsStory />
+      <div className="justify-self-start relative z-10">
+        <div className="w-48 max-w-xs">
+          <CartoonishLogisticsStory />
+        </div>
       </div>
       
       {/* Center: Logo and App Name */}
-      <div className="flex items-center relative z-10" style={{ minWidth: 160, minHeight: 40 }}>
+      <div className="justify-self-center flex items-center relative z-10" style={{ minWidth: 160, minHeight: 40 }}>
         <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* Animated logo background */}
           <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-full blur animate-pulse"></div>
@@ -138,7 +140,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       </div>
       
       {/* Right Side: Nav Items and Auth */}
-      <div className="flex items-center gap-6 relative z-10">
+      <div className="justify-self-end flex items-center gap-6 relative z-10">
         {/* Nav Items */}
         <div className="flex gap-4">
           {navItems.map((item, idx) => (
@@ -160,7 +162,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         </div>
         
         {/* Auth Section */}
-        <div style={{ width: 110, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <div className="flex items-center justify-end" style={{ width: 110, height: 40 }}>
           {!isLoggedIn ? (
           <button
             className="group relative px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center overflow-hidden"
