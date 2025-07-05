@@ -1,66 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { LogIn, Mail, Lock, Zap } from 'lucide-react';
-
-// Helper to get a cookie value by name
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : '';
-}
-
-// Helper to set a cookie
-function setCookie(name, value) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
-}
+import { useAuth } from '../../context/AuthContext';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [devStatus, setDevStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
 
-  // Autofill from cookies on mount
-  useEffect(() => {
-    const savedEmail = getCookie('predelix_email');
-    const savedPassword = getCookie('predelix_password');
-    if (savedEmail) setEmail(savedEmail);
-    if (savedPassword) setPassword(savedPassword);
-  }, []);
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    let loginName = '';
-    if (
-      (email === 'teamdsa@gmail.com' && password === 'teamdsa') ||
-      (email === getCookie('predelix_email') && password === getCookie('predelix_password'))
-    ) {
-      setError('');
-      // For teamdsa creds, set name to "Team DSA"
-      if (email === 'teamdsa@gmail.com' && password === 'teamdsa') {
-        loginName = 'Team DSA';
-      } else {
-        // If no name exists, use email before @
-        loginName = getCookie('predelix_name');
-        if (!loginName) {
-          loginName = email.split('@')[0];
-        }
+    setError('');
+    setLoading(true);
+    
+    try {
+      const data = await login(email, password);
+      if (onLogin) {
+        onLogin({
+          name: data.user.username,
+          email: data.user.email,
+          id: data.user.id
+        });
       }
-      // If any of the two fields changed, update all cookies; else, clear others
-      const prevEmail = getCookie('predelix_email');
-      const prevPassword = getCookie('predelix_password');
-      const prevName = getCookie('predelix_name');
-      if (email !== prevEmail || password !== prevPassword || loginName !== prevName) {
-        setCookie('predelix_email', email);
-        setCookie('predelix_password', password);
-        setCookie('predelix_name', loginName);
-      } else {
-        // If not all match, clear others
-        if (email !== prevEmail) setCookie('predelix_name', '');
-        if (password !== prevPassword) setCookie('predelix_name', '');
-        if (loginName !== prevName) setCookie('predelix_email', '');
-      }
-      if (onLogin) onLogin({ name: loginName, email });
-    } else {
-      setError('Invalid email or password');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   }
 

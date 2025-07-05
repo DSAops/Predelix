@@ -116,32 +116,8 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         </div>
       </div>
       
-      {/* Center: Logo and App Name */}
-      <div className="justify-self-center flex items-center relative z-10" style={{ minWidth: 160, minHeight: 40 }}>
-        <div style={{ width: 140, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Animated logo background */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-full blur animate-pulse"></div>
-          <div className="relative flex items-center space-x-2">
-            {/* Animated logo icon */}
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center animate-float1">
-              <Truck className="w-5 h-5 text-white animate-bounce" />
-            </div>
-            <div key={key}>
-              <TextRoll
-                className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 bg-clip-text text-transparent"
-                loop
-                loopDelay={3000}
-              >
-                {['Predelix']}
-              </TextRoll>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Right Side: Nav Items and Auth */}
-      <div className="justify-self-end flex items-center gap-6 relative z-10">
-        {/* Nav Items */}
+      {/* Center: Nav Items */}
+      <div className="justify-self-center flex items-center relative z-10">
         <div className="flex gap-4">
           {navItems.map((item, idx) => (
             <Link
@@ -159,6 +135,28 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
               </div>
             </Link>
           ))}
+        </div>
+      </div>
+      
+      {/* Right Side: App Name and Auth */}
+      <div className="justify-self-end flex items-center gap-6 relative z-10">
+        {/* App Name */}
+        <div style={{ width: 140, height: 32 }} className="flex items-center">
+          <div className="relative flex items-center space-x-2">
+            {/* Animated logo icon */}
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center animate-float1">
+              <Truck className="w-5 h-5 text-white animate-bounce" />
+            </div>
+            <div key={key}>
+              <TextRoll
+                className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 bg-clip-text text-transparent"
+                loop
+                loopDelay={3000}
+              >
+                {['Predelix']}
+              </TextRoll>
+            </div>
+          </div>
         </div>
         
         {/* Auth Section */}

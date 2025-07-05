@@ -1,20 +1,29 @@
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
-function Signup({ onSignup }) {
+export default function Signup({ onSignup }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { register } = useAuth();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // Save to cookies (expires in 7 days)
-    document.cookie = `predelix_name=${encodeURIComponent(name)}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    document.cookie = `predelix_email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    document.cookie = `predelix_password=${encodeURIComponent(password)}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    setName('');
-    setEmail('');
-    setPassword('');
-    if (onSignup) onSignup();
+    setError('');
+    
+    try {
+      await register(name, email, password);
+      // Clear form
+      setName('');
+      setEmail('');
+      setPassword('');
+      // Notify parent component
+      if (onSignup) onSignup();
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError(error.message || 'Failed to create account');
+    }
   }
 
   return (
@@ -112,13 +121,19 @@ function Signup({ onSignup }) {
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </button>
 
+        {error && (
+          <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="text-center">
           <p className="text-sm text-zinc-600">
             Already have an account?{' '}
             <button
               type="button"
               className="text-purple-500 font-medium hover:text-purple-600 transition-colors"
-              onClick={() => {/* Handle switch to login */}}
+              onClick={() => onSignup()}
             >
               Sign In
             </button>
@@ -128,5 +143,3 @@ function Signup({ onSignup }) {
     </div>
   );
 }
-
-export default Signup;

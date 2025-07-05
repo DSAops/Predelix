@@ -1,54 +1,81 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import { Auth } from "./pages/authentication/Auth";
 import { Navbar } from "./pages/common/Navbar";
+import { Footer } from "./pages/common/Footer";
 import Predict from "./pages/Predict";
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { useState, useEffect } from 'react';
 
-function ProtectedRoute({ isLoggedIn, openAuth, children }) {
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
   const location = useLocation();
-  if (!isLoggedIn && location.pathname !== "/") {
-    openAuth();
-    return <Home />;
+  const [authOpen, setAuthOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      setAuthOpen(true);
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return <div>Loading...</div>;
   }
-  return children;
+
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Auth
+        open={authOpen}
+        onOpenChange={(open) => {
+          setAuthOpen(open);
+          if (!open && !user) {
+            navigate('/');
+          }
+        }}
+        onLogin={() => {
+          setAuthOpen(false);
+        }}
+        showTrigger={false}
+      />
+      {user ? children : null}
+    </>
+  );
 }
 
-export default function AppRouter() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
 
   // Handler for dialog open/close
+  const navigate = useNavigate();
+
   function handleAuthOpenChange(open) {
     setAuthOpen(open);
-    if (!open && !isLoggedIn) {
-      // If dialog is closed and user is not logged in, redirect to home
-      window.location.pathname = '/';
+    if (!open && !user) {
+      navigate('/');
     }
   }
 
-  // Called on successful login, expects userData object with at least a name property
+  // Called on successful login
   function handleLoginSuccess(userData) {
-    setIsLoggedIn(true);
-    setUser(userData);
     setAuthOpen(false);
   }
 
   // Called on logout
-  function handleLogout() {
-    setIsLoggedIn(false);
-    setUser(null);
+  async function handleLogout() {
+    await logout();
     setAuthOpen(false);
-    window.location.pathname = '/';
+    navigate('/');
   }
 
   return (
-    <BrowserRouter>
+    <div className="min-h-screen flex flex-col">
       <Navbar
         onLoginClick={() => setAuthOpen(true)}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={!!user}
         user={user}
         onLogout={handleLogout}
       />
@@ -58,26 +85,38 @@ export default function AppRouter() {
         onLogin={handleLoginSuccess}
         showTrigger={false}
       />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/predict"
-          element={
-            <ProtectedRoute isLoggedIn={isLoggedIn} openAuth={() => setAuthOpen(true)}>
-              <Predict />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/about"
-          element={
-            <ProtectedRoute isLoggedIn={isLoggedIn} openAuth={() => setAuthOpen(true)}>
-              <About />
-            </ProtectedRoute>
-          }
-        />
-        {/* Add more protected routes as needed */}
-      </Routes>
-    </BrowserRouter>
+      <main className="flex-grow pt-[66px]">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/predict"
+            element={
+              <ProtectedRoute>
+                <Predict />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute>
+                <About />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function AppRouter() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

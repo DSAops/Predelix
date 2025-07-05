@@ -16,8 +16,8 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
   const [mode, setMode] = React.useState('login');
 
   // Pass onLogin to Login component
-  function handleLoginSuccess() {
-    if (onLogin) onLogin();
+  function handleLoginSuccess(userData) {
+    if (onLogin) onLogin(userData);
   }
 
   return (
