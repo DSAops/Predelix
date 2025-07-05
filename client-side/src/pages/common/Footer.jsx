@@ -4,17 +4,17 @@ const creators = [
   {
     name: 'Anuj Sahu',
     role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/anuj-sahu/',
+    linkedin: 'https://www.linkedin.com/in/anuj-sahu-4059bb253/',
   },
   {
     name: 'Saksham Gupta',
     role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/saksham-gupta/',
+    linkedin: 'https://www.linkedin.com/in/saksham-gupta-87a1a427b/',
   },
   {
     name: 'Devraj Patil',
     role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/devraj-patil/',
+    linkedin: 'https://www.linkedin.com/in/devraj-patil-0944b22b5/',
   },
 ];
 
