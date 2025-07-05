@@ -181,3 +181,5 @@ Need a demo or have questions?
 ---
 
 Predelix: Powering the future of retail supply chains with AI.
+
+> 🚧 **Disclaimer:** This repository contains a hackathon prototype built for learning and demo purposes only (Walmart Hackathon ’25).
