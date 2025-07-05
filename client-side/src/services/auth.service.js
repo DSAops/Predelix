@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:5000/api/auth';
+import config from '../config';
+
+const API_URL = `${config.apiUrl}/auth`;
 
 // Common fetch options
 const fetchOptions = {
@@ -10,6 +12,34 @@ const fetchOptions = {
 };
 
 export const authService = {
+    async googleAuth({ access_token, userInfo }) {
+        try {
+            const response = await fetch(`${API_URL}/google`, {
+                ...fetchOptions,
+                method: 'POST',
+                body: JSON.stringify({ 
+                    access_token,
+                    email: userInfo.email,
+                    name: userInfo.name,
+                    sub: userInfo.sub
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Google authentication failed');
+            }
+
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Google authentication error:', error);
+            throw error;
+        }
+    },
     async login(email, password) {
         try {
             const response = await fetch(`${API_URL}/login`, {

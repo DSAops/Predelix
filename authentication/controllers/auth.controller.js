@@ -18,7 +18,88 @@ const generateRefreshToken = (userId) => {
     );
 };
 
+const verifyGoogleToken = async (access_token) => {
+    try {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${access_token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+        
+        return true;
+    } catch (error) {
+        throw new Error('Invalid Google token');
+    }
+};
+
 const authController = {
+    // Google authentication
+    googleAuth: async (req, res) => {
+        try {
+            const { access_token, email, name, sub } = req.body;
+            
+            // Verify the access token is valid
+            await verifyGoogleToken(access_token);
+            
+            // Find or create user
+            let user = await User.findOne({ email });
+            
+            if (!user) {
+                // Create new user if doesn't exist
+                user = new User({
+                    username: name,
+                    email: email,
+                    isGoogleUser: true,
+                    googleId: sub, // Google's unique identifier
+                    password: undefined // No password for Google users
+                });
+            } else if (!user.isGoogleUser) {
+                // If user exists but is not a Google user, don't allow Google login
+                return res.status(400).json({
+                    message: 'Email already registered with password authentication'
+                });
+            }
+
+            // Generate tokens
+            const accessToken = generateAccessToken(user._id);
+            const refreshToken = generateRefreshToken(user._id);
+            
+            // Save refresh token and update Google ID if needed
+            user.refreshToken = refreshToken;
+            if (!user.googleId) {
+                user.googleId = googleUser.sub;
+            }
+            await user.save();
+
+            // Set refresh token in HTTP-only cookie
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+
+            res.json({
+                message: 'Google authentication successful',
+                accessToken,
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    isGoogleUser: user.isGoogleUser
+                }
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                message: 'Error with Google authentication',
+                error: error.message
+            });
+        }
+    },
     // Register new user
     register: async (req, res) => {
         try {

@@ -48,6 +48,19 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const googleAuth = async (accessToken) => {
+        try {
+            const data = await authService.googleAuth(accessToken);
+            if (data && data.user) {
+                setUser(data.user);
+            }
+            return data;
+        } catch (error) {
+            console.error('Google auth error in context:', error);
+            throw error;
+        }
+    };
+
     const register = async (username, email, password) => {
         try {
             const data = await authService.register(username, email, password);
@@ -87,7 +100,8 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
-        checkAuth
+        checkAuth,
+        googleAuth
     };
 
     if (loading) {
