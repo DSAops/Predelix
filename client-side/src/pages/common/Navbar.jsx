@@ -67,9 +67,13 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const match = document.cookie.match(new RegExp('(^| )predelix_name=([^;]+)'));
-    setCookieName(match ? decodeURIComponent(match[2]) : '');
-  }, [isLoggedIn, user]);
+    // Update cookieName when user changes
+    if (user && user.name) {
+      setCookieName(user.name);
+    } else {
+      setCookieName('');
+    }
+  }, [user]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -190,7 +194,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
               <div className="relative z-10 flex flex-col justify-center items-center">
                 <div className="px-4 pt-4 pb-2 text-sky-800 text-lg font-bold text-center">
                   <span className="inline-block animate-wave mr-1">👋</span>
-                  Hi there {cookieName || user?.name || 'User'}
+                  Hi there {user?.name || 'User'}
                 </div>
                 <hr className="border-sky-200 my-1 w-full" />
                 <button

@@ -58,9 +58,16 @@ export function AuthProvider({ children }) {
                 throw new Error(data.error);
             }
             if (data.user) {
-                setUser(data.user);
+                // Set the full user data including the name
+                setUser({
+                    ...data.user,
+                    name: username // Ensure name is included
+                });
             } else {
                 console.warn('User data not received in registration response');
+                // If we don't get user data but the registration was successful,
+                // at least set the username
+                setUser({ name: username });
             }
             return data;
         } catch (error) {
