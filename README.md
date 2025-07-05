@@ -113,6 +113,11 @@ cd ../frontend
 npm install
 npm run dev
 ```
+# .env
+TWILIO_ACCOUNT_SID=your_twilio_sid
+TWILIO_AUTH_TOKEN=your_twilio_token
+TWILIO_PHONE_NUMBER=+1234567890
+and more....
 
 
 ```
