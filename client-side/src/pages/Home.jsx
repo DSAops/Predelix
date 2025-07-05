@@ -175,53 +175,134 @@ function HomePage() {
         </div>
 
         {/* Animated Central Hero Element */}
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div 
-            className="transform transition-all duration-1000 ease-out"
-            style={{ transform: `translateY(${scrollY * -0.1}px)` }}
-          >
-            {/* Animated Logo/Brand */}
-            <div className="mb-8 relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
-              <h1 className="relative text-6xl md:text-8xl font-black mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 bg-clip-text text-transparent drop-shadow-lg animate-slideInUp">
-                PREDELIX
-              </h1>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 bg-clip-text text-transparent opacity-50 animate-ping"></div>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div 
+              className="text-center lg:text-left transform transition-all duration-1000 ease-out"
+              style={{ transform: `translateY(${scrollY * -0.1}px)` }}
+            >
+              {/* Animated Logo/Brand */}
+              <div className="mb-8 relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
+                <h1 className="relative text-6xl md:text-8xl font-black mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 bg-clip-text text-transparent drop-shadow-lg animate-slideInUp">
+                  PREDELIX
+                </h1>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 bg-clip-text text-transparent opacity-50 animate-ping"></div>
+              </div>
+
+              {/* Animated Tagline */}
+              <div className="relative overflow-hidden">
+                <h2 className="text-2xl md:text-4xl font-bold mb-6 text-sky-700 animate-slideInUp animation-delay-200">
+                  <span className="inline-block animate-wave">🚀</span>
+                  Next-Gen Logistics Intelligence
+                  <span className="inline-block animate-wave animation-delay-500">📦</span>
+                </h2>
+              </div>
+
+              {/* Animated Description */}
+              <p className="text-lg md:text-xl text-sky-600 max-w-3xl lg:max-w-none leading-relaxed mb-8 animate-slideInUp animation-delay-400">
+                Revolutionizing supply chain management with 
+                <span className="font-semibold text-cyan-600 animate-pulse"> AI-powered predictions</span>, 
+                <span className="font-semibold text-blue-600 animate-pulse animation-delay-300"> real-time optimization</span>, and 
+                <span className="font-semibold text-sky-600 animate-pulse animation-delay-600"> autonomous decision-making</span> systems.
+              </p>
+
+              {/* Animated Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-slideInUp animation-delay-600">
+                <button className="group relative px-10 py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 hover:from-cyan-500 hover:via-blue-500 hover:to-sky-600 font-bold text-white shadow-xl transform hover:scale-105 transition-all duration-300 border border-cyan-200 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative flex items-center">
+                    <Zap className="w-5 h-5 mr-2 animate-pulse" />
+                    Get Started
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  </span>
+                </button>
+                <button className="group px-10 py-4 rounded-xl bg-white/90 backdrop-blur-xl border border-sky-200 hover:border-blue-300 font-semibold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-105 transition-all duration-300">
+                  <span className="flex items-center">
+                    <Globe className="w-5 h-5 mr-2 animate-spin-slow" />
+                    View Demo
+                  </span>
+                </button>
+              </div>
             </div>
 
-            {/* Animated Tagline */}
-            <div className="relative overflow-hidden">
-              <h2 className="text-2xl md:text-4xl font-bold mb-6 text-sky-700 animate-slideInUp animation-delay-200">
-                <span className="inline-block animate-wave">🚀</span>
-                Next-Gen Logistics Intelligence
-                <span className="inline-block animate-wave animation-delay-500">📦</span>
-              </h2>
-            </div>
+            {/* Right Side - Aesthetic Video */}
+            <div 
+              className="relative flex justify-center lg:justify-end transform transition-all duration-1000 ease-out"
+              style={{ transform: `translateY(${scrollY * -0.05}px)` }}
+            >
+              {/* Decorative Background Elements */}
+              <div className="absolute -inset-8 opacity-60">
+                {/* Floating Geometric Shapes */}
+                <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full animate-float1 blur-sm"></div>
+                <div className="absolute top-1/4 right-0 w-16 h-16 bg-gradient-to-br from-blue-400/25 to-sky-500/25 rounded-lg animate-float2 blur-sm"></div>
+                <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-gradient-to-br from-sky-400/35 to-cyan-500/35 rounded-full animate-float3 blur-sm"></div>
+                <div className="absolute bottom-0 right-1/4 w-14 h-14 bg-gradient-to-br from-purple-400/30 to-pink-500/30 rounded-lg animate-float1 blur-sm"></div>
+              </div>
 
-            {/* Animated Description */}
-            <p className="text-lg md:text-xl text-sky-600 max-w-3xl mx-auto leading-relaxed mb-8 animate-slideInUp animation-delay-400">
-              Revolutionizing supply chain management with 
-              <span className="font-semibold text-cyan-600 animate-pulse"> AI-powered predictions</span>, 
-              <span className="font-semibold text-blue-600 animate-pulse animation-delay-300"> real-time optimization</span>, and 
-              <span className="font-semibold text-sky-600 animate-pulse animation-delay-600"> autonomous decision-making</span> systems.
-            </p>
+              {/* Main Video Container */}
+              <div className="relative group">
+                {/* Outer Decorative Ring */}
+                <div className="absolute -inset-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-3xl opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                <div className="absolute -inset-5 bg-gradient-to-r from-white via-sky-100 to-white rounded-3xl"></div>
+                
+                {/* Inner Decorative Frame */}
+                <div className="absolute -inset-3 bg-gradient-to-br from-cyan-100 via-blue-100 to-sky-100 rounded-2xl shadow-xl"></div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-white to-cyan-50 rounded-2xl"></div>
+                
+                {/* Video Element */}
+                <div className="relative rounded-xl overflow-hidden shadow-2xl group-hover:shadow-3xl transition-shadow duration-300">
+                  {/* Video with Controls */}
+                  <video 
+                    className="w-full h-auto max-w-md lg:max-w-lg rounded-xl transform group-hover:scale-105 transition-transform duration-300"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    poster="/vite.svg"
+                  >
+                    <source src="/src/assets/video.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* Video Overlay Effects */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/20 via-transparent to-blue-900/20 rounded-xl pointer-events-none"></div>
+                </div>
 
-            {/* Animated Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slideInUp animation-delay-600">
-              <button className="group relative px-10 py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 hover:from-cyan-500 hover:via-blue-500 hover:to-sky-600 font-bold text-white shadow-xl transform hover:scale-105 transition-all duration-300 border border-cyan-200 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative flex items-center">
-                  <Zap className="w-5 h-5 mr-2 animate-pulse" />
-                  Get Started
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-              </button>
-              <button className="group px-10 py-4 rounded-xl bg-white/90 backdrop-blur-xl border border-sky-200 hover:border-blue-300 font-semibold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-105 transition-all duration-300">
-                <span className="flex items-center">
-                  <Globe className="w-5 h-5 mr-2 animate-spin-slow" />
-                  View Demo
-                </span>
-              </button>
+                {/* Floating Icons Around Video */}
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div className="absolute -top-2 -right-6 w-6 h-6 bg-gradient-to-br from-blue-400 to-sky-500 rounded-full flex items-center justify-center text-white shadow-lg animate-float2">
+                  <Package className="w-3 h-3" />
+                </div>
+                <div className="absolute -bottom-4 -left-6 w-7 h-7 bg-gradient-to-br from-sky-400 to-cyan-500 rounded-full flex items-center justify-center text-white shadow-lg animate-float3">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div className="absolute -bottom-2 -right-4 w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce animation-delay-500">
+                  <Zap className="w-4 h-4" />
+                </div>
+
+                {/* Sparkle Effects */}
+                <div className="absolute top-1/4 -left-8 text-2xl text-yellow-400 animate-pulse">✨</div>
+                <div className="absolute top-3/4 -right-8 text-xl text-blue-400 animate-pulse animation-delay-300">⭐</div>
+                <div className="absolute bottom-1/4 -left-10 text-lg text-cyan-400 animate-pulse animation-delay-600">💫</div>
+                
+                {/* Corner Decorations */}
+                <div className="absolute -top-8 -left-8 w-16 h-16 border-t-4 border-l-4 border-cyan-400 rounded-tl-2xl opacity-60"></div>
+                <div className="absolute -top-8 -right-8 w-16 h-16 border-t-4 border-r-4 border-blue-400 rounded-tr-2xl opacity-60"></div>
+                <div className="absolute -bottom-8 -left-8 w-16 h-16 border-b-4 border-l-4 border-sky-400 rounded-bl-2xl opacity-60"></div>
+                <div className="absolute -bottom-8 -right-8 w-16 h-16 border-b-4 border-r-4 border-purple-400 rounded-br-2xl opacity-60"></div>
+              </div>
+
+              {/* Video Description */}
+              <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+                <p className="text-sm text-sky-600 font-medium bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                  🎬 Watch Predelix in Action
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -532,6 +613,18 @@ function HomePage() {
           50% { transform: scale(1.1); }
           100% { transform: scale(1); opacity: 1; }
         }
+        @keyframes glow-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(56, 189, 248, 0.3); }
+        }
+        @keyframes video-float {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-5px) scale(1.02); }
+        }
+        @keyframes sparkle-twinkle {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.2); }
+        }
         
         .animate-float1 { animation: float1 6s ease-in-out infinite; }
         .animate-float2 { animation: float2 8s ease-in-out infinite; }
@@ -545,6 +638,9 @@ function HomePage() {
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
         .animate-draw-path { animation: draw-path 3s ease-in-out infinite; }
         .animate-count-up { animation: count-up 0.8s ease-out forwards; }
+        .animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+        .animate-video-float { animation: video-float 4s ease-in-out infinite; }
+        .animate-sparkle-twinkle { animation: sparkle-twinkle 2s ease-in-out infinite; }
         
         .animation-delay-200 { animation-delay: 0.2s; }
         .animation-delay-300 { animation-delay: 0.3s; }
@@ -554,6 +650,11 @@ function HomePage() {
         .animation-delay-800 { animation-delay: 0.8s; }
         .animation-delay-1000 { animation-delay: 1s; }
         .animation-delay-1200 { animation-delay: 1.2s; }
+        
+        /* Custom shadow class */
+        .shadow-3xl {
+          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+        }
       `}</style>
     </div>
   );
