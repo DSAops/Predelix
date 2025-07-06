@@ -272,10 +272,10 @@ function HomePage() {
                 </div>
 
                 {/* Floating Icons Around Video */}
-                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
+                {/* <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
                   <Truck className="w-4 h-4" />
-                </div>
-                <div className="absolute -top-2 -right-6 w-6 h-6 bg-gradient-to-br from-blue-400 to-sky-500 rounded-full flex items-center justify-center text-white shadow-lg animate-float2">
+                </div> */}
+                {/* <div className="absolute -top-2 -right-6 w-6 h-6 bg-gradient-to-br from-blue-400 to-sky-500 rounded-full flex items-center justify-center text-white shadow-lg animate-float2">
                   <Package className="w-3 h-3" />
                 </div>
                 <div className="absolute -bottom-4 -left-6 w-7 h-7 bg-gradient-to-br from-sky-400 to-cyan-500 rounded-full flex items-center justify-center text-white shadow-lg animate-float3">
@@ -283,12 +283,12 @@ function HomePage() {
                 </div>
                 <div className="absolute -bottom-2 -right-4 w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce animation-delay-500">
                   <Zap className="w-4 h-4" />
-                </div>
+                </div> */}
 
                 {/* Sparkle Effects */}
-                <div className="absolute top-1/4 -left-8 text-2xl text-yellow-400 animate-pulse">✨</div>
+                {/* <div className="absolute top-1/4 -left-8 text-2xl text-yellow-400 animate-pulse">✨</div>
                 <div className="absolute top-3/4 -right-8 text-xl text-blue-400 animate-pulse animation-delay-300">⭐</div>
-                <div className="absolute bottom-1/4 -left-10 text-lg text-cyan-400 animate-pulse animation-delay-600">💫</div>
+                <div className="absolute bottom-1/4 -left-10 text-lg text-cyan-400 animate-pulse animation-delay-600">💫</div> */}
                 
                 {/* Corner Decorations */}
                 <div className="absolute -top-8 -left-8 w-16 h-16 border-t-4 border-l-4 border-cyan-400 rounded-tl-2xl opacity-60"></div>
@@ -298,11 +298,11 @@ function HomePage() {
               </div>
 
               {/* Video Description */}
-              <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+              {/* <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
                 <p className="text-sm text-sky-600 font-medium bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
                   🎬 Watch Predelix in Action
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
