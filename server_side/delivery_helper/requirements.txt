@@ -8,6 +8,4 @@ flask
 flask-cors
 python-dotenv
 speechrecognition
-wave
-audioop
 requests

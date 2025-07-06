@@ -3,12 +3,9 @@ from twilio.rest import Client
 from flask import Flask, request, Response, jsonify
 import os
 import time
-import threading
 import urllib.request
 import base64
 import speech_recognition as sr
-import wave
-import audioop
 from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
