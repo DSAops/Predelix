@@ -10,6 +10,8 @@ import speech_recognition as sr
 import wave
 import audioop
 from flask_cors import CORS
+from dotenv import load_dotenv
+load_dotenv()
 
 # Load sensitive credentials from environment variables
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -200,21 +202,40 @@ def trigger_calls():
         # Fallback to frontend-provided value (for local/ngrok)
         webhook_base_url = request.json.get('webhook_base_url')
     if not webhook_base_url:
+        print('[ERROR] webhook_base_url missing!')
         return jsonify({'status': 'error', 'message': 'webhook_base_url required (set PUBLIC_BASE_URL or provide in request)'}), 400
     if not webhook_base_url.startswith('http'):
         webhook_base_url = f'https://{webhook_base_url}'
+
+    # Check Twilio credentials
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_PHONE_NUMBER:
+        print('[ERROR] Twilio credentials missing!')
+        return jsonify({'status': 'error', 'message': 'Twilio credentials missing!'}), 500
+
     df = load_data()
     successful_calls = 0
     failed_calls = 0
     missed_rows = []
+    error_details = []
     for idx, row in df.iterrows():
         response_value = df.at[idx, 'response']
         if response_value is None or pd.isna(response_value) or str(response_value).strip() == '':
-            if make_call(row, idx, webhook_base_url):
-                successful_calls += 1
-            else:
+            to_number = str(row['mobile_number'])
+            if not to_number.startswith('+'):
+                print(f'[WARNING] Number {to_number} is not in E.164 format!')
+            print(f'[INFO] Attempting call to {row.get("name", "(no name)")} at {to_number}')
+            try:
+                if make_call(row, idx, webhook_base_url):
+                    successful_calls += 1
+                else:
+                    failed_calls += 1
+                    missed_rows.append(row.to_dict())
+                    error_details.append({'row': idx, 'number': to_number, 'error': 'Call failed'})
+            except Exception as e:
+                print(f'[ERROR] Exception during call: {e}')
                 failed_calls += 1
                 missed_rows.append(row.to_dict())
+                error_details.append({'row': idx, 'number': to_number, 'error': str(e)})
             time.sleep(2)
     if failed_calls > 0:
         save_missed_calls(missed_rows)
@@ -222,7 +243,8 @@ def trigger_calls():
         'status': 'completed',
         'successful_calls': successful_calls,
         'failed_calls': failed_calls,
-        'missed': missed_rows
+        'missed': missed_rows,
+        'errors': error_details
     })
 
 @app.route('/api/results', methods=['GET'])
