@@ -12,11 +12,19 @@ import {
   Globe,
   Zap,
   Shield,
+  Settings,
+  UserCircle,
+  Palette,
+  Moon,
+  Sun,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { TextRoll } from '../../../components/motion-primitives/text-roll';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import LogisticsStoryAnimation from '../../../components/LogisticsStoryAnimation';
 import CartoonishLogisticsStory from '../../../components/CartoonishLogisticsStory';
+import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
@@ -65,6 +73,19 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
   const [key, setKey] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const { currentTheme, themes, changeTheme, themeColors } = useTheme();
+
+  // Theme options with icons
+  const themeOptions = [
+    { id: 'light', name: 'Light', icon: Sun },
+    { id: 'dark', name: 'Dark', icon: Moon },
+    { id: 'ocean', name: 'Ocean', icon: Globe },
+    { id: 'sunset', name: 'Sunset', icon: Sparkles },
+    { id: 'forest', name: 'Forest', icon: Zap },
+    { id: 'cosmic', name: 'Cosmic', icon: Sparkles },
+  ];
 
   useEffect(() => {
     // Update cookieName when user changes
@@ -180,31 +201,107 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
           </button>
         ) : (
           <Popover className="relative">
-            <PopoverButton className="group flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-110 focus:outline-none shadow-lg hover:shadow-xl relative overflow-hidden">
+            <PopoverButton className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 focus:outline-none shadow-lg hover:shadow-xl relative overflow-hidden">
               {/* Animated background pulse */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
-              <UserIcon className="h-5 w-5 text-white relative z-10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+              <div className="relative z-10 flex items-center gap-2">
+                <UserIcon className="h-5 w-5 text-white" />
+                <span className="text-white font-medium text-sm max-w-20 truncate">
+                  {user?.name || 'Namaste'}
+                </span>
+                <ChevronDown className="h-4 w-4 text-white/80" />
+              </div>
             </PopoverButton>
             <PopoverPanel
               anchor="bottom"
-              className="absolute right-0 mt-2 w-48 rounded-xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-sky-200/50 p-0 z-50 border border-cyan-100/50 overflow-hidden"
+              className="absolute right-0 mt-2 w-64 rounded-xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-sky-200/50 p-0 z-50 border border-cyan-100/50 overflow-hidden"
             >
               {/* Animated background in dropdown */}
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 to-blue-50/50"></div>
-              <div className="relative z-10 flex flex-col justify-center items-center">
-                <div className="px-4 pt-4 pb-2 text-sky-800 text-lg font-bold text-center">
-                  <span className="inline-block animate-wave mr-1">👋</span>
-                  Hi there {user?.name || 'User'}
+              <div className="relative z-10">
+                {/* User Info Header */}
+                <div className="px-4 pt-4 pb-2 border-b border-sky-200/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <UserCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sky-800">{user?.name || 'Namaste'}</div>
+                      <div className="text-sm text-sky-600">{user?.email || ''}</div>
+                    </div>
+                  </div>
                 </div>
-                <hr className="border-sky-200 my-1 w-full" />
-                <button
-                  className="group flex items-center justify-center gap-2 w-full px-4 py-2 rounded-b-xl text-sm text-sky-600 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 font-medium transform hover:scale-105"
-                  onClick={onLogout}
-                  style={{ background: 'none', border: 'none' }}
-                >
-                  <LogOutIcon className="h-4 w-4 group-hover:animate-bounce" />
-                  <span className="text-sky-600 text-sm">Logout</span>
-                </button>
+
+                {/* Profile Option */}
+                <div className="py-2">
+                  <button
+                    className="group flex items-center gap-3 w-full px-4 py-2 text-sm text-sky-700 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300"
+                    onClick={() => {/* Handle profile click */}}
+                  >
+                    <UserCircle className="h-4 w-4 group-hover:animate-pulse" />
+                    <span>Profile</span>
+                  </button>
+                </div>
+
+                {/* Settings Section */}
+                <div className="border-t border-sky-200/50">
+                  <button
+                    className="group flex items-center justify-between w-full px-4 py-2 text-sm text-sky-700 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300"
+                    onClick={() => setShowSettings(!showSettings)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Settings className="h-4 w-4 group-hover:animate-spin" />
+                      <span>Settings</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showSettings ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {/* Settings Dropdown */}
+                  {showSettings && (
+                    <div className="bg-white/50 border-t border-sky-200/30">
+                      {/* Theme Selection */}
+                      <div className="px-4 py-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Palette className="h-4 w-4 text-sky-600" />
+                          <span className="text-sm font-medium text-sky-700">Theme</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {themeOptions.map((theme) => {
+                            const IconComponent = theme.icon;
+                            return (
+                              <button
+                                key={theme.id}
+                                onClick={() => changeTheme(theme.id)}
+                                className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all duration-300 ${
+                                  currentTheme === theme.id
+                                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                                    : 'bg-white/60 text-sky-600 hover:bg-white/80 hover:text-cyan-600'
+                                }`}
+                              >
+                                <IconComponent className="h-3 w-3" />
+                                <span>{theme.name}</span>
+                                {currentTheme === theme.id && (
+                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Logout Button */}
+                <div className="border-t border-sky-200/50">
+                  <button
+                    className="group flex items-center gap-3 w-full px-4 py-3 text-sm text-sky-600 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 font-medium"
+                    onClick={onLogout}
+                  >
+                    <LogOutIcon className="h-4 w-4 group-hover:animate-bounce" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             </PopoverPanel>
           </Popover>

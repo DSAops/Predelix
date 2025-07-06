@@ -215,7 +215,6 @@ function About() {
         .animation-delay-1000 { animation-delay: 1s; }
       `}</style>
       
-      <Footer />
     </div>
   );
 }
