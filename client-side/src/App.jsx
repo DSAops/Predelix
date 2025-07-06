@@ -1,6 +1,6 @@
-import AppRouter from "./router";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import config from './config';
+import AppRouter from './router';
 
 function App() {
   return (
