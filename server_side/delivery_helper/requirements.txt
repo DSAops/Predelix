@@ -1,0 +1,13 @@
+# To run delivery_call.py or retry_missed_calls.py, use:
+# python delivery_call.py
+# python retry_missed_calls.py
+
+pandas
+twilio
+flask
+flask-cors
+python-dotenv
+speechrecognition
+wave
+audioop
+requests
