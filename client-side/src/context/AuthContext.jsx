@@ -104,10 +104,6 @@ export function AuthProvider({ children }) {
         googleAuth
     };
 
-    if (loading) {
-        return <div>Loading...</div>; // Or your loading component
-    }
-
     return (
         <AuthContext.Provider value={value}>
             {children}

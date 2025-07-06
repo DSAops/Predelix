@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useLoading } from '../context/LoadingContext';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -58,6 +59,7 @@ function Predict() {
   const [showStores, setShowStores] = useState(false);
   
   const { themeColors } = useTheme();
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     let ticking = false;
@@ -77,13 +79,20 @@ function Predict() {
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0];
     if (uploadedFile) {
-      setFile(uploadedFile);
-      // TODO: Handle file processing
+      showLoading("Processing file...");
+      
+      // Simulate file processing time
+      setTimeout(() => {
+        setFile(uploadedFile);
+        hideLoading();
+      }, 1000);
     }
   };
 
   const handlePredict = () => {
     setLoading(true);
+    showLoading("Analyzing data with AI...");
+    
     // TODO: Implement prediction logic
     setTimeout(() => {
       setPredictions({
@@ -141,31 +150,39 @@ function Predict() {
         ]
       });
       setLoading(false);
-    }, 1500);
+      hideLoading();
+    }, 2500);
   };
 
   const handleDownloadCSV = () => {
     if (!predictions) return;
     
-    // Create CSV content
-    let csvContent = "Store,Item,Date,Predicted Stock\n";
+    showLoading("Generating CSV file...");
     
-    predictions.stores.forEach(store => {
-      store.items.forEach(item => {
-        csvContent += `${store.name},${item.name},${item.date},${item.predictedStock}\n`;
+    // Simulate CSV generation time for better UX
+    setTimeout(() => {
+      // Create CSV content
+      let csvContent = "Store,Item,Date,Predicted Stock\n";
+      
+      predictions.stores.forEach(store => {
+        store.items.forEach(item => {
+          csvContent += `${store.name},${item.name},${item.date},${item.predictedStock}\n`;
+        });
       });
-    });
-    
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'stock_predictions.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'stock_predictions.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      hideLoading();
+    }, 800);
   };
 
   return (

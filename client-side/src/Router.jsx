@@ -7,21 +7,26 @@ import { Footer } from "./pages/common/Footer";
 import Predict from "./pages/Predict";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useState, useEffect } from 'react';
+import LoadingAnimation from './components/LoadingAnimation';
+import PageLoader from './components/PageLoader';
+import { useLoading } from './context/LoadingContext';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [authOpen, setAuthOpen] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
-    if (!loading && !user) {
-      setAuthOpen(true);
+    if (loading) {
+      showLoading("Authenticating...");
+    } else {
+      hideLoading();
+      if (!user) {
+        setAuthOpen(true);
+      }
     }
-  }, [user, loading]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  }, [user, loading, showLoading, hideLoading]);
 
   const navigate = useNavigate();
 
@@ -47,7 +52,17 @@ function ProtectedRoute({ children }) {
 
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
+
+  // Handle initial authentication loading
+  useEffect(() => {
+    if (loading) {
+      showLoading("Initializing app...");
+    } else {
+      hideLoading();
+    }
+  }, [loading, showLoading, hideLoading]);
 
   // Handler for dialog open/close
   const navigate = useNavigate();
@@ -87,12 +102,21 @@ function AppContent() {
       />
       <main className="flex-grow pt-[66px]">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route 
+            path="/" 
+            element={
+              <PageLoader minLoadTime={300}>
+                <Home />
+              </PageLoader>
+            } 
+          />
           <Route
             path="/predict"
             element={
               <ProtectedRoute>
-                <Predict />
+                <PageLoader minLoadTime={300}>
+                  <Predict />
+                </PageLoader>
               </ProtectedRoute>
             }
           />
@@ -100,7 +124,9 @@ function AppContent() {
             path="/about"
             element={
               <ProtectedRoute>
-                <About />
+                <PageLoader minLoadTime={300}>
+                  <About />
+                </PageLoader>
               </ProtectedRoute>
             }
           />
