@@ -1,10 +1,10 @@
-import AppRouter from "./router";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import config from './config';
 import { ThemeProvider } from './context/ThemeContext';
 import { LoadingProvider, useLoading } from './context/LoadingContext';
 import LoadingAnimation from './components/LoadingAnimation';
 import './styles/themes.css';
+import AppRouter from './router';
 
 // Main App Content Component
 const AppContent = () => {
