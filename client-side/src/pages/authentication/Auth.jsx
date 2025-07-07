@@ -97,10 +97,8 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
           </button>
         </div>
         
-        <DialogClose asChild>
-          <button className="absolute top-4 right-4 text-sky-600 hover:text-cyan-600 text-2xl font-bold z-20 w-8 h-8 rounded-full hover:bg-cyan-100 transition-all duration-300 transform hover:scale-110" aria-label="Close">
-            ×
-          </button>
+        <DialogClose className="absolute top-4 right-4 text-sky-600 hover:text-cyan-600 text-2xl font-bold z-20 w-8 h-8 rounded-full hover:bg-cyan-100 transition-all duration-300 transform hover:scale-110" aria-label="Close">
+          ×
         </DialogClose>
         
         {/* Custom animations */}

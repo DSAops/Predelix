@@ -3,6 +3,7 @@ import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
+import StoreModal from '../components/StoreModal';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -47,6 +48,19 @@ const FloatingPredictElements = ({ scrollY }) => {
   );
 };
 
+function groupPredictionsByStoreAndProduct(predictions) {
+  const stores = {};
+  predictions.forEach(pred => {
+    if (!stores[pred.store_id]) stores[pred.store_id] = {};
+    if (!stores[pred.store_id][pred.product_id]) stores[pred.store_id][pred.product_id] = [];
+    stores[pred.store_id][pred.product_id].push({
+      date: pred.date,
+      predicted_stock: pred.predicted_stock,
+    });
+  });
+  return stores;
+}
+
 function Predict() {
   // Navbar height (px)
   const NAVBAR_HEIGHT = 66; // px (matches py-[13px] + 40px content)
@@ -56,6 +70,7 @@ function Predict() {
   const [predictions, setPredictions] = useState(null);
   const [csvBlob, setCsvBlob] = useState(null);
   const [scrollY, setScrollY] = useState(0);
+  const [selectedStore, setSelectedStore] = useState(null);
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
@@ -176,6 +191,8 @@ function Predict() {
     }, 500);
   };
 
+  const groupedStores = predictions ? groupPredictionsByStoreAndProduct(predictions) : {};
+
   return (
     <div className="min-h-screen theme-gradient-bg flex flex-col overflow-x-hidden transition-all duration-300">
       {/* Enhanced Background */}
@@ -227,6 +244,27 @@ function Predict() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Store Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
+          {Object.entries(groupedStores).map(([storeId, products]) => (
+            <div key={storeId} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center">
+              <div className="text-lg font-bold mb-2">{/** Replace with actual shop owner name from context if available */}Shop Owner</div>
+              <button
+                className="flex flex-col items-center group focus:outline-none"
+                onClick={() => setSelectedStore({ storeId, products })}
+              >
+                <div className="rounded-full bg-blue-100 p-4 mb-2 group-hover:bg-blue-200 transition">
+                  <Store className="w-8 h-8 text-blue-600 group-hover:scale-110 transition-transform" />
+                </div>
+                <span className="text-blue-700 font-semibold group-hover:underline">
+                  Store ID: {storeId}
+                </span>
+                <span className="text-xs text-gray-400 group-hover:text-blue-500">View Predictions</span>
+              </button>
+            </div>
+          ))}
         </div>
 
         {/* Enhanced Main Content */}
@@ -422,6 +460,15 @@ function Predict() {
           </div>
         </div>
       </div>
+      
+      {/* Modal */}
+      {selectedStore && (
+        <StoreModal
+          storeId={selectedStore.storeId}
+          products={selectedStore.products}
+          onClose={() => setSelectedStore(null)}
+        />
+      )}
       
       {/* Custom animations */}
       <style jsx>{`
