@@ -10,6 +10,9 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
 
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all origins
+
 # Load sensitive credentials from environment variables
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
