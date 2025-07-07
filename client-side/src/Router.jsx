@@ -5,6 +5,7 @@ import { Auth } from "./pages/authentication/Auth";
 import { Navbar } from "./pages/common/Navbar";
 import { Footer } from "./pages/common/Footer";
 import Predict from "./pages/Predict";
+import SmartDrop from "./pages/SmartDrop";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useState, useEffect } from 'react';
 import LoadingAnimation from './components/LoadingAnimation';
@@ -126,6 +127,16 @@ function AppContent() {
               <ProtectedRoute>
                 <PageLoader minLoadTime={300}>
                   <About />
+                </PageLoader>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/smartdrop"
+            element={
+              <ProtectedRoute>
+                <PageLoader minLoadTime={300}>
+                  <SmartDrop />
                 </PageLoader>
               </ProtectedRoute>
             }

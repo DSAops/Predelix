@@ -29,6 +29,7 @@ import { useTheme } from '../../context/ThemeContext';
 const navItems = [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
   { title: 'Predict', icon: <BarChart2 className="h-5 w-5 mr-2" />, to: '/predict' },
+  { title: 'SmartDrop', icon: <Package className="h-5 w-5 mr-2" />, to: '/smartdrop' },
   { title: 'About', icon: <User className="h-5 w-5 mr-2" />, to: '/about' },
 ];
 

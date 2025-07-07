@@ -5,6 +5,7 @@ import { Auth } from "../pages/authentication/Auth";
 import { Navbar } from "../pages/common/Navbar";
 import { Footer } from "../pages/common/Footer";
 import Predict from "../pages/Predict";
+import SmartDrop from "../pages/SmartDrop";
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 
@@ -89,6 +90,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Predict />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/smartdrop"
+            element={
+              <ProtectedRoute>
+                <SmartDrop />
               </ProtectedRoute>
             }
           />
