@@ -1,0 +1,42 @@
+.env
+*.csv
+*.wav
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.joblib
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# Environment
+.env*
+
+# Misc
+*.sqlite3
+*.db
+*.bak
+*.tmp
+*.swp
+
+# Ignore model files
+stock_predictor_model.pkl
