@@ -11,7 +11,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all origins
+# Enable CORS for all origins with all methods and headers
+CORS(app, origins="*", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"])
 
 # Load sensitive credentials from environment variables
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -21,9 +23,6 @@ TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 # CSV paths (can be overridden by env or API)
 INPUT_CSV = os.getenv('INPUT_CSV', 'input.csv')
 OUTPUT_CSV = os.getenv('OUTPUT_CSV', 'output.csv')
-
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 
 def load_data(input_csv=INPUT_CSV):
     df = pd.read_csv(input_csv)
@@ -173,9 +172,17 @@ def save_missed_calls(missed_rows):
             writer.writerows(missed_rows)
         print(f"Missed calls saved to missed_calls.csv ({len(missed_rows)} numbers)")
 
-@app.route('/api/upload_customers', methods=['POST'])
+@app.route('/api/upload_customers', methods=['POST', 'OPTIONS'])
 def upload_customers():
     """Upload customer data as CSV (multipart/form-data)."""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = Response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
     if 'file' not in request.files:
         return jsonify({'status': 'error', 'message': 'No file part in the request.'}), 400
     file = request.files['file']
@@ -191,11 +198,23 @@ def upload_customers():
     if not required_columns.issubset(df.columns):
         return jsonify({'status': 'error', 'message': f'Missing required columns: {required_columns - set(df.columns)}'}), 400
     df.to_csv(INPUT_CSV, index=False)
-    return jsonify({'status': 'success', 'message': 'CSV uploaded and validated.'}), 200
+    
+    # Add CORS headers to response
+    response = jsonify({'status': 'success', 'message': 'CSV uploaded and validated.'})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response, 200
 
-@app.route('/api/trigger_calls', methods=['POST'])
+@app.route('/api/trigger_calls', methods=['POST', 'OPTIONS'])
 def trigger_calls():
     """Trigger delivery calls to all customers in the input CSV."""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = Response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
     # Prefer PUBLIC_BASE_URL env var if set (for production)
     webhook_base_url = os.getenv('PUBLIC_BASE_URL')
     if not webhook_base_url:
@@ -203,14 +222,18 @@ def trigger_calls():
         webhook_base_url = request.json.get('webhook_base_url')
     if not webhook_base_url:
         print('[ERROR] webhook_base_url missing!')
-        return jsonify({'status': 'error', 'message': 'webhook_base_url required (set PUBLIC_BASE_URL or provide in request)'}), 400
+        response = jsonify({'status': 'error', 'message': 'webhook_base_url required (set PUBLIC_BASE_URL or provide in request)'})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 400
     if not webhook_base_url.startswith('http'):
         webhook_base_url = f'https://{webhook_base_url}'
 
     # Check Twilio credentials
     if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_PHONE_NUMBER:
         print('[ERROR] Twilio credentials missing!')
-        return jsonify({'status': 'error', 'message': 'Twilio credentials missing!'}), 500
+        response = jsonify({'status': 'error', 'message': 'Twilio credentials missing!'})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 500
 
     df = load_data()
     successful_calls = 0
@@ -239,19 +262,41 @@ def trigger_calls():
             time.sleep(2)
     if failed_calls > 0:
         save_missed_calls(missed_rows)
-    return jsonify({
+    
+    # Add CORS headers to response
+    response = jsonify({
         'status': 'completed',
         'successful_calls': successful_calls,
         'failed_calls': failed_calls,
         'missed': missed_rows,
         'errors': error_details
     })
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
-@app.route('/api/results', methods=['GET'])
+@app.route('/api/results', methods=['GET', 'OPTIONS'])
 def get_results():
     """Fetch the latest call results."""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = Response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
     df = load_data(OUTPUT_CSV)
-    return df.to_json(orient='records'), 200, {'Content-Type': 'application/json'}
+    response = Response(df.to_json(orient='records'), mimetype='application/json')
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
+# Global CORS handler
+@app.after_request
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Access-Control-Allow-Credentials'
+    return response
 
 if __name__ == '__main__':
     # Only for development/testing. For production, use a WSGI server (e.g., gunicorn)
