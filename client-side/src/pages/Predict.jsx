@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Footer } from './common/Footer';
-import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet } from 'lucide-react';
+import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Eye } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
 import StoreModal from '../components/StoreModal';
@@ -9,40 +9,40 @@ import StoreModal from '../components/StoreModal';
 const FloatingPredictElements = ({ scrollY }) => {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-      {/* Floating prediction elements with diverse colors */}
+      {/* Floating prediction elements with cyan/blue theme */}
       <div 
-        className="absolute top-16 left-8 w-10 h-10 bg-gradient-to-br from-emerald-400/25 to-teal-500/25 rounded-lg animate-float1 shadow-lg flex items-center justify-center"
+        className="absolute top-16 left-8 w-10 h-10 bg-gradient-to-br from-cyan-400/25 to-blue-500/25 rounded-lg animate-float1 shadow-lg flex items-center justify-center"
         style={{ transform: `translateY(${scrollY * -0.15}px)` }}
       >
-        <BarChart2 className="w-5 h-5 text-emerald-500/70" />
+        <BarChart2 className="w-5 h-5 text-cyan-500/70" />
       </div>
       
       <div 
-        className="absolute top-24 right-12 w-8 h-8 bg-gradient-to-br from-purple-400/25 to-violet-500/25 rounded-md animate-float2 shadow-lg flex items-center justify-center"
+        className="absolute top-24 right-12 w-8 h-8 bg-gradient-to-br from-blue-400/25 to-sky-500/25 rounded-md animate-float2 shadow-lg flex items-center justify-center"
         style={{ transform: `translateY(${scrollY * -0.2}px)` }}
       >
-        <TrendingUp className="w-4 h-4 text-purple-500/70" />
+        <TrendingUp className="w-4 h-4 text-blue-500/70" />
       </div>
       
       <div 
-        className="absolute top-1/3 left-12 w-12 h-12 bg-gradient-to-br from-orange-400/25 to-amber-500/25 rounded-xl animate-float3 shadow-lg flex items-center justify-center"
+        className="absolute top-1/3 left-12 w-12 h-12 bg-gradient-to-br from-cyan-400/25 to-blue-500/25 rounded-xl animate-float3 shadow-lg flex items-center justify-center"
         style={{ transform: `translateY(${scrollY * -0.1}px)` }}
       >
-        <Brain className="w-6 h-6 text-orange-500/70 animate-pulse" />
+        <Brain className="w-6 h-6 text-cyan-500/70 animate-pulse" />
       </div>
       
       <div 
-        className="absolute bottom-32 right-8 w-6 h-6 bg-gradient-to-br from-rose-400/25 to-pink-500/25 rounded-full animate-float1 shadow-lg flex items-center justify-center"
+        className="absolute bottom-32 right-8 w-6 h-6 bg-gradient-to-br from-sky-400/25 to-blue-500/25 rounded-full animate-float1 shadow-lg flex items-center justify-center"
         style={{ transform: `translateY(${scrollY * -0.25}px)` }}
       >
-        <Target className="w-3 h-3 text-rose-500/70" />
+        <Target className="w-3 h-3 text-sky-500/70" />
       </div>
       
       <div 
-        className="absolute bottom-16 left-1/4 w-14 h-14 bg-gradient-to-br from-indigo-500/25 to-blue-600/25 rounded-2xl animate-float2 shadow-lg flex items-center justify-center"
+        className="absolute bottom-16 left-1/4 w-14 h-14 bg-gradient-to-br from-blue-500/25 to-cyan-600/25 rounded-2xl animate-float2 shadow-lg flex items-center justify-center"
         style={{ transform: `translateY(${scrollY * -0.18}px)` }}
       >
-        <Package className="w-7 h-7 text-indigo-500/70 animate-bounce" />
+        <Package className="w-7 h-7 text-blue-500/70 animate-bounce" />
       </div>
     </div>
   );
@@ -71,6 +71,16 @@ function Predict() {
   const [csvBlob, setCsvBlob] = useState(null);
   const [scrollY, setScrollY] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(8);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [storeCurrentPage, setStoreCurrentPage] = useState(1);
+  const [storesPerPage] = useState(6);
+  const [showUploadSection, setShowUploadSection] = useState(true);
+  const [predictionHistory, setPredictionHistory] = useState([]);
+  const [activePredictionId, setActivePredictionId] = useState(null);
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
@@ -143,24 +153,45 @@ function Predict() {
       
       // Always get JSON data for preview
       const data = await response.json();
-      setPredictions(data);
       
-      // Also generate CSV blob for download
+      // Create CSV content
       let csvContent = "";
       if (data && data.length > 0) {
-        // Create CSV headers from first object keys
         const headers = Object.keys(data[0]);
         csvContent = headers.join(',') + '\n';
-        
-        // Add data rows
         data.forEach(row => {
           const values = headers.map(header => row[header] || '');
           csvContent += values.join(',') + '\n';
         });
-        
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        setCsvBlob(blob);
       }
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create prediction entry
+      const predictionId = Date.now().toString();
+      const predictionEntry = {
+        id: predictionId,
+        fileName: file.name,
+        uploadDate: new Date().toLocaleString(),
+        predictions: data,
+        csvBlob: blob,
+        recordCount: data.length
+      };
+      
+      // Add to history and set as active
+      setPredictionHistory(prev => [predictionEntry, ...prev]);
+      setActivePredictionId(predictionId);
+      setPredictions(data);
+      setCsvBlob(blob);
+      setShowUploadSection(false);
+      
+      // Reset form
+      setFile(null);
+      setCurrentPage(1);
+      setSearchTerm('');
+      setSortField('');
+      setStoreCurrentPage(1);
+      
     } catch (err) {
       setPredictions(null);
       setCsvBlob(null);
@@ -191,20 +222,84 @@ function Predict() {
     }, 500);
   };
 
+  const handleUploadMore = () => {
+    setShowUploadSection(true);
+  };
+
+  const handleSelectPrediction = (predictionEntry) => {
+    setActivePredictionId(predictionEntry.id);
+    setPredictions(predictionEntry.predictions);
+    setCsvBlob(predictionEntry.csvBlob);
+    setCurrentPage(1);
+    setSearchTerm('');
+    setSortField('');
+    setStoreCurrentPage(1);
+  };
+
   const groupedStores = predictions ? groupPredictionsByStoreAndProduct(predictions) : {};
+
+  // Enhanced data processing with search, sort, and pagination
+  const filteredAndSortedData = useMemo(() => {
+    if (!predictions) return [];
+    
+    let filtered = predictions.filter(item =>
+      Object.values(item).some(value =>
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+
+    if (sortField) {
+      filtered.sort((a, b) => {
+        const aVal = a[sortField];
+        const bVal = b[sortField];
+        
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [predictions, searchTerm, sortField, sortDirection]);
+
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field) => {
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 opacity-50" />;
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="w-4 h-4 text-cyan-600" /> : 
+      <ArrowDown className="w-4 h-4 text-cyan-600" />;
+  };
+
+  // Store cards pagination
+  const storeEntries = Object.entries(groupedStores);
+  const totalStorePages = Math.ceil(storeEntries.length / storesPerPage);
+  const storeStartIndex = (storeCurrentPage - 1) * storesPerPage;
+  const paginatedStores = storeEntries.slice(storeStartIndex, storeStartIndex + storesPerPage);
 
   return (
     <div className="min-h-screen theme-gradient-bg flex flex-col overflow-x-hidden transition-all duration-300">
-      {/* Enhanced Background */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_60%,rgba(16,185,129,0.08),rgba(255,255,255,0.9))]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.06),transparent)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(249,115,22,0.06),transparent)]"></div>
-        
-        {/* Animated background shapes */}
-        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-emerald-400/8 to-teal-500/8 rounded-full animate-morph-slow"></div>
-        <div className="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gradient-to-br from-purple-400/8 to-violet-500/8 rounded-full animate-morph-medium"></div>
-      </div>
+        {/* Enhanced Background */}
+        <div className="fixed inset-0 pointer-events-none -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_60%,rgba(6,182,212,0.08),rgba(255,255,255,0.9))]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.06),transparent)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(14,165,233,0.06),transparent)]"></div>
+          
+          {/* Animated background shapes */}
+          <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-cyan-400/8 to-blue-500/8 rounded-full animate-morph-slow"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gradient-to-br from-blue-400/8 to-sky-500/8 rounded-full animate-morph-medium"></div>
+        </div>
       
       <FloatingPredictElements scrollY={scrollY} />
       
@@ -233,7 +328,7 @@ function Predict() {
             <div className="mt-8 animate-slideInUp animation-delay-400">
               <button
                 onClick={handleDownloadCSV}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10 flex items-center gap-3">
@@ -247,217 +342,416 @@ function Predict() {
         </div>
 
         {/* Store Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
-          {Object.entries(groupedStores).map(([storeId, products]) => (
-            <div key={storeId} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center">
-              <div className="text-lg font-bold mb-2">{/** Replace with actual shop owner name from context if available */}Shop Owner</div>
-              <button
-                className="flex flex-col items-center group focus:outline-none"
-                onClick={() => setSelectedStore({ storeId, products })}
-              >
-                <div className="rounded-full bg-blue-100 p-4 mb-2 group-hover:bg-blue-200 transition">
-                  <Store className="w-8 h-8 text-blue-600 group-hover:scale-110 transition-transform" />
+        {storeEntries.length > 0 && (
+          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-300 mb-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                  <Store className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-blue-700 font-semibold group-hover:underline">
-                  Store ID: {storeId}
-                </span>
-                <span className="text-xs text-gray-400 group-hover:text-blue-500">View Predictions</span>
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Enhanced Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Enhanced Upload Section */}
-          <div 
-            className="group bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl relative overflow-hidden animate-slideInUp animation-delay-400"
-            style={{ transform: `translateY(${scrollY * -0.05}px)` }}
-          >
-            {/* Animated background in card */}
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center animate-bounce">
-                  <UploadCloud className="w-5 h-5 text-white" />
+                <div>
+                  <h3 className="text-2xl font-bold text-sky-700">Store Overview</h3>
+                  <p className="text-sm text-sky-600">{storeEntries.length} stores with predictions</p>
                 </div>
-                <h2 className="text-xl font-bold text-sky-700">Data Upload</h2>
               </div>
               
-              <div className="relative text-center p-8 border-2 border-dashed border-cyan-300/60 rounded-xl bg-gradient-to-br from-cyan-50/50 to-blue-50/50 hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 cursor-pointer group-hover:border-cyan-400/80">
-                <input
-                  type="file"
-                  accept=".csv,.xlsx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <UploadCloud className="relative h-12 w-12 mx-auto text-cyan-500 mb-4 animate-float1" />
-                  </div>
-                  <p className="text-sky-800 font-medium mb-2">
-                    {file ? (
-                      <span className="flex items-center justify-center space-x-2">
-                        <Package className="w-4 h-4 animate-bounce" />
-                        <span>{file.name}</span>
-                      </span>
-                    ) : (
-                      "Upload your inventory data"
-                    )}
-                  </p>
-                  <p className="text-sm text-sky-600">
-                    Drop your CSV or Excel file here or click to browse
-                  </p>
-                </label>
-              </div>
-
-              <button
-                onClick={handlePredict}
-                disabled={!file || loading}
-                className={`group relative w-full py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 overflow-hidden
-                  ${!file || loading 
-                    ? 'bg-gray-200 cursor-not-allowed text-gray-400' 
-                    : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white shadow-xl hover:shadow-2xl'
-                  }`}
-              >
-                {!file && !loading && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                )}
-                <div className="relative z-10 flex items-center gap-3">
-                  {loading ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 animate-spin" />
-                      <span>Processing Data...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="h-5 w-5 animate-pulse" />
-                      <span>Generate AI Predictions</span>
-                      <BarChart2 className="h-5 w-5 group-hover:animate-bounce" />
-                    </>
-                  )}
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column - Enhanced Results Section */}
-          <div 
-            className="group bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-200/50 p-8 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl relative overflow-hidden animate-slideInUp animation-delay-600"
-            style={{ transform: `translateY(${scrollY * -0.05}px)` }}
-          >
-            {/* Animated background in card */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-sky-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-lg flex items-center justify-center animate-pulse">
-                  <BarChart2 className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-bold text-sky-700">Prediction Results</h2>
-                {predictions && (
-                  <div className="ml-auto flex items-center gap-2">
-                    <div className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                      READY
-                    </div>
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Results Display */}
-              {predictions ? (
-                <div className="space-y-6">
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-4 rounded-xl border border-cyan-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Package className="w-4 h-4 text-cyan-600" />
-                        <span className="text-sm font-medium text-cyan-700">Total Records</span>
-                      </div>
-                      <div className="text-2xl font-bold text-cyan-800">{predictions.length}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-medium text-emerald-700">CSV Available</span>
-                      </div>
-                      <div className="text-lg font-bold text-emerald-800">Download Ready</div>
-                    </div>
-                  </div>
-
-                  {/* Data Table */}
-                  <div className="bg-white rounded-xl border border-sky-200 overflow-hidden">
-                    <div className="bg-gradient-to-r from-cyan-100 to-blue-100 px-4 py-3 border-b border-sky-200">
-                      <h3 className="font-semibold text-sky-800 flex items-center gap-2">
-                        <DatabaseIcon className="w-4 h-4" />
-                        Prediction Data Preview
-                      </h3>
-                    </div>
-                    <div className="overflow-x-auto max-h-96">
-                      <table className="w-full">
-                        <thead className="sticky top-0 bg-gray-50">
-                          <tr>
-                            {predictions.length > 0 && Object.keys(predictions[0]).map((key, idx) => (
-                              <th key={idx} className="py-3 px-4 text-left text-sky-800 font-semibold border-b whitespace-nowrap">
-                                {key.replace(/_/g, ' ').toUpperCase()}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {predictions.slice(0, 10).map((row, idx) => (
-                            <tr key={idx} className="border-b border-sky-100 hover:bg-cyan-50/30 transition-colors duration-200">
-                              {Object.values(row).map((value, valueIdx) => (
-                                <td key={valueIdx} className="py-3 px-4 text-sm whitespace-nowrap">
-                                  {value}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {predictions.length > 10 && (
-                      <div className="bg-gray-50 px-4 py-3 text-sm text-gray-600 border-t">
-                        Showing 10 of {predictions.length} records. Download CSV for complete dataset.
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Download Button */}
-                  <div className="flex justify-center">
-                    <button
-                      onClick={handleDownloadCSV}
-                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative z-10 flex items-center gap-3">
-                        <Download className="w-5 h-5 animate-bounce" />
-                        <span>Download Complete Dataset (CSV)</span>
-                        <FileSpreadsheet className="w-5 h-5" />
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* No Data State */
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 animate-slideInUp animation-delay-800">
-                  <div className="relative mb-6">
-                    <div className="absolute -inset-4 bg-gradient-to-r from-blue-400/20 to-sky-500/20 rounded-full blur-xl opacity-50"></div>
-                    <DatabaseIcon className="relative h-16 w-16 text-blue-300 animate-float1" />
-                  </div>
-                  <h3 className="text-xl font-bold text-sky-700 mb-3">Ready for Analysis</h3>
-                  <p className="text-sky-600 leading-relaxed">
-                    Upload your inventory data and generate predictions to see intelligent insights and recommendations here
-                  </p>
+              {totalStorePages > 1 && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Eye className="w-4 h-4" />
+                  <span>Page {storeCurrentPage} of {totalStorePages}</span>
                 </div>
               )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {paginatedStores.map(([storeId, products]) => (
+                <div key={storeId} className="bg-gradient-to-br from-white to-cyan-50/30 rounded-xl shadow-lg p-8 flex flex-col items-center border border-cyan-100 hover:shadow-xl hover:scale-105 transition-all duration-300">
+                  <div className="text-lg font-bold mb-4 text-sky-700">Shop Owner</div>
+                  <button
+                    className="flex flex-col items-center group focus:outline-none"
+                    onClick={() => setSelectedStore({ storeId, products })}
+                  >
+                    <div className="rounded-full bg-cyan-100 p-6 mb-4 group-hover:bg-cyan-200 transition-colors duration-200">
+                      <Store className="w-10 h-10 text-cyan-600 group-hover:scale-110 transition-transform duration-200" />
+                    </div>
+                    <span className="text-cyan-700 font-semibold group-hover:underline text-center">
+                      Store ID: {storeId}
+                    </span>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Package className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-500">{Object.keys(products).length} products</span>
+                    </div>
+                    <span className="text-sm text-cyan-500 group-hover:text-cyan-700 mt-2 transition-colors duration-200">
+                      View Predictions →
+                    </span>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Store Cards Pagination */}
+            {totalStorePages > 1 && (
+              <div className="flex items-center justify-center mt-8 space-x-3">
+                <button
+                  onClick={() => setStoreCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={storeCurrentPage === 1}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+                
+                <div className="flex items-center space-x-2">
+                  {[...Array(Math.min(totalStorePages, 5))].map((_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setStoreCurrentPage(pageNum)}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                          storeCurrentPage === pageNum
+                            ? 'bg-cyan-500 text-white'
+                            : 'text-cyan-600 hover:bg-cyan-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  {totalStorePages > 5 && (
+                    <>
+                      <span className="px-2 text-gray-400">...</span>
+                      <button
+                        onClick={() => setStoreCurrentPage(totalStorePages)}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                          storeCurrentPage === totalStorePages
+                            ? 'bg-cyan-500 text-white'
+                            : 'text-cyan-600 hover:bg-cyan-100'
+                        }`}
+                      >
+                        {totalStorePages}
+                      </button>
+                    </>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => setStoreCurrentPage(prev => Math.min(prev + 1, totalStorePages))}
+                  disabled={storeCurrentPage === totalStorePages}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Enhanced Main Content - Single Column Layout */}
+        <div className="space-y-6">
+          {/* Upload Section or Upload More Section */}
+          {showUploadSection ? (
+            <div 
+              className="group bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 transform transition-all duration-500 hover:shadow-2xl relative overflow-hidden animate-slideInUp animation-delay-400"
+              style={{ transform: `translateY(${scrollY * -0.02}px)` }}
+            >
+              {/* Animated background in card */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center space-x-3 mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center animate-pulse">
+                    <UploadCloud className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-sky-700">Data Upload & Analysis</h2>
+                    <p className="text-sm text-sky-600">Upload your inventory data to get AI-powered predictions</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* File Upload Area - Full Width */}
+                  <div className="relative text-center p-8 border-2 border-dashed border-cyan-300/60 rounded-xl bg-gradient-to-br from-cyan-50/50 to-blue-50/50 hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 cursor-pointer group-hover:border-cyan-400/80">
+                    <input
+                      type="file"
+                      accept=".csv,.xlsx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <UploadCloud className="relative h-12 w-12 mx-auto text-cyan-500 mb-4 animate-float1" />
+                      </div>
+                      <p className="text-sky-800 font-medium mb-2">
+                        {file ? (
+                          <span className="flex items-center justify-center space-x-2">
+                            <Package className="w-5 h-5 animate-bounce text-cyan-600" />
+                            <span className="text-cyan-700">{file.name}</span>
+                          </span>
+                        ) : (
+                          "Upload your inventory data"
+                        )}
+                      </p>
+                      <p className="text-sm text-sky-600">
+                        Drag & drop your CSV or Excel file here or click to browse
+                      </p>
+                    </label>
+                  </div>
+
+                  {/* Generate Predictions Button - Always Below Upload */}
+                  <button
+                    onClick={handlePredict}
+                    disabled={!file || loading}
+                    className={`group relative w-full py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 overflow-hidden
+                      ${!file || loading 
+                        ? 'bg-gray-200 cursor-not-allowed text-gray-400' 
+                        : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white shadow-xl hover:shadow-2xl'
+                      }`}
+                  >
+                    <div className="relative z-10 flex items-center gap-3">
+                      {loading ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="h-5 w-5 animate-pulse" />
+                          <span>Generate Predictions</span>
+                          <BarChart2 className="h-5 w-5 group-hover:animate-bounce" />
+                        </>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Upload More Section */
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-400">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
+                    <UploadCloud className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-sky-700">Analysis Complete</h3>
+                    <p className="text-sm text-sky-600">Upload more data or manage your prediction history</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleDownloadCSV}
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download CSV</span>
+                  </button>
+                  <button
+                    onClick={handleUploadMore}
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Upload More</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Prediction History */}
+              {predictionHistory.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-cyan-200">
+                  <h4 className="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Prediction History
+                  </h4>
+                  <div className="grid gap-3">
+                    {predictionHistory.map((entry) => (
+                      <button
+                        key={entry.id}
+                        onClick={() => handleSelectPrediction(entry)}
+                        className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+                          activePredictionId === entry.id
+                            ? 'bg-cyan-50 border-cyan-300 shadow-md'
+                            : 'bg-gray-50 border-gray-200 hover:bg-cyan-50 hover:border-cyan-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              activePredictionId === entry.id ? 'bg-cyan-500' : 'bg-gray-400'
+                            }`}></div>
+                            <div>
+                              <div className="font-medium text-gray-900">{entry.fileName}</div>
+                              <div className="text-sm text-gray-500">{entry.uploadDate}</div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-cyan-600 font-medium">
+                            {entry.recordCount} predictions
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Data Display Section */}
+          {predictions && predictions.length > 0 && (
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 overflow-hidden animate-slideInUp animation-delay-600">
+              {/* Header with Stats and Controls */}
+              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 px-8 py-6 border-b border-cyan-200">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                      <DatabaseIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-sky-700">Prediction Results</h3>
+                      <div className="flex items-center gap-4 mt-1">
+                        <p className="text-sm text-sky-600">
+                          {filteredAndSortedData.length} of {predictions.length} records 
+                          {searchTerm && ` matching "${searchTerm}"`}
+                        </p>
+                        {predictions && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-cyan-100 rounded-full">
+                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-medium text-cyan-700">{predictions.length} predictions ready</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Search and Filter Controls */}
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search predictions..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(1); // Reset to first page when searching
+                        }}
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Filter className="w-4 h-4" />
+                      <span>Page {currentPage} of {totalPages}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      {predictions.length > 0 && Object.keys(predictions[0]).map((key, idx) => (
+                        <th key={idx} className="px-6 py-4 text-left">
+                          <button
+                            onClick={() => handleSort(key)}
+                            className="flex items-center space-x-2 font-semibold text-gray-700 hover:text-cyan-600 transition-colors duration-200"
+                          >
+                            <span>{key.replace(/_/g, ' ').toUpperCase()}</span>
+                            {getSortIcon(key)}
+                          </button>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-cyan-50/50 transition-colors duration-200">
+                        {Object.entries(row).map(([key, value], valueIdx) => (
+                          <td key={valueIdx} className="px-6 py-4 text-sm">
+                            <div className={`
+                              ${key.includes('stock') || key.includes('predicted') ? 'font-semibold text-cyan-600' : 'text-gray-900'}
+                              ${key.includes('date') ? 'text-blue-600' : ''}
+                              ${key.includes('id') ? 'font-mono text-gray-600' : ''}
+                            `}>
+                              {value}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredAndSortedData.length)} of {filteredAndSortedData.length} results
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {[...Array(Math.min(totalPages, 5))].map((_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                              currentPage === pageNum
+                                ? 'bg-cyan-500 text-white'
+                                : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      {totalPages > 5 && (
+                        <>
+                          <span className="px-2 text-gray-400">...</span>
+                          <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                              currentPage === totalPages
+                                ? 'bg-cyan-500 text-white'
+                                : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            {totalPages}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
