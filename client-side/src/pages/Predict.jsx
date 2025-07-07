@@ -54,9 +54,8 @@ function Predict() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [predictions, setPredictions] = useState(null);
+  const [csvBlob, setCsvBlob] = useState(null);
   const [scrollY, setScrollY] = useState(0);
-  const [selectedStore, setSelectedStore] = useState(null);
-  const [showStores, setShowStores] = useState(false);
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
@@ -95,51 +94,86 @@ function Predict() {
     showLoading("Analyzing data with AI...");
     const formData = new FormData();
     formData.append('file', file);
+    
     try {
-      const response = await fetch('https://predelix.onrender.com/api/predict', {
+      const url = 'https://predelix.onrender.com/api/predict';
+      
+      const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
-      if (!response.ok) throw new Error('Prediction failed');
+      
+      if (!response.ok) {
+        // First get the content type to decide how to parse
+        const contentType = response.headers.get('content-type');
+        let errorText;
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorText = errorData.error || errorData.message || `HTTP ${response.status}`;
+          } catch {
+            errorText = `HTTP ${response.status}`;
+          }
+        } else {
+          try {
+            errorText = await response.text() || `HTTP ${response.status}`;
+          } catch {
+            errorText = `HTTP ${response.status}`;
+          }
+        }
+        
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+      
+      // Always get JSON data for preview
       const data = await response.json();
       setPredictions(data);
+      
+      // Also generate CSV blob for download
+      let csvContent = "";
+      if (data && data.length > 0) {
+        // Create CSV headers from first object keys
+        const headers = Object.keys(data[0]);
+        csvContent = headers.join(',') + '\n';
+        
+        // Add data rows
+        data.forEach(row => {
+          const values = headers.map(header => row[header] || '');
+          csvContent += values.join(',') + '\n';
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        setCsvBlob(blob);
+      }
     } catch (err) {
       setPredictions(null);
-      alert('Prediction failed. Please check your file and try again.');
+      setCsvBlob(null);
+      alert(`Prediction failed: ${err.message}`);
+      console.error('Prediction error:', err);
     }
+    
     setLoading(false);
     hideLoading();
   };
 
   const handleDownloadCSV = () => {
-    if (!predictions) return;
+    if (!csvBlob) return;
     
-    showLoading("Generating CSV file...");
+    showLoading("Preparing CSV download...");
     
-    // Simulate CSV generation time for better UX
     setTimeout(() => {
-      // Create CSV content
-      let csvContent = "Store,Item,Date,Predicted Stock\n";
-      
-      predictions.stores.forEach(store => {
-        store.items.forEach(item => {
-          csvContent += `${store.name},${item.name},${item.date},${item.predictedStock}\n`;
-        });
-      });
-      
-      // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const downloadUrl = window.URL.createObjectURL(csvBlob);
       const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'stock_predictions.csv');
-      link.style.visibility = 'hidden';
+      link.href = downloadUrl;
+      link.download = 'stock_predictions.csv';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
       
       hideLoading();
-    }, 800);
+    }, 500);
   };
 
   return (
@@ -178,7 +212,7 @@ function Predict() {
           </p>
           
           {/* Download CSV Button */}
-          {predictions && (
+          {predictions && csvBlob && (
             <div className="mt-8 animate-slideInUp animation-delay-400">
               <button
                 onClick={handleDownloadCSV}
@@ -286,32 +320,93 @@ function Predict() {
                   <BarChart2 className="w-5 h-5 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-sky-700">Prediction Results</h2>
+                {predictions && (
+                  <div className="ml-auto flex items-center gap-2">
+                    <div className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      READY
+                    </div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                )}
               </div>
               
-              {Array.isArray(predictions) ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border border-sky-200 rounded-xl">
-                    <thead>
-                      <tr className="bg-gradient-to-r from-cyan-100 to-blue-100">
-                        <th className="py-2 px-4 text-sky-800 font-semibold">Store ID</th>
-                        <th className="py-2 px-4 text-sky-800 font-semibold">Product ID</th>
-                        <th className="py-2 px-4 text-sky-800 font-semibold">Date</th>
-                        <th className="py-2 px-4 text-sky-800 font-semibold">Predicted Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {predictions.map((row, idx) => (
-                        <tr key={idx} className="border-b border-sky-100 hover:bg-cyan-50/30 transition-colors duration-200">
-                          <td className="py-2 px-4">{row.store_id}</td>
-                          <td className="py-2 px-4">{row.product_id}</td>
-                          <td className="py-2 px-4">{row.date}</td>
-                          <td className="py-2 px-4">{row.predicted_stock}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Results Display */}
+              {predictions ? (
+                <div className="space-y-6">
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-4 rounded-xl border border-cyan-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Package className="w-4 h-4 text-cyan-600" />
+                        <span className="text-sm font-medium text-cyan-700">Total Records</span>
+                      </div>
+                      <div className="text-2xl font-bold text-cyan-800">{predictions.length}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-medium text-emerald-700">CSV Available</span>
+                      </div>
+                      <div className="text-lg font-bold text-emerald-800">Download Ready</div>
+                    </div>
+                  </div>
+
+                  {/* Data Table */}
+                  <div className="bg-white rounded-xl border border-sky-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-cyan-100 to-blue-100 px-4 py-3 border-b border-sky-200">
+                      <h3 className="font-semibold text-sky-800 flex items-center gap-2">
+                        <DatabaseIcon className="w-4 h-4" />
+                        Prediction Data Preview
+                      </h3>
+                    </div>
+                    <div className="overflow-x-auto max-h-96">
+                      <table className="w-full">
+                        <thead className="sticky top-0 bg-gray-50">
+                          <tr>
+                            {predictions.length > 0 && Object.keys(predictions[0]).map((key, idx) => (
+                              <th key={idx} className="py-3 px-4 text-left text-sky-800 font-semibold border-b whitespace-nowrap">
+                                {key.replace(/_/g, ' ').toUpperCase()}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {predictions.slice(0, 10).map((row, idx) => (
+                            <tr key={idx} className="border-b border-sky-100 hover:bg-cyan-50/30 transition-colors duration-200">
+                              {Object.values(row).map((value, valueIdx) => (
+                                <td key={valueIdx} className="py-3 px-4 text-sm whitespace-nowrap">
+                                  {value}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {predictions.length > 10 && (
+                      <div className="bg-gray-50 px-4 py-3 text-sm text-gray-600 border-t">
+                        Showing 10 of {predictions.length} records. Download CSV for complete dataset.
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Download Button */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleDownloadCSV}
+                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative z-10 flex items-center gap-3">
+                        <Download className="w-5 h-5 animate-bounce" />
+                        <span>Download Complete Dataset (CSV)</span>
+                        <FileSpreadsheet className="w-5 h-5" />
+                      </div>
+                    </button>
+                  </div>
                 </div>
               ) : (
+                /* No Data State */
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 animate-slideInUp animation-delay-800">
                   <div className="relative mb-6">
                     <div className="absolute -inset-4 bg-gradient-to-r from-blue-400/20 to-sky-500/20 rounded-full blur-xl opacity-50"></div>
