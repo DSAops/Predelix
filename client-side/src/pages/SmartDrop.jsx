@@ -81,6 +81,9 @@ function SmartDrop() {
   const [loadingResponses, setLoadingResponses] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [itemsPerPage] = useState(8);
+  const [timer, setTimer] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const [waitingForResults, setWaitingForResults] = useState(false);
   
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
@@ -117,6 +120,33 @@ function SmartDrop() {
       }
     }
   }, []); // Empty dependency array - only run on mount
+
+  // Timer effect for waiting for call results
+  useEffect(() => {
+    let interval;
+    if (timerActive && timer > 0) {
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            setTimerActive(false);
+            setWaitingForResults(false);
+            // Auto-fetch results when timer completes
+            handleFetchResults();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timer]);
+
+  // Format timer display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Handlers
   const handleFileChange = (e) => {
@@ -225,7 +255,9 @@ function SmartDrop() {
     setCallDone(false);
     setResponses(null);
     setShowResponses(false);
-    setLoadingResponses(true);
+    setLoadingResponses(false);
+    setWaitingForResults(false);
+    setTimerActive(false);
     showLoading("Initiating customer calls...");
     
     try {
@@ -235,35 +267,22 @@ function SmartDrop() {
         body: JSON.stringify({ webhook_base_url: window.location.origin }),
       });
       if (!res.ok) throw new Error('Call trigger failed');
-      setCallDone(true);
       
-      // Auto-fetch responses after calls are completed
-      setTimeout(async () => {
-        try {
-          const responseRes = await fetch(`${API_BASE}/results`);
-          if (responseRes.ok) {
-            const data = await responseRes.json();
-            setResponses(data.length > 0 ? data : []);
-            setShowResponses(true);
-          }
-        } catch (err) {
-          setResponseError('Failed to fetch responses automatically.');
-        } finally {
-          setLoadingResponses(false);
-          hideLoading();
-        }
-      }, 2000); // Small delay to ensure calls are processed
+      setCallDone(true);
+      setWaitingForResults(true);
+      setTimer(180); // 3 minutes = 180 seconds
+      setTimerActive(true);
+      hideLoading();
       
     } catch (err) {
       setCallError('Failed to trigger calls. Please try again.');
-      setLoadingResponses(false);
       hideLoading();
     } finally {
       setCalling(false);
     }
   };
 
-  const handleViewResponses = async () => {
+  const handleFetchResults = async () => {
     setLoadingResponses(true);
     setResponseError(null);
     setResponses(null);
@@ -274,18 +293,25 @@ function SmartDrop() {
       const res = await fetch(`${API_BASE}/results`);
       if (!res.ok) throw new Error('Failed to fetch responses');
       const data = await res.json();
+      
       if (!data || data.length === 0) {
         setResponses([]);
+        setResponseError('No responses received yet. Calls may still be in progress or customers haven\'t responded.');
       } else {
         setResponses(data);
+        setShowResponses(true);
+        setWaitingForResults(false);
       }
-      setShowResponses(true);
     } catch (err) {
-      setResponseError('Failed to fetch responses. Please try again.');
+      setResponseError('Failed to fetch responses. Please try again later.');
     } finally {
       setLoadingResponses(false);
       hideLoading();
     }
+  };
+
+  const handleViewResponses = async () => {
+    handleFetchResults();
   };
 
   const handleSort = (field) => {
@@ -337,10 +363,6 @@ function SmartDrop() {
   }, [filteredAndSortedData, currentPage, itemsPerPage]);
 
   const { totalPages, startIndex, paginatedData } = paginationData;
-
-  const tableHeaders = useMemo(() => {
-    return responses && responses.length > 0 ? Object.keys(responses[0]) : [];
-  }, [responses]);
 
   const csvPreviewData = useMemo(() => {
     if (!csvData) return null;
@@ -671,12 +693,72 @@ function SmartDrop() {
               </div>
 
               {/* Call Status */}
-              {callDone && !loadingResponses && (
-                <div className="mt-6 text-center p-4 bg-cyan-50 border border-cyan-200 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 text-cyan-700">
-                    <CheckCircle className="w-5 h-5 animate-bounce" />
-                    <span className="text-sm font-medium">Calls completed successfully! Customer responses are being loaded below.</span>
+              {callDone && !loadingResponses && !showResponses && (
+                <div className="mt-6 space-y-4">
+                  <div className="text-center p-4 bg-cyan-50 border border-cyan-200 rounded-xl">
+                    <div className="flex items-center justify-center gap-2 text-cyan-700">
+                      <CheckCircle className="w-5 h-5 animate-bounce" />
+                      <span className="text-sm font-medium">
+                        Calls completed successfully! 
+                        {waitingForResults ? ' Waiting for customer responses...' : ' Ready to fetch responses.'}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Timer Display */}
+                  {waitingForResults && timerActive && (
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-3 mb-4">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                          <h4 className="text-lg font-semibold text-blue-700">Waiting for Customer Responses</h4>
+                          <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                        </div>
+                        <div className="text-4xl font-bold text-blue-600 mb-2 font-mono">
+                          {formatTime(timer)}
+                        </div>
+                        <p className="text-sm text-blue-600 mb-4">
+                          Results will automatically load when the timer completes
+                        </p>
+                        <div className="flex items-center justify-center gap-4">
+                          <button
+                            onClick={handleFetchResults}
+                            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Check Now
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTimerActive(false);
+                              setWaitingForResults(false);
+                              setTimer(0);
+                            }}
+                            className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
+                          >
+                            Cancel Timer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Manual Fetch Button (when timer is not active) */}
+                  {callDone && !waitingForResults && !timerActive && !loadingResponses && (
+                    <div className="text-center">
+                      <button
+                        onClick={handleFetchResults}
+                        className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-500 hover:from-blue-600 hover:via-sky-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative z-10 flex items-center gap-3">
+                          <Users className="w-5 h-5 animate-bounce" />
+                          <span>Fetch Customer Responses</span>
+                          <Eye className="w-5 h-5" />
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -691,8 +773,8 @@ function SmartDrop() {
             </div>
           )}
 
-          {/* Step 3: Customer Responses Section - Auto-shown after calls complete */}
-          {showResponses && (
+          {/* Step 3: Customer Responses Section - Show when results are available */}
+          {(showResponses || loadingResponses || responseError) && (
             <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-500">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-sky-400 to-cyan-500 rounded-xl flex items-center justify-center animate-pulse">
@@ -701,9 +783,10 @@ function SmartDrop() {
                 <div>
                   <h2 className="text-2xl font-bold text-sky-700">Customer Responses</h2>
                   <p className="text-sm text-sky-600">
-                    {responses && responses.length > 0 
+                    {loadingResponses ? 'Loading customer responses...' :
+                     responses && responses.length > 0 
                       ? `Responses collected from ${responses.length} customers`
-                      : 'No responses available yet'
+                      : responseError ? 'Error loading responses' : 'No responses available yet'
                     }
                   </p>
                 </div>
@@ -724,18 +807,38 @@ function SmartDrop() {
 
               {responseError && (
                 <div className="text-center p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 text-red-700">
-                    <AlertCircle className="w-5 h-5" />
-                    <span className="text-sm font-medium">{responseError}</span>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-red-700">
+                      <AlertCircle className="w-5 h-5" />
+                      <span className="text-sm font-medium">{responseError}</span>
+                    </div>
+                    <button
+                      onClick={handleFetchResults}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Try Again
+                    </button>
                   </div>
                 </div>
               )}
 
-              {!loadingResponses && responses && responses.length === 0 && (
+              {!loadingResponses && !responseError && responses && responses.length === 0 && (
                 <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 text-yellow-700">
-                    <AlertCircle className="w-5 h-5" />
-                    <span className="text-sm font-medium">No responses received yet. This may take a few moments after initiating calls.</span>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-yellow-700">
+                      <AlertCircle className="w-5 h-5" />
+                      <span className="text-sm font-medium">
+                        No responses received yet. Calls may still be in progress or customers haven't responded.
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleFetchResults}
+                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Refresh Results
+                    </button>
                   </div>
                 </div>
               )}
@@ -795,7 +898,9 @@ function SmartDrop() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      {tableHeaders.map((key, idx) => (
+                      {responses.length > 0 && Object.keys(responses[0])
+                        .filter(key => !['recording_sid', 'recording_duration', 'response'].includes(key.toLowerCase()))
+                        .map((key, idx) => (
                         <th key={idx} className="px-6 py-4 text-left">
                           <button
                             onClick={() => handleSort(key)}
@@ -811,12 +916,14 @@ function SmartDrop() {
                   <tbody className="divide-y divide-gray-200">
                     {paginatedData.map((row, idx) => (
                       <tr key={idx} className="hover:bg-cyan-50/50 transition-colors duration-200">
-                        {Object.entries(row).map(([key, value], valueIdx) => (
+                        {Object.entries(row)
+                          .filter(([key]) => !['recording_sid', 'recording_duration', 'response'].includes(key.toLowerCase()))
+                          .map(([key, value], valueIdx) => (
                           <td key={valueIdx} className="px-6 py-4 text-sm">
                             <div className={`
                               ${key.includes('phone') || key.includes('number') ? 'font-mono text-blue-600' : 'text-gray-900'}
                               ${key.includes('name') || key.includes('customer') ? 'font-semibold text-cyan-600' : ''}
-                              ${key.includes('status') || key.includes('response') ? 'font-medium' : ''}
+                              ${key.includes('status') || key.includes('transcription') ? 'font-medium' : ''}
                             `}>
                               {value}
                             </div>
