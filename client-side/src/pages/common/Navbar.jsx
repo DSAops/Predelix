@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Home as HomeIcon,
@@ -78,15 +78,32 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
   
   const { currentTheme, themes, changeTheme, themeColors } = useTheme();
 
-  // Theme options with icons
-  const themeOptions = [
+  // Memoized theme options with icons
+  const themeOptions = useMemo(() => [
     { id: 'light', name: 'Light', icon: Sun },
     { id: 'dark', name: 'Dark', icon: Moon },
     { id: 'ocean', name: 'Ocean', icon: Globe },
     { id: 'sunset', name: 'Sunset', icon: Sparkles },
     { id: 'forest', name: 'Forest', icon: Zap },
     { id: 'cosmic', name: 'Cosmic', icon: Sparkles },
-  ];
+  ], []);
+
+  // Memoized navigation items with authentication state
+  const memoizedNavItems = useMemo(() => {
+    return navItems.map(item => ({
+      ...item,
+      isAccessible: isLoggedIn || item.to === '/'
+    }));
+  }, [isLoggedIn]);
+
+  // Memoized navbar styles based on scroll state
+  const navbarStyles = useMemo(() => ({
+    base: "fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-out",
+    scrolled: isScrolled 
+      ? "bg-white/95 backdrop-blur-lg shadow-xl border-b border-cyan-200/50" 
+      : "bg-transparent",
+    transform: `translateY(${scrollY * -0.05}px)`
+  }), [isScrolled, scrollY]);
 
   useEffect(() => {
     // Update cookieName when user changes
@@ -311,7 +328,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       </div>
       
       {/* Custom navbar animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-3px) rotate(2deg); }

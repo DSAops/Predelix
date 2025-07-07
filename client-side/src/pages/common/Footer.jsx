@@ -1,45 +1,53 @@
+import React, { useMemo } from 'react';
 import { Github, Linkedin, Mail, ExternalLink, Truck, Package, Globe, Zap, Shield, BarChart2 } from 'lucide-react';
 
-const creators = [
-  {
-    name: 'Anuj Sahu',
-    role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/anuj-sahu-4059bb253/',
-  },
-  {
-    name: 'Saksham Gupta',
-    role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/saksham-gupta-87a1a427b/',
-  },
-  {
-    name: 'Devraj Patil',
-    role: 'Full Stack Developer',
-    linkedin: 'https://www.linkedin.com/in/devraj-patil-0944b22b5/',
-  },
-];
+const useFooterData = () => {
+  const creators = useMemo(() => [
+    {
+      name: 'Anuj Sahu',
+      role: 'Full Stack Developer',
+      linkedin: 'https://www.linkedin.com/in/anuj-sahu-4059bb253/',
+    },
+    {
+      name: 'Saksham Gupta',
+      role: 'Full Stack Developer',
+      linkedin: 'https://www.linkedin.com/in/saksham-gupta-87a1a427b/',
+    },
+    {
+      name: 'Devraj Patil',
+      role: 'Full Stack Developer',
+      linkedin: 'https://www.linkedin.com/in/devraj-patil-0944b22b5/',
+    },
+  ], []);
 
-const links = {
-  product: [
-    { name: 'Features', href: '#features' },
-    { name: 'Documentation', href: '/docs' },
-    { name: 'API Reference', href: '/api' },
-    { name: 'Pricing', href: '/pricing' },
-  ],
-  resources: [
-    { name: 'Demo', href: '/demo' },
-    { name: 'Case Studies', href: '/case-studies' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Knowledge Base', href: '/knowledge-base' },
-  ],
-  company: [
-    { name: 'About Us', href: '/about' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'Privacy Policy', href: '/privacy' },
-    { name: 'Terms of Service', href: '/terms' },
-  ],
+  const links = useMemo(() => ({
+    product: [
+      { name: 'Features', href: '#features' },
+      { name: 'Documentation', href: '/docs' },
+      { name: 'API Reference', href: '/api' },
+      { name: 'Pricing', href: '/pricing' },
+    ],
+    resources: [
+      { name: 'Demo', href: '/demo' },
+      { name: 'Case Studies', href: '/case-studies' },
+      { name: 'Blog', href: '/blog' },
+      { name: 'Help Center', href: '/help' },
+      { name: 'Knowledge Base', href: '/knowledge-base' },
+    ],
+    company: [
+      { name: 'About Us', href: '/about' },
+      { name: 'Contact', href: '/contact' },
+      { name: 'Privacy Policy', href: '/privacy' },
+      { name: 'Terms of Service', href: '/terms' },
+    ],
+  }), []);
+
+  return { creators, links };
 };
 
 export function Footer() {
+  const { creators, links } = useFooterData();
+  
   return (
     <footer className="bg-gradient-to-br from-white via-cyan-50/30 to-blue-50/30 border-t border-cyan-200/50 mt-auto w-full relative z-50 overflow-hidden">
       {/* Floating footer elements */}
@@ -172,7 +180,7 @@ export function Footer() {
       </div>
       
       {/* Custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-3px) rotate(2deg); }

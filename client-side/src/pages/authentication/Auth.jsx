@@ -7,7 +7,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from '../../../components/motion-primitives/dialog';
-import Login from './Login.jsx';
+import Login from './login.jsx';
 import Signup from './Signup.jsx';
 import React from 'react';
 import { Truck, Package, Globe, Zap, Shield, BarChart2 } from 'lucide-react';
@@ -102,7 +102,7 @@ export function Auth({ open, onOpenChange, onLogin, showTrigger = true }) {
         </DialogClose>
         
         {/* Custom animations */}
-        <style jsx>{`
+        <style>{`
           @keyframes float1 {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-3px) rotate(2deg); }

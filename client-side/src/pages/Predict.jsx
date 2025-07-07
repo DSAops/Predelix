@@ -4,6 +4,7 @@ import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe,
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
 import StoreModal from '../components/StoreModal';
+import { usePredictState } from '../hooks/usePredictState';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -65,22 +66,31 @@ function Predict() {
   // Navbar height (px)
   const NAVBAR_HEIGHT = 66; // px (matches py-[13px] + 40px content)
   
-  const [file, setFile] = useState(null);
+  // Use persisted state for user data
+  const {
+    file, setFile,
+    predictions, setPredictions,
+    csvBlob, setCsvBlob,
+    selectedStore, setSelectedStore,
+    currentPage, setCurrentPage,
+    searchTerm, setSearchTerm,
+    sortField, setSortField,
+    sortDirection, setSortDirection,
+    storeCurrentPage, setStoreCurrentPage,
+    showUploadSection, setShowUploadSection,
+    predictionHistory, setPredictionHistory,
+    activePredictionId, setActivePredictionId,
+    isPredictionDataStale,
+    isFileDataStale,
+    isReturningSession,
+    resetPredictState
+  } = usePredictState();
+  
+  // Non-persisted state (temporary UI state)
   const [loading, setLoading] = useState(false);
-  const [predictions, setPredictions] = useState(null);
-  const [csvBlob, setCsvBlob] = useState(null);
   const [scrollY, setScrollY] = useState(0);
-  const [selectedStore, setSelectedStore] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('');
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [storeCurrentPage, setStoreCurrentPage] = useState(1);
   const [storesPerPage] = useState(6);
-  const [showUploadSection, setShowUploadSection] = useState(true);
-  const [predictionHistory, setPredictionHistory] = useState([]);
-  const [activePredictionId, setActivePredictionId] = useState(null);
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
@@ -99,6 +109,21 @@ function Predict() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show restoration notification when component mounts with existing data
+  useEffect(() => {
+    if (isReturningSession && (file || predictions || selectedStore)) {
+      console.log('Predict page state restored from previous session');
+      
+      // Check if data is stale and notify user
+      if (isPredictionDataStale() && predictions) {
+        console.warn('Prediction data is stale (>30 minutes old). Consider refreshing.');
+      }
+      if (isFileDataStale() && file) {
+        console.warn('File data is stale (>30 minutes old). Consider re-uploading.');
+      }
+    }
+  }, []); // Empty dependency array - only run on mount
 
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0];
@@ -263,7 +288,9 @@ function Predict() {
     setStoreCurrentPage(1);
   };
 
-  const groupedStores = predictions ? groupPredictionsByStoreAndProduct(predictions) : {};
+  const groupedStores = useMemo(() => {
+    return predictions ? groupPredictionsByStoreAndProduct(predictions) : {};
+  }, [predictions]);
 
   // Enhanced data processing with search, sort, and pagination
   const filteredAndSortedData = useMemo(() => {
@@ -289,31 +316,51 @@ function Predict() {
     return filtered;
   }, [predictions, searchTerm, sortField, sortDirection]);
 
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
+    
+    return { totalPages, startIndex, paginatedData };
+  }, [filteredAndSortedData, currentPage, itemsPerPage]);
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (field) => {
-    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 opacity-50" />;
-    return sortDirection === 'asc' ? 
-      <ArrowUp className="w-4 h-4 text-cyan-600" /> : 
-      <ArrowDown className="w-4 h-4 text-cyan-600" />;
-  };
+  const { totalPages, startIndex, paginatedData } = paginationData;
 
   // Store cards pagination
-  const storeEntries = Object.entries(groupedStores);
-  const totalStorePages = Math.ceil(storeEntries.length / storesPerPage);
-  const storeStartIndex = (storeCurrentPage - 1) * storesPerPage;
-  const paginatedStores = storeEntries.slice(storeStartIndex, storeStartIndex + storesPerPage);
+  const storeData = useMemo(() => {
+    const storeEntries = Object.entries(groupedStores);
+    const totalStorePages = Math.ceil(storeEntries.length / storesPerPage);
+    const storeStartIndex = (storeCurrentPage - 1) * storesPerPage;
+    const paginatedStores = storeEntries.slice(storeStartIndex, storeStartIndex + storesPerPage);
+    
+    return { storeEntries, totalStorePages, paginatedStores };
+  }, [groupedStores, storeCurrentPage, storesPerPage]);
+
+  const { storeEntries, totalStorePages, paginatedStores } = storeData;
+
+  const handleSort = useMemo(() => {
+    return (field) => {
+      if (sortField === field) {
+        setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortDirection('asc');
+      }
+    };
+  }, [sortField]);
+
+  const getSortIcon = useMemo(() => {
+    return (field) => {
+      if (sortField !== field) return <ArrowUpDown className="w-4 h-4 opacity-50" />;
+      return sortDirection === 'asc' ? 
+        <ArrowUp className="w-4 h-4 text-cyan-600" /> : 
+        <ArrowDown className="w-4 h-4 text-cyan-600" />;
+    };
+  }, [sortField, sortDirection]);
+
+  const tableHeaders = useMemo(() => {
+    return predictions && predictions.length > 0 ? Object.keys(predictions[0]) : [];
+  }, [predictions]);
 
   return (
     <div className="min-h-screen theme-gradient-bg flex flex-col overflow-x-hidden transition-all duration-300">
@@ -478,6 +525,33 @@ function Predict() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Data Restoration Notification */}
+        {isReturningSession && (file || predictions || selectedStore) && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 animate-slideInUp">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <RefreshCw className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-green-800">Previous Session Restored</h4>
+                <p className="text-sm text-green-600">
+                  Your work has been automatically saved and restored from your last visit.
+                  {isPredictionDataStale() && predictions && (
+                    <span className="text-amber-600 ml-1">(Data is over 30 minutes old - consider refreshing)</span>
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetPredictState}
+                className="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-md transition-colors duration-200"
+              >
+                Start Fresh
+              </button>
+            </div>
           </div>
         )}
 
@@ -709,7 +783,7 @@ function Predict() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      {predictions.length > 0 && Object.keys(predictions[0]).map((key, idx) => (
+                      {tableHeaders.map((key, idx) => (
                         <th key={idx} className="px-6 py-4 text-left">
                           <button
                             type="button"
@@ -824,7 +898,7 @@ function Predict() {
       )}
       
       {/* Custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-8px) rotate(2deg); }
