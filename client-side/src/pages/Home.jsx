@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, Truck, Package, Globe, BarChart2, Zap, Shield } from 'lucide-react';
 import LogisticsStoryAnimation from '../../components/LogisticsStoryAnimation';
 
+// Animated logistics-themed                  {/* Video Element */}
+                  <video 
+                    className="w-full h-auto max-w-md lg:max-w-lg rounded-xl transform group-hover:scale-105 transition-transform duration-300"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    poster="/vite.svg"
+                  >
+                    <source src="/video.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+
 // Animated logistics-themed floating objects
 const FloatingLogisticsObjects = ({ scrollY }) => {
   return (
@@ -262,8 +276,20 @@ function HomePage() {
                     loop
                     playsInline
                     poster="/vite.svg"
+                    onError={(e) => {
+                      console.log('Video loading error:', e);
+                      // Fallback: try different video paths
+                      const video = e.target;
+                      if (video.src.includes('/video.mp4')) {
+                        video.src = './video.mp4';
+                      } else if (video.src.includes('./video.mp4')) {
+                        video.src = `${window.location.origin}/video.mp4`;
+                      }
+                    }}
                   >
-                    <source src="/src/assets/video.mp4" type="video/mp4" />
+                    <source src="/video.mp4" type="video/mp4" />
+                    <source src="./video.mp4" type="video/mp4" />
+                    <source src={`${window.location.origin}/video.mp4`} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                   
