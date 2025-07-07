@@ -85,6 +85,13 @@ def voice(row_index):
     """
     return Response(response, mimetype='text/xml')
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "message": "✅ App is working as expected!",
+        "note": "You are at home."
+    })
+
 @app.route('/recording/<int:row_index>', methods=['GET', 'POST'])
 def recording(row_index):
     df = load_data()

@@ -18,7 +18,7 @@ MODEL_PATH = 'stock_predictor_model.pkl'
 def home():
     return jsonify({
         "message": "✅ App is working as expected!",
-        "note": "You are at home. Please refer to /api/predict for predictions."
+        "note": "You are at home."
     })
 
 
