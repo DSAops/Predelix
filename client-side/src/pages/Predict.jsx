@@ -203,6 +203,33 @@ function Predict() {
     hideLoading();
   };
 
+  const handleUploadDemoData = async () => {
+    showLoading("Loading demo data...");
+    
+    try {
+      // Fetch the demo CSV file from the public folder
+      const response = await fetch('/sample_sales_data.csv');
+      if (!response.ok) {
+        throw new Error('Failed to load demo data');
+      }
+      
+      const csvText = await response.text();
+      
+      // Create a File object from the CSV text
+      const blob = new Blob([csvText], { type: 'text/csv' });
+      const demoFile = new File([blob], 'sample_sales_data.csv', { type: 'text/csv' });
+      
+      // Set the file as if it was uploaded normally
+      setFile(demoFile);
+      
+      hideLoading();
+    } catch (error) {
+      console.error('Error loading demo data:', error);
+      alert('Failed to load demo data. Please try again.');
+      hideLoading();
+    }
+  };
+
   const handleDownloadCSV = () => {
     if (!csvBlob) return;
     
@@ -327,6 +354,7 @@ function Predict() {
           {predictions && csvBlob && (
             <div className="mt-8 animate-slideInUp animation-delay-400">
               <button
+                type="button"
                 onClick={handleDownloadCSV}
                 className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
               >
@@ -368,6 +396,7 @@ function Predict() {
                 <div key={storeId} className="bg-gradient-to-br from-white to-cyan-50/30 rounded-xl shadow-lg p-8 flex flex-col items-center border border-cyan-100 hover:shadow-xl hover:scale-105 transition-all duration-300">
                   <div className="text-lg font-bold mb-4 text-sky-700">Shop Owner</div>
                   <button
+                    type="button"
                     className="flex flex-col items-center group focus:outline-none"
                     onClick={() => setSelectedStore({ storeId, products })}
                   >
@@ -393,6 +422,7 @@ function Predict() {
             {totalStorePages > 1 && (
               <div className="flex items-center justify-center mt-8 space-x-3">
                 <button
+                  type="button"
                   onClick={() => setStoreCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={storeCurrentPage === 1}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
@@ -406,6 +436,7 @@ function Predict() {
                     const pageNum = i + 1;
                     return (
                       <button
+                        type="button"
                         key={pageNum}
                         onClick={() => setStoreCurrentPage(pageNum)}
                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
@@ -422,6 +453,7 @@ function Predict() {
                     <>
                       <span className="px-2 text-gray-400">...</span>
                       <button
+                        type="button"
                         onClick={() => setStoreCurrentPage(totalStorePages)}
                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                           storeCurrentPage === totalStorePages
@@ -436,6 +468,7 @@ function Predict() {
                 </div>
                 
                 <button
+                  type="button"
                   onClick={() => setStoreCurrentPage(prev => Math.min(prev + 1, totalStorePages))}
                   disabled={storeCurrentPage === totalStorePages}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
@@ -460,14 +493,31 @@ function Predict() {
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               
               <div className="relative z-10">
-                <div className="flex items-center space-x-3 mb-8">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center animate-pulse">
-                    <UploadCloud className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center animate-pulse">
+                      <UploadCloud className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-sky-700">Data Upload & Analysis</h2>
+                      <p className="text-sm text-sky-600">Upload your inventory data to get AI-powered predictions</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-sky-700">Data Upload & Analysis</h2>
-                    <p className="text-sm text-sky-600">Upload your inventory data to get AI-powered predictions</p>
-                  </div>
+                  
+                  {/* Small Demo Data Button */}
+                  <button
+                    type="button"
+                    onClick={handleUploadDemoData}
+                    disabled={loading}
+                    className={`group relative px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 border
+                      ${loading 
+                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-400' 
+                        : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 hover:border-yellow-400 text-yellow-700 hover:text-yellow-800 shadow-md hover:shadow-lg'
+                      }`}
+                  >
+                    <DatabaseIcon className="h-4 w-4" />
+                    <span className="text-sm">Demo Data</span>
+                  </button>
                 </div>
                 
                 <div className="space-y-6">
@@ -503,6 +553,7 @@ function Predict() {
 
                   {/* Generate Predictions Button - Always Below Upload */}
                   <button
+                    type="button"
                     onClick={handlePredict}
                     disabled={!file || loading}
                     className={`group relative w-full py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 overflow-hidden
@@ -544,6 +595,7 @@ function Predict() {
                 </div>
                 <div className="flex items-center space-x-3">
                   <button
+                    type="button"
                     onClick={handleDownloadCSV}
                     className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
@@ -551,6 +603,7 @@ function Predict() {
                     <span>Download CSV</span>
                   </button>
                   <button
+                    type="button"
                     onClick={handleUploadMore}
                     className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
@@ -570,6 +623,7 @@ function Predict() {
                   <div className="grid gap-3">
                     {predictionHistory.map((entry) => (
                       <button
+                        type="button"
                         key={entry.id}
                         onClick={() => handleSelectPrediction(entry)}
                         className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
@@ -658,6 +712,7 @@ function Predict() {
                       {predictions.length > 0 && Object.keys(predictions[0]).map((key, idx) => (
                         <th key={idx} className="px-6 py-4 text-left">
                           <button
+                            type="button"
                             onClick={() => handleSort(key)}
                             className="flex items-center space-x-2 font-semibold text-gray-700 hover:text-cyan-600 transition-colors duration-200"
                           >
@@ -697,6 +752,7 @@ function Predict() {
                   
                   <div className="flex items-center space-x-2">
                     <button
+                      type="button"
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
                       className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
@@ -710,6 +766,7 @@ function Predict() {
                         const pageNum = i + 1;
                         return (
                           <button
+                            type="button"
                             key={pageNum}
                             onClick={() => setCurrentPage(pageNum)}
                             className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
@@ -726,6 +783,7 @@ function Predict() {
                         <>
                           <span className="px-2 text-gray-400">...</span>
                           <button
+                            type="button"
                             onClick={() => setCurrentPage(totalPages)}
                             className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                               currentPage === totalPages
@@ -740,6 +798,7 @@ function Predict() {
                     </div>
                     
                     <button
+                      type="button"
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
                       className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
