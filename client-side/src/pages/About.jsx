@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Footer } from './common/Footer';
 import { Truck, Package, Globe, BarChart2, Zap, Shield, Users, Target, Award } from 'lucide-react';
 
@@ -62,6 +62,39 @@ function About() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Memoized content data
+  const aboutContent = useMemo(() => ({
+    title: "About Predelix",
+    description: "Predelix is revolutionizing logistics with cutting-edge AI technology. Our mission is to optimize supply chain operations, reduce costs, and enhance delivery efficiency for businesses worldwide.",
+    features: [
+      {
+        icon: Target,
+        title: "Our Mission",
+        description: "To transform global logistics through intelligent automation and predictive analytics."
+      },
+      {
+        icon: Users,
+        title: "Our Team",
+        description: "Expert engineers and logistics professionals working together to build the future of delivery."
+      },
+      {
+        icon: Award,
+        title: "Our Vision",
+        description: "A world where every package reaches its destination efficiently, sustainably, and on time."
+      }
+    ]
+  }), []);
+
+  // Memoized background styles
+  const backgroundStyles = useMemo(() => ({
+    main: "bg-gradient-to-br from-blue-50 via-cyan-50 to-white",
+    radialGlow: "radial-gradient(circle at 50% 40%, rgba(56,189,248,0.12) 0%, rgba(255,255,255,1) 70%)",
+    morphElements: [
+      "absolute top-1/4 left-1/3 w-48 h-48 bg-gradient-to-br from-cyan-400/8 to-blue-500/8 rounded-full animate-morph-slow",
+      "absolute bottom-1/4 right-1/3 w-32 h-32 bg-gradient-to-br from-blue-400/8 to-sky-500/8 rounded-full animate-morph-medium"
+    ]
+  }), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-white flex flex-col overflow-x-hidden">
@@ -170,7 +203,7 @@ function About() {
       </div>
       
       {/* Custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-10px) rotate(3deg); }

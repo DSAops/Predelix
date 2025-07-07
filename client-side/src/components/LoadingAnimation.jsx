@@ -77,7 +77,7 @@ const LoadingAnimation = ({ message = "Loading..." }) => {
       </div>
 
       {/* Custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes spin-slow {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }

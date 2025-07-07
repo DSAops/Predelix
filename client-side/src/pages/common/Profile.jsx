@@ -127,6 +127,49 @@ function Profile({ onClose }) {
                 </div>
               </div>
 
+              {/* Data Management */}
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c0-1.1.9-2 2-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2z" />
+                  </svg>
+                  Saved Data Management
+                </h3>
+                <p className="text-xs text-orange-700 mb-3">
+                  Your work is automatically saved. Clear saved data if you want to start fresh.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('predict-page-state');
+                      alert('Predict page data cleared successfully!');
+                    }}
+                    className="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-700 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Clear Predict Data
+                  </button>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('smartdrop-page-state');
+                      alert('SmartDrop page data cleared successfully!');
+                    }}
+                    className="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-700 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Clear SmartDrop Data
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('predict-page-state');
+                    localStorage.removeItem('smartdrop-page-state');
+                    alert('All saved data cleared successfully!');
+                  }}
+                  className="w-full mt-2 bg-red-100 hover:bg-red-200 text-red-700 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Clear All Saved Data
+                </button>
+              </div>
+
               {/* Actions */}
               <div className="flex gap-3">
                 <button

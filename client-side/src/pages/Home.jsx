@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Truck, Package, Globe, BarChart2, Zap, Shield } from 'lucide-react';
 import LogisticsStoryAnimation from '../../components/LogisticsStoryAnimation';
 
@@ -164,10 +164,56 @@ function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Animated stats
+  // Animated stats - call hooks at top level
   const accuracy = useCountUp(99, 2000);
   const revenue = useCountUp(32, 2500);
   const efficiency = useCountUp(85, 3000);
+
+  // Memoized stats data object
+  const statsData = useMemo(() => ({
+    accuracy,
+    revenue,
+    efficiency
+  }), [accuracy, revenue, efficiency]);
+
+  // Memoized feature cards data
+  const featureCards = useMemo(() => [
+    {
+      icon: Truck,
+      title: "Smart Fleet Management",
+      description: "Real-time tracking with predictive maintenance, route optimization, and autonomous dispatch systems for maximum efficiency.",
+      gradient: "from-cyan-50 to-blue-50",
+      iconColor: "text-cyan-500",
+      borderColor: "border-cyan-100",
+      animation: "animate-bounce"
+    },
+    {
+      icon: Package,
+      title: "Intelligent Inventory",
+      description: "AI-powered stock prediction with automated reordering, demand forecasting, and supply chain risk assessment.",
+      gradient: "from-blue-50 to-sky-50",
+      iconColor: "text-blue-500",
+      borderColor: "border-blue-100",
+      animation: "animate-pulse"
+    },
+    {
+      icon: BarChart2,
+      title: "Predictive Analytics",
+      description: "Advanced machine learning algorithms analyze patterns, predict demands, and optimize operations for future growth.",
+      gradient: "from-sky-50 to-cyan-50",
+      iconColor: "text-sky-500",
+      borderColor: "border-sky-100",
+      animation: "animate-bounce"
+    }
+  ], []);
+
+  // Memoized background gradients
+  const backgroundGradients = useMemo(() => ({
+    main: "bg-gradient-to-br from-blue-50 via-cyan-50 to-white",
+    radial1: "bg-[radial-gradient(circle_at_60%_40%,rgba(56,189,248,0.10),rgba(255,255,255,0.7))]",
+    radial2: "bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.07),transparent)]",
+    radial3: "bg-[radial-gradient(circle_at_20%_80%,rgba(34,211,238,0.07),transparent)]"
+  }), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-white text-slate-800 overflow-x-hidden">
@@ -587,7 +633,7 @@ function HomePage() {
       </section>
 
       {/* Enhanced Custom Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(5deg); }

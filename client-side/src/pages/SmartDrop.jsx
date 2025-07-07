@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Users, ArrowLeft, Package, Download, Brain, Target, TrendingUp, Search, Eye, Filter, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Users, ArrowLeft, Package, Download, Brain, Target, TrendingUp, Search, Eye, Filter, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
+import { useSmartDropState } from '../hooks/useSmartDropState';
 
 // Floating elements for SmartDrop page
 const FloatingSmartDropElements = ({ scrollY }) => {
@@ -52,23 +53,33 @@ function SmartDrop() {
   // Navbar height (px)
   const NAVBAR_HEIGHT = 66;
   
-  const [csvFile, setCsvFile] = useState(null);
-  const [csvData, setCsvData] = useState(null);
+  // Use persisted state for user data
+  const {
+    csvFile, setCsvFile,
+    csvData, setCsvData,
+    uploaded, setUploaded,
+    uploadError, setUploadError,
+    callDone, setCallDone,
+    callError, setCallError,
+    responses, setResponses,
+    responseError, setResponseError,
+    showResponses, setShowResponses,
+    searchTerm, setSearchTerm,
+    sortField, setSortField,
+    sortDirection, setSortDirection,
+    currentPage, setCurrentPage,
+    isUploadDataStale,
+    isCallDataStale,
+    isResponseDataStale,
+    isReturningSession,
+    resetSmartDropState
+  } = useSmartDropState();
+  
+  // Non-persisted state (temporary UI state)
   const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [calling, setCalling] = useState(false);
-  const [callDone, setCallDone] = useState(false);
-  const [callError, setCallError] = useState(null);
-  const [responses, setResponses] = useState(null);
   const [loadingResponses, setLoadingResponses] = useState(false);
-  const [responseError, setResponseError] = useState(null);
-  const [showResponses, setShowResponses] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('');
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
   
   const navigate = useNavigate();
@@ -88,6 +99,24 @@ function SmartDrop() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show restoration notification when component mounts with existing data
+  useEffect(() => {
+    if (isReturningSession && (csvFile || csvData || uploaded || responses)) {
+      console.log('SmartDrop page state restored from previous session');
+      
+      // Check if data is stale and notify user
+      if (isUploadDataStale() && uploaded) {
+        console.warn('Upload data is stale (>15 minutes old). Consider re-uploading.');
+      }
+      if (isCallDataStale() && callDone) {
+        console.warn('Call data is stale (>15 minutes old). Consider making new calls.');
+      }
+      if (isResponseDataStale() && responses) {
+        console.warn('Response data is stale (>15 minutes old). Consider refreshing responses.');
+      }
+    }
+  }, []); // Empty dependency array - only run on mount
 
   // Handlers
   const handleFileChange = (e) => {
@@ -276,7 +305,7 @@ function SmartDrop() {
   };
 
   // Data processing for table
-  const filteredAndSortedData = React.useMemo(() => {
+  const filteredAndSortedData = useMemo(() => {
     if (!responses || responses.length === 0) return [];
     
     let filtered = responses.filter(item =>
@@ -299,9 +328,28 @@ function SmartDrop() {
     return filtered;
   }, [responses, searchTerm, sortField, sortDirection]);
 
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
+    
+    return { totalPages, startIndex, paginatedData };
+  }, [filteredAndSortedData, currentPage, itemsPerPage]);
+
+  const { totalPages, startIndex, paginatedData } = paginationData;
+
+  const tableHeaders = useMemo(() => {
+    return responses && responses.length > 0 ? Object.keys(responses[0]) : [];
+  }, [responses]);
+
+  const csvPreviewData = useMemo(() => {
+    if (!csvData) return null;
+    return {
+      headers: csvData.headers,
+      rows: csvData.rows,
+      hasData: csvData.headers && csvData.rows && csvData.headers.length > 0
+    };
+  }, [csvData]);
 
   // UI
   return (
@@ -339,6 +387,33 @@ function SmartDrop() {
             <span className="font-semibold text-cyan-600 animate-pulse"> AI-powered communication</span>
           </p>
         </div>
+
+        {/* Data Restoration Notification */}
+        {isReturningSession && (csvFile || csvData || uploaded || responses) && (
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-4 animate-slideInUp">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <RefreshCw className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-blue-800">Previous Session Restored</h4>
+                <p className="text-sm text-blue-600">
+                  Your delivery call progress has been automatically saved and restored.
+                  {(isUploadDataStale() && uploaded) || (isCallDataStale() && callDone) || (isResponseDataStale() && responses) ? (
+                    <span className="text-amber-600 ml-1">(Some data is over 15 minutes old - consider refreshing)</span>
+                  ) : null}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetSmartDropState}
+                className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors duration-200"
+              >
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="space-y-6">
@@ -720,7 +795,7 @@ function SmartDrop() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      {responses.length > 0 && Object.keys(responses[0]).map((key, idx) => (
+                      {tableHeaders.map((key, idx) => (
                         <th key={idx} className="px-6 py-4 text-left">
                           <button
                             onClick={() => handleSort(key)}
@@ -835,7 +910,7 @@ function SmartDrop() {
       </div>
       
       {/* Custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-8px) rotate(2deg); }
