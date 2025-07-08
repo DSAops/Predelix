@@ -6,13 +6,14 @@
 - [💡 What Does Predelix Do?](#-what-does-predelix-do)
 - [📦 Features](#-features)
 - [🛠️ Tech Stack](#️-tech-stack)
-- [⚙️ How It Works](#-how-it-works)
+- [⚙️ How It Works](#how-it-works)
 - [🚀 Getting Started](#-getting-started)
 - [📡 API Documentation](#-api-documentation)
 - [🤝 Contributing](#-contributing)
 - [🔭 Ongoing Development](#-ongoing-development)
 - [👥 Team & Credits](#-team--credits)
 - [📬 Contact](#-contact)
+- [📸 Snapshots](#snapshots)
 
 ---
 
@@ -96,6 +97,36 @@ Built for scale and real-world usability, Predelix leverages machine learning, v
 5. Delivery agent retries only queued calls using **“Retry Call”** button.
 
 ---
+## 🧠 ML Model Details
+
+We use a **Random Forest Regressor** from Scikit-learn to predict stock requirements per store and SKU.
+
+### 📄 Dataset:
+- Format: CSV with `date`, `SKU ID`, `store ID`, `units sold`
+- Source: Simulated real-world retail sales data
+
+### 🔍 Feature Engineering:
+- Date-based features: day of week, month, holidays
+- Lag variables and rolling average sales
+- One-hot encoding of categorical variables
+
+### 🧠 Model Used:
+- Algorithm: `RandomForestRegressor`
+- Parameters: `n_estimators=100`, `max_depth=10`
+- Framework: `Scikit-learn`
+
+> 📌 This model enables store-specific predictions for each product to reduce understocking and wastage.
+
+---
+
+## 🧩 Use Cases
+
+- 🏬 **Retail Chains**: Automate stock distribution across branches.
+- 🚚 **Logistics Teams**: Ensure customer availability before dispatch.
+- 🛒 **D2C Brands**: Use AI to improve customer delivery coordination.
+- 📦 **Warehousing Units**: Forecast demand and reduce excess inventory.
+
+---
 
 ## 🚀 Getting Started
 
@@ -132,9 +163,9 @@ ngrok http 5000
 | Method | Endpoint              | Description                                 |
 |--------|----------------------|---------------------------------------------|
 | GET    | /                    | Health check                                |
-| POST   | /predict-stock       | Upload sales CSV & get stock forecast       |
-| POST   | /initiate-calls      | Upload delivery CSV and start calls         |
-| GET    | /call-status         | Fetch real-time call status & transcripts   |
+| POST   | /api/predict      | Upload sales CSV & get stock forecast       |
+| POST   | /api/trigger_calls | Upload delivery CSV and start calls         |
+| GET    | /api/results        | Fetch real-time call status & transcripts   |
 | POST   | /retry-failed-calls  | Retry only failed/disconnected calls        |
 
 
@@ -163,11 +194,9 @@ git push origin feature/amazing-feature
 We are continuously working on expanding the platform with:
 - 🌍 Multilingual voice support
 - 🗺️ Google Maps integration for delivery optimization
-- 🔐 Role-based dashboards (vendors, agents, admins)
-- 🧾 PDF/Excel download reports
 
 Track progress here:
-📌 GitHub Repo: https://github.com/your-username/predelix
+📌 GitHub Repo: [https://github.com/your-username/predelix](https://github.com/DSAops/Predelix)
 
 ---
 
@@ -204,3 +233,5 @@ Need a demo or have questions?
 Predelix: Powering the future of retail supply chains with AI.
 
 > 🚧 **Disclaimer:** This repository contains a hackathon prototype built for learning and demo purposes only (Walmart Hackathon ’25).
+>
+> 💡 Made with ❤️ during Walmart Hackathon '25 by Team DSA. (Devraj, Saksham, and Anuj)
