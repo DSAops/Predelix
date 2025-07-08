@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Truck, Package, Globe, BarChart2, Zap, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import LogisticsStoryAnimation from '../../components/LogisticsStoryAnimation';
 
 // Animated logistics-themed                  {/* Video Element */}
@@ -148,6 +149,7 @@ const useCountUp = (end, duration = 2000) => {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
   useEffect(() => {
     let ticking = false;
@@ -269,20 +271,42 @@ function HomePage() {
               </p>
 
               {/* Animated Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-slideInUp animation-delay-600">
-                <button className="group relative px-10 py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 hover:from-cyan-500 hover:via-blue-500 hover:to-sky-600 font-bold text-white shadow-xl transform hover:scale-105 transition-all duration-300 border border-cyan-200 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center animate-slideInUp animation-delay-600">
+                <button 
+                  onClick={() => navigate('/predict')}
+                  className="group relative px-12 py-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 font-bold text-white shadow-2xl transform hover:scale-[1.05] transition-all duration-500 ease-out border-2 border-cyan-300/30 hover:border-cyan-200/50 overflow-hidden"
+                >
+                  {/* Animated shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                  
+                  {/* Button content */}
                   <span className="relative flex items-center">
-                    <Zap className="w-5 h-5 mr-2 animate-pulse" />
+                    <Zap className="w-6 h-6 mr-3 animate-pulse group-hover:scale-110 transition-transform duration-500" />
                     Get Started
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform duration-500" />
                   </span>
+                  
+                  {/* Hover glow effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400/50 to-sky-400/50 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </button>
-                <button className="group px-10 py-4 rounded-xl bg-white/90 backdrop-blur-xl border border-sky-200 hover:border-blue-300 font-semibold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-105 transition-all duration-300">
-                  <span className="flex items-center">
-                    <Globe className="w-5 h-5 mr-2 animate-spin-slow" />
+                
+                <button 
+                  onClick={() => {
+                    document.getElementById('demo-section').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="group relative px-12 py-5 rounded-2xl bg-white/95 backdrop-blur-xl border-2 border-sky-300/50 hover:border-blue-400/70 font-bold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-[1.05] transition-all duration-500 ease-out overflow-hidden hover:bg-gradient-to-r hover:from-white/95 hover:to-sky-50/95"
+                >
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-sky-50/0 via-sky-100/30 to-sky-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                  
+                  {/* Button content */}
+                  <span className="relative flex items-center">
+                    <Globe className="w-6 h-6 mr-3 animate-spin-slow group-hover:scale-110 transition-transform duration-500" />
                     View Demo
                   </span>
+                  
+                  {/* Hover glow effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-sky-300/30 to-blue-300/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </button>
               </div>
             </div>
@@ -379,51 +403,129 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Animated Stats Section */}
+        {/* Feature Showcase Section */}
         <div 
-          className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full max-w-5xl mx-auto transform transition-all duration-1000"
+          className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 mt-20 w-full max-w-6xl mx-auto transform transition-all duration-1000"
           style={{ transform: `translateY(${scrollY * -0.05}px)` }}
         >
-          <div className="group bg-white/90 backdrop-blur-xl rounded-2xl p-8 border border-cyan-200 shadow-xl flex flex-col items-center animate-slideInUp animation-delay-800 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-            <div className="relative mb-4">
-              <div className="absolute -inset-2 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-cyan-50 to-blue-50 p-4 rounded-full">
-                <BarChart2 className="w-8 h-8 text-cyan-500 animate-bounce" />
-              </div>
+          {/* Predict Feature Card */}
+          <div className="group relative bg-gradient-to-br from-white/95 via-cyan-50/90 to-blue-50/80 backdrop-blur-xl rounded-3xl p-8 border-2 border-cyan-200/60 shadow-2xl animate-slideInUp animation-delay-800 transform hover:scale-[1.03] transition-all duration-700 ease-out hover:shadow-3xl hover:border-cyan-300/80 overflow-hidden">
+            {/* Animated Background Pattern */}
+            <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
+              <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full blur-3xl animate-float1"></div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-sky-500 rounded-full blur-2xl animate-float2"></div>
             </div>
-            <div className="text-5xl font-bold text-cyan-500 mb-2 animate-count-up">{accuracy}%</div>
-            <div className="text-sky-700 font-medium text-center">Prediction Accuracy</div>
-            <div className="text-xs text-sky-500 mt-1 opacity-70">AI-Powered Insights</div>
+            
+            {/* Glowing Border Effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400/0 via-cyan-400/20 to-cyan-400/0 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            
+            <div className="relative z-10">
+              <div className="relative mb-8">
+                <div className="absolute -inset-3 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-2xl blur-xl animate-pulse group-hover:from-cyan-400/50 group-hover:to-blue-500/50 transition-all duration-700"></div>
+                <div className="relative bg-gradient-to-br from-cyan-100/80 to-blue-100/80 group-hover:from-cyan-200/90 group-hover:to-blue-200/90 p-5 rounded-2xl flex items-center justify-center w-20 h-20 border-2 border-cyan-300/50 group-hover:border-cyan-400/70 shadow-lg group-hover:shadow-xl transition-all duration-700">
+                  <BarChart2 className="w-10 h-10 text-cyan-600 group-hover:text-cyan-700 animate-bounce group-hover:scale-110 transition-all duration-700" />
+                </div>
+                {/* Floating Mini Icons */}
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 delay-200 animate-pulse">
+                  <div className="w-full h-full rounded-full border-2 border-white/50"></div>
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent group-hover:from-cyan-700 group-hover:to-blue-700 mb-4 transition-all duration-700">AI Stock Predictor</h3>
+              
+              <p className="text-slate-600 group-hover:text-slate-700 mb-6 leading-relaxed transition-all duration-700 text-base">
+                Upload your sales data and let our advanced machine learning algorithms predict future stock requirements with incredible accuracy.
+              </p>
+              
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">Upload CSV sales data</span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">AI-powered trend analysis</span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-sky-400 to-sky-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">Interactive prediction charts</span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/predict')}
+                className="group/btn w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all duration-700 transform hover:scale-[1.02] shadow-xl hover:shadow-2xl border border-cyan-400/30 hover:border-cyan-300/50 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                <span className="relative flex items-center justify-center">
+                  Try Predictor
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform duration-700" />
+                </span>
+              </button>
+            </div>
           </div>
           
-          <div className="group bg-white/90 backdrop-blur-xl rounded-2xl p-8 border border-blue-200 shadow-xl flex flex-col items-center animate-slideInUp animation-delay-1000 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-            <div className="relative mb-4">
-              <div className="absolute -inset-2 bg-gradient-to-br from-blue-400/20 to-sky-500/20 rounded-full blur animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-blue-50 to-sky-50 p-4 rounded-full">
-                <Zap className="w-8 h-8 text-blue-500 animate-pulse" />
-              </div>
+          {/* SmartDrop Feature Card */}
+          <div className="group relative bg-gradient-to-br from-white/95 via-blue-50/90 to-purple-50/80 backdrop-blur-xl rounded-3xl p-8 border-2 border-blue-200/60 shadow-2xl animate-slideInUp animation-delay-1000 transform hover:scale-[1.03] transition-all duration-700 ease-out hover:shadow-3xl hover:border-blue-300/80 overflow-hidden">
+            {/* Animated Background Pattern */}
+            <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-3xl animate-float2"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full blur-2xl animate-float3"></div>
             </div>
-            <div className="text-5xl font-bold text-blue-500 mb-2 animate-count-up">+{revenue}%</div>
-            <div className="text-sky-700 font-medium text-center">Revenue Growth</div>
-            <div className="text-xs text-sky-500 mt-1 opacity-70">Year-over-Year</div>
-          </div>
-          
-          <div className="group bg-white/90 backdrop-blur-xl rounded-2xl p-8 border border-sky-200 shadow-xl flex flex-col items-center animate-slideInUp animation-delay-1200 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-            <div className="relative mb-4">
-              <div className="absolute -inset-2 bg-gradient-to-br from-sky-400/20 to-cyan-500/20 rounded-full blur animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-sky-50 to-cyan-50 p-4 rounded-full">
-                <Shield className="w-8 h-8 text-sky-500 animate-spin-slow" />
+            
+            {/* Glowing Border Effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/0 via-blue-400/20 to-blue-400/0 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            
+            <div className="relative z-10">
+              <div className="relative mb-8">
+                <div className="absolute -inset-3 bg-gradient-to-br from-blue-400/30 to-purple-500/30 rounded-2xl blur-xl animate-pulse group-hover:from-blue-400/50 group-hover:to-purple-500/50 transition-all duration-700"></div>
+                <div className="relative bg-gradient-to-br from-blue-100/80 to-purple-100/80 group-hover:from-blue-200/90 group-hover:to-purple-200/90 p-5 rounded-2xl flex items-center justify-center w-20 h-20 border-2 border-blue-300/50 group-hover:border-blue-400/70 shadow-lg group-hover:shadow-xl transition-all duration-700">
+                  <Truck className="w-10 h-10 text-blue-600 group-hover:text-blue-700 animate-pulse group-hover:scale-110 transition-all duration-700" />
+                </div>
+                {/* Floating Mini Icons */}
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 delay-200 animate-pulse">
+                  <div className="w-full h-full rounded-full border-2 border-white/50"></div>
+                </div>
               </div>
+              
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-purple-700 mb-4 transition-all duration-700">SmartDrop Delivery</h3>
+              
+              <p className="text-slate-600 group-hover:text-slate-700 mb-6 leading-relaxed transition-all duration-700 text-base">
+                Automate your delivery confirmation calls with AI-powered communication that contacts customers and collects delivery preferences.
+              </p>
+              
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">Upload customer contact lists</span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">Automated delivery calls</span>
+                </div>
+                <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
+                  <div className="w-3 h-3 bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <span className="font-medium">Real-time response tracking</span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/smartdrop')}
+                className="group/btn w-full py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white font-bold rounded-2xl transition-all duration-700 transform hover:scale-[1.02] shadow-xl hover:shadow-2xl border border-blue-400/30 hover:border-blue-300/50 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                <span className="relative flex items-center justify-center">
+                  Try SmartDrop
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform duration-700" />
+                </span>
+              </button>
             </div>
-            <div className="text-5xl font-bold text-sky-500 mb-2 animate-count-up">{efficiency}%</div>
-            <div className="text-sky-700 font-medium text-center">Efficiency Boost</div>
-            <div className="text-xs text-sky-500 mt-1 opacity-70">Automated Operations</div>
           </div>
         </div>
       </section>
 
       {/* STORY ANIMATION SECTION */}
-      <section className="relative py-24 px-4 md:px-8 bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-50">
+      <section id="demo-section" className="relative py-24 px-4 md:px-8 bg-gradient-to-br from-cyan-50 via-blue-50 to-sky-50">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
@@ -436,80 +538,92 @@ function HomePage() {
           </div>
 
           {/* Story Animation Container */}
-          <div className="flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex flex-col xl:flex-row items-start xl:items-center gap-16">
             {/* Animation */}
-            <div className="flex-1 flex justify-center">
+            <div className="w-full xl:w-1/2 flex justify-center xl:justify-start">
               <div className="relative">
                 <div className="absolute -inset-8 bg-gradient-to-br from-cyan-400/10 to-blue-500/10 rounded-full blur-2xl animate-pulse"></div>
-                <LogisticsStoryAnimation size="large" />
+                <div className="relative z-10">
+                  <LogisticsStoryAnimation size="large" />
+                </div>
               </div>
             </div>
 
             {/* Story Steps Description */}
-            <div className="flex-1 space-y-8">
+            <div className="w-full xl:w-1/2 space-y-6">
               <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-red-200 hover:border-red-300 transition-all duration-300 hover:shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-lg">1</span>
+                <div className="flex items-start mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-red-400 to-red-500 rounded-full flex items-center justify-center mr-5 flex-shrink-0 shadow-lg">
+                    <span className="text-white font-bold text-xl">1</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">The Challenge</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">The Challenge</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Traditional logistics face chaotic parcel management, inefficient routes, and wasted resources. 
+                      Packages get lost, deliveries are delayed, and costs spiral out of control.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">
-                  Traditional logistics face chaotic parcel management, inefficient routes, and wasted resources. 
-                  Packages get lost, deliveries are delayed, and costs spiral out of control.
-                </p>
               </div>
 
               <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 hover:border-blue-300 transition-all duration-300 hover:shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-lg">2</span>
+                <div className="flex items-start mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center mr-5 flex-shrink-0 shadow-lg">
+                    <span className="text-white font-bold text-xl">2</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">AI Analysis</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">AI Analysis</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Our advanced AI algorithms analyze millions of data points, identifying patterns, 
+                      predicting demand, and calculating optimal solutions in real-time.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">
-                  Our advanced AI algorithms analyze millions of data points, identifying patterns, 
-                  predicting demand, and calculating optimal solutions in real-time.
-                </p>
               </div>
 
               <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-green-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-lg">3</span>
+                <div className="flex items-start mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mr-5 flex-shrink-0 shadow-lg">
+                    <span className="text-white font-bold text-xl">3</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">Smart Organization</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Smart Organization</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Parcels are automatically sorted and organized using intelligent algorithms, 
+                      ensuring perfect categorization and streamlined workflow.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">
-                  Parcels are automatically sorted and organized using intelligent algorithms, 
-                  ensuring perfect categorization and streamlined workflow.
-                </p>
               </div>
 
               <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-cyan-200 hover:border-cyan-300 transition-all duration-300 hover:shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-lg">4</span>
+                <div className="flex items-start mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center mr-5 flex-shrink-0 shadow-lg">
+                    <span className="text-white font-bold text-xl">4</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">Route Optimization</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Route Optimization</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Delivery routes are optimized in real-time, considering traffic, weather, and priority, 
+                      ensuring maximum efficiency and minimum cost.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">
-                  Delivery routes are optimized in real-time, considering traffic, weather, and priority, 
-                  ensuring maximum efficiency and minimum cost.
-                </p>
               </div>
 
               <div className="group p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-emerald-200 hover:border-emerald-300 transition-all duration-300 hover:shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white font-bold text-lg">5</span>
+                <div className="flex items-start mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mr-5 flex-shrink-0 shadow-lg">
+                    <span className="text-white font-bold text-xl">5</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">Perfect Delivery</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Perfect Delivery</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      The result: Fast, efficient, and cost-effective logistics that delight customers 
+                      and maximize your business potential.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">
-                  The result: Fast, efficient, and cost-effective logistics that delight customers 
-                  and maximize your business potential.
-                </p>
               </div>
             </div>
           </div>
@@ -531,62 +645,65 @@ function HomePage() {
 
           {/* Enhanced Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="group relative bg-white/90 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-cyan-100 flex flex-col items-center animate-slideInUp animation-delay-200 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-              <div className="absolute -inset-1 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Smart Fleet Management Card */}
+            <div className="group relative bg-gradient-to-br from-white/95 to-cyan-50/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-cyan-200/50 flex flex-col items-center animate-slideInUp animation-delay-200 transform hover:scale-[1.02] transition-all duration-500 ease-out hover:shadow-2xl hover:border-cyan-300/70">
+              <div className="absolute -inset-1 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="relative z-10 w-full">
                 <div className="relative mb-6">
-                  <div className="absolute -inset-3 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur animate-pulse"></div>
-                  <div className="relative bg-gradient-to-br from-cyan-50 to-blue-50 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-                    <Truck className="w-10 h-10 text-cyan-500 animate-bounce" />
+                  <div className="absolute -inset-4 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur animate-pulse group-hover:from-cyan-400/40 group-hover:to-blue-500/40 transition-all duration-500"></div>
+                  <div className="relative bg-gradient-to-br from-cyan-50 to-blue-50 group-hover:from-cyan-100 group-hover:to-blue-100 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center transition-all duration-500 border-2 border-cyan-200/50 group-hover:border-cyan-300/80 shadow-lg group-hover:shadow-xl">
+                    <Truck className="w-12 h-12 text-cyan-600 group-hover:text-cyan-700 animate-bounce group-hover:scale-110 transition-all duration-500" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-sky-700 mb-3 text-center">Smart Fleet Management</h3>
-                <p className="text-sky-500 text-center leading-relaxed">
+                <h3 className="text-xl font-bold text-cyan-700 group-hover:text-cyan-800 mb-3 text-center transition-all duration-500">Smart Fleet Management</h3>
+                <p className="text-slate-600 group-hover:text-slate-700 text-center leading-relaxed transition-all duration-500">
                   Real-time tracking with predictive maintenance, route optimization, and autonomous dispatch systems for maximum efficiency.
                 </p>
-                <div className="mt-4 flex justify-center space-x-2">
-                  <span className="px-2 py-1 bg-cyan-100 text-cyan-600 rounded-full text-xs">Real-time</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs">AI-Powered</span>
+                <div className="mt-6 flex justify-center space-x-3">
+                  <span className="px-3 py-2 bg-gradient-to-r from-cyan-100 to-cyan-200 group-hover:from-cyan-200 group-hover:to-cyan-300 text-cyan-700 group-hover:text-cyan-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-cyan-200/50 group-hover:border-cyan-300/70">Real-time</span>
+                  <span className="px-3 py-2 bg-gradient-to-r from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 text-blue-700 group-hover:text-blue-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-blue-200/50 group-hover:border-blue-300/70">AI-Powered</span>
                 </div>
               </div>
             </div>
 
-            <div className="group relative bg-white/90 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-blue-100 flex flex-col items-center animate-slideInUp animation-delay-400 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400/20 to-sky-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Intelligent Inventory Card */}
+            <div className="group relative bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-blue-200/50 flex flex-col items-center animate-slideInUp animation-delay-400 transform hover:scale-[1.02] transition-all duration-500 ease-out hover:shadow-2xl hover:border-blue-300/70">
+              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400/30 to-purple-500/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="relative z-10 w-full">
                 <div className="relative mb-6">
-                  <div className="absolute -inset-3 bg-gradient-to-br from-blue-400/20 to-sky-500/20 rounded-full blur animate-pulse"></div>
-                  <div className="relative bg-gradient-to-br from-blue-50 to-sky-50 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-                    <Package className="w-10 h-10 text-blue-500 animate-pulse" />
+                  <div className="absolute -inset-4 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full blur animate-pulse group-hover:from-blue-400/40 group-hover:to-purple-500/40 transition-all duration-500"></div>
+                  <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 group-hover:from-blue-100 group-hover:to-purple-100 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center transition-all duration-500 border-2 border-blue-200/50 group-hover:border-blue-300/80 shadow-lg group-hover:shadow-xl">
+                    <Package className="w-12 h-12 text-blue-600 group-hover:text-blue-700 animate-pulse group-hover:scale-110 transition-all duration-500" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-sky-700 mb-3 text-center">Intelligent Inventory</h3>
-                <p className="text-sky-500 text-center leading-relaxed">
+                <h3 className="text-xl font-bold text-blue-700 group-hover:text-blue-800 mb-3 text-center transition-all duration-500">Intelligent Inventory</h3>
+                <p className="text-slate-600 group-hover:text-slate-700 text-center leading-relaxed transition-all duration-500">
                   AI-driven demand forecasting, automated restocking, and zero-waste inventory management across your entire supply chain.
                 </p>
-                <div className="mt-4 flex justify-center space-x-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs">Predictive</span>
-                  <span className="px-2 py-1 bg-sky-100 text-sky-600 rounded-full text-xs">Automated</span>
+                <div className="mt-6 flex justify-center space-x-3">
+                  <span className="px-3 py-2 bg-gradient-to-r from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 text-blue-700 group-hover:text-blue-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-blue-200/50 group-hover:border-blue-300/70">Predictive</span>
+                  <span className="px-3 py-2 bg-gradient-to-r from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 text-purple-700 group-hover:text-purple-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-purple-200/50 group-hover:border-purple-300/70">Automated</span>
                 </div>
               </div>
             </div>
 
-            <div className="group relative bg-white/90 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-sky-100 flex flex-col items-center animate-slideInUp animation-delay-600 transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-              <div className="absolute -inset-1 bg-gradient-to-br from-sky-400/20 to-cyan-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Global Optimization Card */}
+            <div className="group relative bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-emerald-200/50 flex flex-col items-center animate-slideInUp animation-delay-600 transform hover:scale-[1.02] transition-all duration-500 ease-out hover:shadow-2xl hover:border-emerald-300/70">
+              <div className="absolute -inset-1 bg-gradient-to-br from-emerald-400/30 to-teal-500/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="relative z-10 w-full">
                 <div className="relative mb-6">
-                  <div className="absolute -inset-3 bg-gradient-to-br from-sky-400/20 to-cyan-500/20 rounded-full blur animate-pulse"></div>
-                  <div className="relative bg-gradient-to-br from-sky-50 to-cyan-50 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-                    <Globe className="w-10 h-10 text-sky-500 animate-spin-slow" />
+                  <div className="absolute -inset-4 bg-gradient-to-br from-emerald-400/20 to-teal-500/20 rounded-full blur animate-pulse group-hover:from-emerald-400/40 group-hover:to-teal-500/40 transition-all duration-500"></div>
+                  <div className="relative bg-gradient-to-br from-emerald-50 to-teal-50 group-hover:from-emerald-100 group-hover:to-teal-100 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center transition-all duration-500 border-2 border-emerald-200/50 group-hover:border-emerald-300/80 shadow-lg group-hover:shadow-xl">
+                    <Globe className="w-12 h-12 text-emerald-600 group-hover:text-emerald-700 animate-spin-slow group-hover:scale-110 transition-all duration-500" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-sky-700 mb-3 text-center">Global Optimization</h3>
-                <p className="text-sky-500 text-center leading-relaxed">
+                <h3 className="text-xl font-bold text-emerald-700 group-hover:text-emerald-800 mb-3 text-center transition-all duration-500">Global Optimization</h3>
+                <p className="text-slate-600 group-hover:text-slate-700 text-center leading-relaxed transition-all duration-500">
                   Worldwide supply chain coordination with multi-modal transport planning and automated compliance management.
                 </p>
-                <div className="mt-4 flex justify-center space-x-2">
-                  <span className="px-2 py-1 bg-sky-100 text-sky-600 rounded-full text-xs">Global</span>
-                  <span className="px-2 py-1 bg-cyan-100 text-cyan-600 rounded-full text-xs">Smart</span>
+                <div className="mt-6 flex justify-center space-x-3">
+                  <span className="px-3 py-2 bg-gradient-to-r from-emerald-100 to-emerald-200 group-hover:from-emerald-200 group-hover:to-emerald-300 text-emerald-700 group-hover:text-emerald-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-emerald-200/50 group-hover:border-emerald-300/70">Global</span>
+                  <span className="px-3 py-2 bg-gradient-to-r from-teal-100 to-teal-200 group-hover:from-teal-200 group-hover:to-teal-300 text-teal-700 group-hover:text-teal-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-teal-200/50 group-hover:border-teal-300/70">Smart</span>
                 </div>
               </div>
             </div>
@@ -610,21 +727,42 @@ function HomePage() {
                 Join the next generation of intelligent supply chain management. Experience the power of AI-driven logistics optimization.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button className="group relative px-12 py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-400 to-sky-500 hover:from-cyan-500 hover:via-blue-500 hover:to-sky-600 font-bold text-white shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-200 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span className="relative flex items-center">
-                    <Zap className="w-5 h-5 mr-2 animate-pulse" />
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <button 
+                  onClick={() => navigate('/predict')}
+                  className="group relative px-14 py-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 font-bold text-white shadow-2xl transform hover:scale-[1.05] transition-all duration-500 ease-out border-2 border-cyan-300/40 hover:border-cyan-200/60 overflow-hidden"
+                >
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                  
+                  {/* Button content */}
+                  <span className="relative flex items-center text-lg">
+                    <Zap className="w-6 h-6 mr-3 animate-pulse group-hover:scale-110 transition-transform duration-500" />
                     Start Your Journey
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform duration-500" />
                   </span>
+                  
+                  {/* Hover glow effect */}
+                  <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400/40 to-sky-400/40 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </button>
                 
-                <button className="group px-12 py-4 rounded-xl bg-white/90 backdrop-blur-xl border border-sky-200 hover:border-blue-300 font-semibold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-105 transition-all duration-300">
-                  <span className="flex items-center">
-                    <Package className="w-5 h-5 mr-2 animate-bounce" />
+                <button 
+                  onClick={() => {
+                    window.open('mailto:contact@predelix.com?subject=Schedule Demo&body=Hi, I would like to schedule a demo of Predelix.', '_blank');
+                  }}
+                  className="group relative px-14 py-5 rounded-2xl bg-white/95 backdrop-blur-xl border-2 border-sky-300/60 hover:border-blue-400/80 font-bold text-sky-700 hover:text-blue-700 shadow-xl transform hover:scale-[1.05] transition-all duration-500 ease-out overflow-hidden hover:bg-gradient-to-r hover:from-white/95 hover:to-sky-50/95"
+                >
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-sky-50/0 via-sky-100/40 to-sky-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                  
+                  {/* Button content */}
+                  <span className="relative flex items-center text-lg">
+                    <Package className="w-6 h-6 mr-3 animate-bounce group-hover:scale-110 transition-transform duration-500" />
                     Schedule Demo
                   </span>
+                  
+                  {/* Hover glow effect */}
+                  <div className="absolute -inset-2 bg-gradient-to-r from-sky-300/30 to-blue-300/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </button>
               </div>
             </div>
