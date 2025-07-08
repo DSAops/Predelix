@@ -123,16 +123,9 @@ function SmartDrop() {
     }
   }, []); // Empty dependency array - only run on mount
 
-  // Demo modal logic - show on every page refresh
+  // Demo modal logic - always show on mount, hide only when dismissed
   useEffect(() => {
-    // Check if this is a page refresh (not navigation)
-    const isPageRefresh = performance.navigation?.type === 1 || 
-                         performance.getEntriesByType('navigation')[0]?.type === 'reload';
-    
-    // Show modal on every page refresh, not on navigation
-    if (isPageRefresh) {
-      setShowDemoModal(true);
-    }
+    setShowDemoModal(true);
   }, []);
 
   // Timer effect for waiting for call results
