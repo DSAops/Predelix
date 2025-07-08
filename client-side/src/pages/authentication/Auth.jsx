@@ -7,8 +7,8 @@ import {
   DialogTrigger,
   DialogClose,
 } from '../../../components/motion-primitives/dialog';
-import Login from './login.jsx';
-import Signup from './Signup.jsx';
+import Login from './Login';
+import Signup from './Signup';
 import React from 'react';
 import { Truck, Package, Globe, Zap, Shield, BarChart2 } from 'lucide-react';
 
