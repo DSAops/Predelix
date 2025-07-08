@@ -179,11 +179,27 @@ Track progress here:
 
 ---
 
+
 ## 📬 Contact
 Need a demo or have questions?
 📧 Email us at: officialanuj004@gmail.com
 
 ---
+## Snapshots
+
+![Screenshot 2025-07-09 030247](https://github.com/user-attachments/assets/79696671-c9d4-4631-8b8c-22dacbec1055)
+![Screenshot 2025-07-09 025836](https://github.com/user-attachments/assets/f78999b7-2bc0-4d7d-84eb-3a575396d48e)
+![Screenshot 2025-07-09 025853](https://github.com/user-attachments/assets/ce05987b-e54a-4e90-93fa-8b850a6daae0)
+![image](https://github.com/user-attachments/assets/c7971fe2-552c-4f38-b9e5-3343e5865cc5)
+![image](https://github.com/user-attachments/assets/4fb75658-dead-4c88-829b-37fa44cb1df0)
+![Screenshot 2025-07-09 025759](https://github.com/user-attachments/assets/3437f175-16d5-4c83-94cf-e3c0e622a99e)
+![Screenshot 2025-07-09 025807](https://github.com/user-attachments/assets/02b52b50-0a51-46ac-94f6-b4ea1b7f0ec3)
+![Screenshot 2025-07-09 025720](https://github.com/user-attachments/assets/9660a0ed-7c6a-4102-a74d-ca709d5e422b)
+![Screenshot 2025-07-09 025824](https://github.com/user-attachments/assets/879a270b-4e27-4132-a472-3e8300fbf40a)
+
+
+---
+
 
 Predelix: Powering the future of retail supply chains with AI.
 
