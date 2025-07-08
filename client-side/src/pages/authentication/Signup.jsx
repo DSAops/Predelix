@@ -13,13 +13,13 @@ export default function Signup({ onSignup }) {
     setError('');
     
     try {
-      await register(name, email, password);
+      const data = await register(name, email, password);
       // Clear form
       setName('');
       setEmail('');
       setPassword('');
-      // Notify parent component
-      if (onSignup) onSignup();
+      // Notify parent component with user data
+      if (onSignup) onSignup(data.user);
     } catch (error) {
       console.error('Signup error:', error);
       setError(error.message || 'Failed to create account');

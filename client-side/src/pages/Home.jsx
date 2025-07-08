@@ -466,11 +466,11 @@ function HomePage() {
           </div>
           
           {/* SmartDrop Feature Card */}
-          <div className="group relative bg-gradient-to-br from-white/95 via-blue-50/90 to-purple-50/80 backdrop-blur-xl rounded-3xl p-8 border-2 border-blue-200/60 shadow-2xl animate-slideInUp animation-delay-1000 transform hover:scale-[1.03] transition-all duration-700 ease-out hover:shadow-3xl hover:border-blue-300/80 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/80 backdrop-blur-xl rounded-3xl p-8 border-2 border-blue-200/60 shadow-2xl animate-slideInUp animation-delay-1000 transform hover:scale-[1.03] transition-all duration-700 ease-out hover:shadow-3xl hover:border-blue-300/80 overflow-hidden">
             {/* Animated Background Pattern */}
             <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-3xl animate-float2"></div>
-              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full blur-2xl animate-float3"></div>
+              <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full blur-3xl animate-float2"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full blur-2xl animate-float3"></div>
             </div>
             
             {/* Glowing Border Effect */}
@@ -478,17 +478,17 @@ function HomePage() {
             
             <div className="relative z-10">
               <div className="relative mb-8">
-                <div className="absolute -inset-3 bg-gradient-to-br from-blue-400/30 to-purple-500/30 rounded-2xl blur-xl animate-pulse group-hover:from-blue-400/50 group-hover:to-purple-500/50 transition-all duration-700"></div>
-                <div className="relative bg-gradient-to-br from-blue-100/80 to-purple-100/80 group-hover:from-blue-200/90 group-hover:to-purple-200/90 p-5 rounded-2xl flex items-center justify-center w-20 h-20 border-2 border-blue-300/50 group-hover:border-blue-400/70 shadow-lg group-hover:shadow-xl transition-all duration-700">
+                <div className="absolute -inset-3 bg-gradient-to-br from-blue-400/30 to-indigo-500/30 rounded-2xl blur-xl animate-pulse group-hover:from-blue-400/50 group-hover:to-indigo-500/50 transition-all duration-700"></div>
+                <div className="relative bg-gradient-to-br from-blue-100/80 to-indigo-100/80 group-hover:from-blue-200/90 group-hover:to-indigo-200/90 p-5 rounded-2xl flex items-center justify-center w-20 h-20 border-2 border-blue-300/50 group-hover:border-blue-400/70 shadow-lg group-hover:shadow-xl transition-all duration-700">
                   <Truck className="w-10 h-10 text-blue-600 group-hover:text-blue-700 animate-pulse group-hover:scale-110 transition-all duration-700" />
                 </div>
                 {/* Floating Mini Icons */}
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 delay-200 animate-pulse">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 delay-200 animate-pulse">
                   <div className="w-full h-full rounded-full border-2 border-white/50"></div>
                 </div>
               </div>
               
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-purple-700 mb-4 transition-all duration-700">SmartDrop Delivery</h3>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-indigo-700 mb-4 transition-all duration-700">SmartDrop Delivery</h3>
               
               <p className="text-slate-600 group-hover:text-slate-700 mb-6 leading-relaxed transition-all duration-700 text-base">
                 Automate your delivery confirmation calls with AI-powered communication that contacts customers and collects delivery preferences.
@@ -500,18 +500,18 @@ function HomePage() {
                   <span className="font-medium">Upload customer contact lists</span>
                 </div>
                 <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
-                  <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
                   <span className="font-medium">Automated delivery calls</span>
                 </div>
                 <div className="flex items-center text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-700">
-                  <div className="w-3 h-3 bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-sky-400 to-sky-500 rounded-full mr-4 group-hover:scale-110 transition-transform duration-700 shadow-sm"></div>
                   <span className="font-medium">Real-time response tracking</span>
                 </div>
               </div>
               
               <button 
                 onClick={() => navigate('/smartdrop')}
-                className="group/btn w-full py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white font-bold rounded-2xl transition-all duration-700 transform hover:scale-[1.02] shadow-xl hover:shadow-2xl border border-blue-400/30 hover:border-blue-300/50 relative overflow-hidden"
+                className="group/btn w-full py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500 hover:from-blue-600 hover:via-indigo-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all duration-700 transform hover:scale-[1.02] shadow-xl hover:shadow-2xl border border-blue-400/30 hover:border-blue-300/50 relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
                 <span className="relative flex items-center justify-center">
@@ -668,11 +668,11 @@ function HomePage() {
 
             {/* Intelligent Inventory Card */}
             <div className="group relative bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-blue-200/50 flex flex-col items-center animate-slideInUp animation-delay-400 transform hover:scale-[1.02] transition-all duration-500 ease-out hover:shadow-2xl hover:border-blue-300/70">
-              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400/30 to-purple-500/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+              <div className="absolute -inset-1 bg-gradient-to-br from-blue-400/30 to-indigo-500/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="relative z-10 w-full">
                 <div className="relative mb-6">
-                  <div className="absolute -inset-4 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full blur animate-pulse group-hover:from-blue-400/40 group-hover:to-purple-500/40 transition-all duration-500"></div>
-                  <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 group-hover:from-blue-100 group-hover:to-purple-100 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center transition-all duration-500 border-2 border-blue-200/50 group-hover:border-blue-300/80 shadow-lg group-hover:shadow-xl">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 rounded-full blur animate-pulse group-hover:from-blue-400/40 group-hover:to-indigo-500/40 transition-all duration-500"></div>
+                  <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 group-hover:from-blue-100 group-hover:to-indigo-100 p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center transition-all duration-500 border-2 border-blue-200/50 group-hover:border-blue-300/80 shadow-lg group-hover:shadow-xl">
                     <Package className="w-12 h-12 text-blue-600 group-hover:text-blue-700 animate-pulse group-hover:scale-110 transition-all duration-500" />
                   </div>
                 </div>
@@ -682,7 +682,7 @@ function HomePage() {
                 </p>
                 <div className="mt-6 flex justify-center space-x-3">
                   <span className="px-3 py-2 bg-gradient-to-r from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 text-blue-700 group-hover:text-blue-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-blue-200/50 group-hover:border-blue-300/70">Predictive</span>
-                  <span className="px-3 py-2 bg-gradient-to-r from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 text-purple-700 group-hover:text-purple-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-purple-200/50 group-hover:border-purple-300/70">Automated</span>
+                  <span className="px-3 py-2 bg-gradient-to-r from-indigo-100 to-indigo-200 group-hover:from-indigo-200 group-hover:to-indigo-300 text-indigo-700 group-hover:text-indigo-800 rounded-full text-xs font-medium shadow-sm group-hover:shadow-md transition-all duration-500 border border-indigo-200/50 group-hover:border-indigo-300/70">Automated</span>
                 </div>
               </div>
             </div>

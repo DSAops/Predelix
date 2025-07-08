@@ -17,5 +17,6 @@ router.post('/google', authController.googleAuth); // Google authentication endp
 
 // Protected routes
 router.get('/me', authMiddleware, authController.getMe);
+router.put('/role', authMiddleware, authController.updateRole);
 
 module.exports = router;

@@ -20,17 +20,25 @@ const generateRefreshToken = (userId) => {
 
 const verifyGoogleToken = async (access_token) => {
     try {
+        console.log('Verifying Google token:', access_token ? 'Token present' : 'No token');
         const response = await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo', {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${access_token}` }
         });
         
+        console.log('Google API response status:', response.status);
+        
         if (!response.ok) {
+            const errorText = await response.text();
+            console.log('Google API error response:', errorText);
             throw new Error('Invalid token');
         }
         
+        const tokenInfo = await response.json();
+        console.log('Token verification successful');
         return true;
     } catch (error) {
+        console.error('Google token verification error:', error);
         throw new Error('Invalid Google token');
     }
 };
@@ -39,40 +47,60 @@ const authController = {
     // Google authentication
     googleAuth: async (req, res) => {
         try {
+            console.log('Google auth request received');
             const { access_token, email, name, sub } = req.body;
+            console.log('Request data:', { 
+                hasToken: !!access_token, 
+                email, 
+                name, 
+                sub 
+            });
             
             // Verify the access token is valid
             await verifyGoogleToken(access_token);
+            console.log('Token verification passed');
             
             // Find or create user
             let user = await User.findOne({ email });
+            console.log('User lookup result:', user ? 'User found' : 'New user');
             
             if (!user) {
                 // Create new user if doesn't exist
-                user = new User({
+                console.log('Creating new user');
+                const newUserData = {
                     username: name,
                     email: email,
                     isGoogleUser: true,
                     googleId: sub, // Google's unique identifier
-                    password: undefined // No password for Google users
-                });
+                    password: undefined, // No password for Google users
+                };
+                
+                // Set demo role for teamdsa@gmail.com, otherwise don't set role (will default to null)
+                if (email === 'teamdsa@gmail.com') {
+                    newUserData.role = 'demo';
+                }
+                
+                user = new User(newUserData);
             } else if (!user.isGoogleUser) {
                 // If user exists but is not a Google user, don't allow Google login
+                console.log('User exists but not a Google user');
                 return res.status(400).json({
                     message: 'Email already registered with password authentication'
                 });
             }
 
             // Generate tokens
+            console.log('Generating tokens');
             const accessToken = generateAccessToken(user._id);
             const refreshToken = generateRefreshToken(user._id);
             
             // Save refresh token and update Google ID if needed
             user.refreshToken = refreshToken;
             if (!user.googleId) {
-                user.googleId = googleUser.sub;
+                user.googleId = sub;
             }
             await user.save();
+            console.log('User saved successfully');
 
             // Set refresh token in HTTP-only cookie
             res.cookie('refreshToken', refreshToken, {
@@ -82,6 +110,7 @@ const authController = {
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
+            console.log('Sending success response');
             res.json({
                 message: 'Google authentication successful',
                 accessToken,
@@ -89,11 +118,13 @@ const authController = {
                     id: user._id,
                     username: user.username,
                     email: user.email,
-                    isGoogleUser: user.isGoogleUser
+                    isGoogleUser: user.isGoogleUser,
+                    role: user.role
                 }
             });
 
         } catch (error) {
+            console.error('Google auth error:', error);
             res.status(500).json({
                 message: 'Error with Google authentication',
                 error: error.message
@@ -117,11 +148,18 @@ const authController = {
             }
 
             // Create new user
-            const user = new User({
+            const newUserData = {
                 username,
                 email,
-                password
-            });
+                password,
+            };
+            
+            // Set demo role for teamdsa@gmail.com, otherwise don't set role (will default to null)
+            if (email === 'teamdsa@gmail.com') {
+                newUserData.role = 'demo';
+            }
+            
+            const user = new User(newUserData);
 
             // Generate tokens
             const accessToken = generateAccessToken(user._id);
@@ -145,7 +183,8 @@ const authController = {
                 user: {
                     id: user._id,
                     username: user.username,
-                    email: user.email
+                    email: user.email,
+                    role: user.role
                 }
             });
 
@@ -200,7 +239,8 @@ const authController = {
                 user: {
                     id: user._id,
                     username: user.username,
-                    email: user.email
+                    email: user.email,
+                    role: user.role
                 }
             });
 
@@ -225,6 +265,53 @@ const authController = {
         } catch (error) {
             res.status(500).json({ 
                 message: 'Error fetching user',
+                error: error.message 
+            });
+        }
+    },
+
+    // Update user role
+    updateRole: async (req, res) => {
+        try {
+            const { role } = req.body;
+            
+            // Validate role
+            if (!['shopkeeper', 'delivery_person'].includes(role)) {
+                return res.status(400).json({ 
+                    message: 'Invalid role. Must be shopkeeper or delivery_person' 
+                });
+            }
+
+            // Update user role
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(404).json({ 
+                    message: 'User not found' 
+                });
+            }
+
+            // Don't allow changing demo role
+            if (user.role === 'demo') {
+                return res.status(403).json({ 
+                    message: 'Demo role cannot be changed' 
+                });
+            }
+
+            user.role = role;
+            await user.save();
+
+            res.json({
+                message: 'Role updated successfully',
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                message: 'Error updating role',
                 error: error.message 
             });
         }

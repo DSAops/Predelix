@@ -33,6 +33,14 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String
     },
+    role: {
+        type: String,
+        enum: {
+            values: ['shopkeeper', 'delivery_person', 'demo', null],
+            message: 'Role must be shopkeeper, delivery_person, demo, or null'
+        },
+        default: null // null means role not selected yet
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -26,12 +26,41 @@ import LogisticsStoryAnimation from '../../../components/LogisticsStoryAnimation
 import CartoonishLogisticsStory from '../../../components/CartoonishLogisticsStory';
 import { useTheme } from '../../context/ThemeContext';
 
-const navItems = [
+const getAllNavItems = () => [
   { title: 'Home', icon: <HomeIcon className="h-5 w-5 mr-2" />, to: '/' },
   { title: 'Predict', icon: <BarChart2 className="h-5 w-5 mr-2" />, to: '/predict' },
   { title: 'SmartDrop', icon: <Package className="h-5 w-5 mr-2" />, to: '/smartdrop' },
   { title: 'About', icon: <User className="h-5 w-5 mr-2" />, to: '/about' },
 ];
+
+// Function to filter navigation items based on user role
+const getFilteredNavItems = (userRole) => {
+  const allItems = getAllNavItems();
+  
+  // If user is not logged in, show all items for visibility (they're protected by routes)
+  if (!userRole) {
+    return allItems;
+  }
+  
+  // Role-based filtering
+  switch (userRole) {
+    case 'shopkeeper':
+      // Shopkeepers can only access Home, Predict, and About
+      return allItems.filter(item => ['Home', 'Predict', 'About'].includes(item.title));
+    
+    case 'delivery_person':
+      // Delivery persons can only access Home, SmartDrop, and About
+      return allItems.filter(item => ['Home', 'SmartDrop', 'About'].includes(item.title));
+    
+    case 'demo':
+      // Demo users can access all pages
+      return allItems;
+    
+    default:
+      // For users with role not set yet, show all items for visibility
+      return allItems;
+  }
+};
 
 // Floating navbar elements component
 const FloatingNavElements = ({ scrollY }) => {
@@ -88,13 +117,18 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
     { id: 'cosmic', name: 'Cosmic', icon: Sparkles },
   ], []);
 
+  // Get filtered navigation items based on user role
+  const navItems = useMemo(() => {
+    return getFilteredNavItems(user?.role);
+  }, [user?.role]);
+
   // Memoized navigation items with authentication state
   const memoizedNavItems = useMemo(() => {
     return navItems.map(item => ({
       ...item,
-      isAccessible: isLoggedIn || item.to === '/'
+      isAccessible: isLoggedIn || item.to === '/' || item.to === '/about'
     }));
-  }, [isLoggedIn]);
+  }, [isLoggedIn, navItems]);
 
   // Memoized navbar styles based on scroll state
   const navbarStyles = useMemo(() => ({

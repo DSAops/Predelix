@@ -33,7 +33,8 @@ function Login({ onLogin }) {
           onLogin({
             name: data.user.username,
             email: data.user.email,
-            id: data.user.id
+            id: data.user.id,
+            role: data.user.role
           });
         }
       } catch (err) {
@@ -60,7 +61,8 @@ function Login({ onLogin }) {
         onLogin({
           name: data.user.username,
           email: data.user.email,
-          id: data.user.id
+          id: data.user.id,
+          role: data.user.role
         });
       }
     } catch (err) {

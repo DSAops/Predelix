@@ -89,9 +89,32 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const updateRole = async (role) => {
+        try {
+            const data = await authService.updateRole(role);
+            if (data && data.user) {
+                setUser(data.user);
+            }
+            return data;
+        } catch (error) {
+            console.error('Update role error in context:', error);
+            throw error;
+        }
+    };
+
     const logout = async () => {
-        await authService.logout();
-        setUser(null);
+        try {
+            console.log('Starting logout process...');
+            await authService.logout();
+            setUser(null);
+            console.log('Logout completed successfully');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            // Even if the server logout fails, clear local state
+            setUser(null);
+            localStorage.removeItem('accessToken');
+            sessionStorage.clear();
+        }
     };
 
     const value = {
@@ -101,7 +124,8 @@ export function AuthProvider({ children }) {
         register,
         logout,
         checkAuth,
-        googleAuth
+        googleAuth,
+        updateRole
     };
 
     return (
