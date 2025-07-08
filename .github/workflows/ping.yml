@@ -1,18 +1,22 @@
-name: Ping Endpoints Every 10 Minutes
+name: Ping with Random Delay
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Every 10 minutes
+    - cron: '*/5 * * * *'  # Runs every 5 minutes
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping all endpoints
-        id: ping
+      - name: Wait random time (0 to 3 minutes)
         run: |
-          set -e
+          RANDOM_DELAY=$(( RANDOM % 180 ))  # 0–179 seconds
+          echo "Sleeping for $RANDOM_DELAY seconds..."
+          sleep $RANDOM_DELAY
+
+      - name: Ping all endpoints
+        run: |
           for url in \
             "https://predelix.onrender.com" \
             "https://predelix-43r5.onrender.com/api/auth" \
@@ -20,29 +24,3 @@ jobs:
             echo "Pinging $url"
             curl --fail --silent --show-error --max-time 15 "$url"
           done
-
-  notify_on_failure:
-    if: failure()
-    needs: ping
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send email on failure
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "🔴 Predelix Cron Failed"
-          to: officialanuj004@gmail.com
-          from: Predelix Monitor <your-email@example.com>
-          body: |
-            One or more of the cron-triggered endpoints failed to respond.
-
-            Checked endpoints:
-            - https://predelix.onrender.com
-            - https://predelix-43r5.onrender.com/api/auth
-            - https://predelix-242m.onrender.com
-
-            Please investigate the issue.
-
