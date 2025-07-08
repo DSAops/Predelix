@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Users, ArrowLeft, Package, Download, Brain, Target, TrendingUp, Search, Eye, Filter, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Users, ArrowLeft, Package, Download, Brain, Target, TrendingUp, Search, Eye, Filter, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, DatabaseIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
 import { useSmartDropState } from '../hooks/useSmartDropState';
@@ -79,6 +79,7 @@ function SmartDrop() {
   const [uploading, setUploading] = useState(false);
   const [calling, setCalling] = useState(false);
   const [loadingResponses, setLoadingResponses] = useState(false);
+  const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [itemsPerPage] = useState(8);
   const [timer, setTimer] = useState(0);
@@ -245,6 +246,75 @@ function SmartDrop() {
       setUploadError(errorMessage);
     } finally {
       setUploading(false);
+      hideLoading();
+    }
+  };
+
+  const handleLoadDemoData = async () => {
+    setIsLoadingDemo(true);
+    setUploadError(null);
+    setUploaded(false);
+    setCsvData(null);
+    setCallDone(false);
+    setResponses(null);
+    setShowResponses(false);
+    showLoading("Loading demo customer data...");
+    
+    try {
+      // Fetch the demo CSV file from public folder
+      const response = await fetch('/input.csv');
+      if (!response.ok) {
+        throw new Error('Failed to load demo data');
+      }
+      
+      const csvText = await response.text();
+      const lines = csvText.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        throw new Error('Demo CSV file is invalid');
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+      const rows = lines.slice(1, Math.min(6, lines.length)).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/['"]/g, ''));
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        return row;
+      });
+
+      // Create a File object from the CSV text
+      const blob = new Blob([csvText], { type: 'text/csv' });
+      const demoFile = new File([blob], 'demo-input.csv', { type: 'text/csv' });
+      
+      // Upload the demo file to the server
+      const formData = new FormData();
+      formData.append('file', demoFile);
+      
+      const uploadRes = await fetch(`${API_BASE}/upload_customers`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text();
+        throw new Error(`Demo upload failed: ${uploadRes.status} ${uploadRes.statusText}. ${errorText}`);
+      }
+
+      const responseData = await uploadRes.json();
+      console.log('Demo upload successful:', responseData);
+      
+      // Set the demo file and data
+      setCsvFile(demoFile);
+      setCsvData({ headers, rows, totalRows: lines.length - 1 });
+      setUploaded(true);
+      
+    } catch (err) {
+      console.error('Demo data error:', err);
+      setUploadError(`Failed to load demo data: ${err.message}`);
+    } finally {
+      setIsLoadingDemo(false);
       hideLoading();
     }
   };
@@ -441,14 +511,31 @@ function SmartDrop() {
         <div className="space-y-6">
           {/* Step 1: CSV Upload Section */}
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-300">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center animate-pulse">
-                <UploadCloud className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center animate-pulse">
+                  <UploadCloud className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-sky-700">Upload Customer Data</h2>
+                  <p className="text-sm text-sky-600">Upload your customer CSV file to begin automated delivery calls</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-sky-700">Upload Customer Data</h2>
-                <p className="text-sm text-sky-600">Upload your customer CSV file to begin automated delivery calls</p>
-              </div>
+              
+              {/* Small Demo Data Button */}
+              <button
+                type="button"
+                onClick={handleLoadDemoData}
+                disabled={uploading || calling || isLoadingDemo}
+                className={`group relative px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 border
+                  ${uploading || calling || isLoadingDemo
+                    ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-400' 
+                    : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 hover:border-yellow-400 text-yellow-700 hover:text-yellow-800 shadow-md hover:shadow-lg'
+                  }`}
+              >
+                <DatabaseIcon className="h-4 w-4" />
+                <span className="text-sm">Demo Data</span>
+              </button>
             </div>
             
             <div className="space-y-6">
