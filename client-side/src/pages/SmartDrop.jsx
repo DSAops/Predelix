@@ -47,7 +47,7 @@ const FloatingSmartDropElements = ({ scrollY }) => {
   );
 };
 
-const API_BASE = 'https://predelix-1.onrender.com/api';
+const API_BASE = 'https://predelix-242m.onrender.com/api';
 
 function SmartDrop() {
   // Navbar height (px)
