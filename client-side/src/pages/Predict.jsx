@@ -4,7 +4,10 @@ import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe,
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
 import StoreModal from '../components/StoreModal';
+import PredictionChart from '../components/PredictionChart';
+import PredictionDashboard from '../components/PredictionDashboard';
 import { usePredictState } from '../hooks/usePredictState';
+import { feedbackService, localFeedbackStorage } from '../services/feedback.service';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -91,9 +94,43 @@ function Predict() {
   const [scrollY, setScrollY] = useState(0);
   const [itemsPerPage] = useState(8);
   const [storesPerPage] = useState(6);
+  const [feedbackData, setFeedbackData] = useState([]);
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
+
+  // Handle feedback from prediction chart
+  const handlePredictionFeedback = async (feedback) => {
+    setFeedbackData(prev => [...prev, feedback]);
+    
+    // Save to localStorage immediately
+    const existingFeedback = JSON.parse(localStorage.getItem('predictionFeedback') || '[]');
+    const feedbackWithId = {
+      ...feedback,
+      id: Date.now().toString(),
+      synced: false,
+    };
+    existingFeedback.push(feedbackWithId);
+    localStorage.setItem('predictionFeedback', JSON.stringify(existingFeedback));
+    
+    // Try to send to backend
+    try {
+      // Import the feedback service dynamically to avoid import issues
+      const { feedbackService } = await import('../services/feedback.service.js');
+      await feedbackService.submitFeedback(feedback);
+      
+      // Mark as synced if successful
+      const updatedFeedback = JSON.parse(localStorage.getItem('predictionFeedback') || '[]');
+      const syncedFeedback = updatedFeedback.map(f => 
+        f.id === feedbackWithId.id ? { ...f, synced: true } : f
+      );
+      localStorage.setItem('predictionFeedback', JSON.stringify(syncedFeedback));
+      
+      console.log('Feedback successfully submitted to server');
+    } catch (error) {
+      console.warn('Failed to submit feedback to server, saved locally:', error);
+    }
+  };
 
   useEffect(() => {
     let ticking = false;
@@ -526,6 +563,22 @@ function Predict() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Prediction Dashboard */}
+        {predictions && predictions.length > 0 && (
+          <PredictionDashboard 
+            predictions={predictions} 
+            feedbackData={feedbackData}
+          />
+        )}
+
+        {/* Prediction Chart Section */}
+        {predictions && predictions.length > 0 && (
+          <PredictionChart 
+            predictions={predictions} 
+            onFeedback={handlePredictionFeedback}
+          />
         )}
 
         {/* Data Restoration Notification */}

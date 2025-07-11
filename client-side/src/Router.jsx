@@ -12,6 +12,7 @@ import LoadingAnimation from './components/LoadingAnimation';
 import PageLoader from './components/PageLoader';
 import RoleSelectionDialog from './components/RoleSelectionDialog';
 import { useLoading } from './context/LoadingContext';
+import PageTransition from './components/PageTransition';
 
 function ProtectedRoute({ children, requiredRole = null }) {
   const { user, loading, updateRole } = useAuth();
@@ -179,46 +180,48 @@ function AppContent() {
         }}
       />
       <main className="flex-grow pt-[66px]">
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <PageLoader minLoadTime={300}>
-                <Home />
-              </PageLoader>
-            } 
-          />
-          <Route
-            path="/predict"
-            element={
-              <ProtectedRoute requiredRole="shopkeeper">
+        <PageTransition>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
                 <PageLoader minLoadTime={300}>
-                  <Predict />
+                  <Home />
                 </PageLoader>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <ProtectedRoute>
-                <PageLoader minLoadTime={300}>
-                  <About />
-                </PageLoader>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/smartdrop"
-            element={
-              <ProtectedRoute requiredRole="delivery_person">
-                <PageLoader minLoadTime={300}>
-                  <SmartDrop />
-                </PageLoader>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+              } 
+            />
+            <Route
+              path="/predict"
+              element={
+                <ProtectedRoute requiredRole="shopkeeper">
+                  <PageLoader minLoadTime={300}>
+                    <Predict />
+                  </PageLoader>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <ProtectedRoute>
+                  <PageLoader minLoadTime={300}>
+                    <About />
+                  </PageLoader>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smartdrop"
+              element={
+                <ProtectedRoute requiredRole="delivery_person">
+                  <PageLoader minLoadTime={300}>
+                    <SmartDrop />
+                  </PageLoader>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </PageTransition>
       </main>
       <Footer />
     </div>

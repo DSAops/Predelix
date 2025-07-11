@@ -3,6 +3,8 @@ import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCir
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
 import { useSmartDropState } from '../hooks/useSmartDropState';
+import SmartDropStatistics from '../components/SmartDropStatistics';
+import SmartDropDashboard from '../components/SmartDropDashboard';
 
 // Floating elements for SmartDrop page
 const FloatingSmartDropElements = ({ scrollY }) => {
@@ -936,6 +938,24 @@ function SmartDrop() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* SmartDrop Dashboard */}
+          {(responses && responses.length > 0) || callDone && (
+            <SmartDropDashboard 
+              responses={responses} 
+              csvData={csvData} 
+              callDone={callDone}
+            />
+          )}
+
+          {/* SmartDrop Statistics */}
+          {(responses && responses.length > 0) || callDone && (
+            <SmartDropStatistics 
+              responses={responses} 
+              csvData={csvData} 
+              callDone={callDone}
+            />
           )}
 
           {/* Step 4: Response Table */}
