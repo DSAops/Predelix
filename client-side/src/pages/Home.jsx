@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Truck, Package, Globe, BarChart2, Zap, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import LogisticsStoryAnimation from '../../components/LogisticsStoryAnimation';
+import { SectionTransition } from '../components/PageTransition';
+import { OptimizedCard } from '../components/OptimizedComponents';
+import { useSmoothScroll } from '../hooks/usePerformance';
 
 // Animated logistics-themed                  {/* Video Element */}
                   <video 

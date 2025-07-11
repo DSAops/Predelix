@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Area, AreaChart } from 'recharts';
 import { ThumbsUp, ThumbsDown, Eye, EyeOff, TrendingUp, TrendingDown, CheckCircle, XCircle, BarChart2, Activity, Calendar, Target } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
-const PredictionChart = ({ predictions, onFeedback }) => {
+const PredictionChart = memo(({ predictions, onFeedback }) => {
   const [chartType, setChartType] = useState('line');
   const [selectedStore, setSelectedStore] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -37,8 +38,8 @@ const PredictionChart = ({ predictions, onFeedback }) => {
   const handleChartTypeChange = useCallback((type) => {
     setIsLoading(true);
     setChartType(type);
-    // Smooth transition
-    setTimeout(() => setIsLoading(false), 150);
+    // Smooth transition with reduced timeout
+    setTimeout(() => setIsLoading(false), 100);
   }, []);
 
   const handleViewModeChange = useCallback((mode, storeValue = null, productValue = null) => {
@@ -46,8 +47,8 @@ const PredictionChart = ({ predictions, onFeedback }) => {
     setViewMode(mode);
     setSelectedStore(storeValue);
     setSelectedProduct(productValue);
-    // Smooth transition
-    setTimeout(() => setIsLoading(false), 150);
+    // Smooth transition with reduced timeout
+    setTimeout(() => setIsLoading(false), 100);
   }, []);
 
   // Process prediction data for visualization
@@ -150,29 +151,6 @@ const PredictionChart = ({ predictions, onFeedback }) => {
       products: Array.from(productSet).sort()
     };
   }, [predictions]);
-
-  // Handle feedback submission
-  const handleFeedback = (dataPoint, isAccurate) => {
-    const feedbackKey = `${dataPoint.store_id || 'all'}_${dataPoint.product_id || 'all'}_${dataPoint.date}`;
-    
-    setFeedbackData(prev => ({
-      ...prev,
-      [feedbackKey]: {
-        isAccurate,
-        timestamp: new Date().toISOString(),
-        dataPoint
-      }
-    }));
-
-    // Call parent callback if provided
-    if (onFeedback) {
-      onFeedback({
-        ...dataPoint,
-        feedback: isAccurate ? 'accurate' : 'inaccurate',
-        timestamp: new Date().toISOString()
-      });
-    }
-  };
 
   // Get current data based on view mode
   const getCurrentData = () => {
@@ -288,7 +266,12 @@ const PredictionChart = ({ predictions, onFeedback }) => {
       }
       
       return (
-        <div className="h-64 flex items-center justify-center text-gray-500">
+        <motion.div 
+          className="h-64 flex items-center justify-center text-gray-500"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="text-center">
             <BarChart2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p className="text-lg font-medium">{message}</p>
@@ -303,18 +286,27 @@ const PredictionChart = ({ predictions, onFeedback }) => {
               )}
             </p>
           </div>
-        </div>
+        </motion.div>
       );
     }
 
     if (isLoading) {
       return (
-        <div className="h-64 flex items-center justify-center">
+        <motion.div 
+          className="h-64 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
           <div className="flex items-center gap-3 text-cyan-600">
-            <div className="w-6 h-6 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
+            <motion.div 
+              className="w-6 h-6 border-2 border-cyan-600 border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
             <span className="text-sm font-medium">Loading chart...</span>
           </div>
-        </div>
+        </motion.div>
       );
     }
 
@@ -418,16 +410,27 @@ const PredictionChart = ({ predictions, onFeedback }) => {
     })();
 
     return (
-      <div className="transition-opacity duration-300 ease-in-out">
+      <motion.div 
+        className="transition-opacity duration-300 ease-in-out"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        key={`${chartType}-${viewMode}-${selectedStore}-${selectedProduct}`}
+      >
         <ResponsiveContainer width="100%" height={400}>
           {chartComponent}
         </ResponsiveContainer>
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp">
+    <motion.div 
+      className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8"
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       <div className="flex items-center justify-between mb-6">          <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
               <Activity className="w-6 h-6 text-white" />
@@ -609,8 +612,15 @@ const PredictionChart = ({ predictions, onFeedback }) => {
       </div>
 
       {/* Feedback Section */}
-      {showFeedback && (
-        <div className="border-t border-gray-200 pt-6">
+      <AnimatePresence>
+        {showFeedback && (
+          <motion.div 
+            className="border-t border-gray-200 pt-6"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-lg font-semibold text-gray-800">Prediction Feedback</h4>
             <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -625,13 +635,35 @@ const PredictionChart = ({ predictions, onFeedback }) => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
             {getCurrentData().slice(0, 6).map((dataPoint, index) => {
               const feedbackKey = `${dataPoint.store_id || 'all'}_${dataPoint.product_id || 'all'}_${dataPoint.date}`;
               const feedback = feedbackData[feedbackKey];
               
               return (
-                <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <motion.div 
+                  key={index} 
+                  className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">
                       {dataPoint.date}
@@ -665,33 +697,34 @@ const PredictionChart = ({ predictions, onFeedback }) => {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleFeedback(dataPoint, true)}
-                        className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium hover:bg-green-200 transition-colors duration-200"
+                        className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium hover:bg-green-200 transition-colors duration-200 transform hover:scale-105"
                       >
                         <ThumbsUp className="w-3 h-3" />
                         Accurate
                       </button>
                       <button
                         onClick={() => handleFeedback(dataPoint, false)}
-                        className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-colors duration-200"
+                        className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-colors duration-200 transform hover:scale-105"
                       >
                         <ThumbsDown className="w-3 h-3" />
                         Inaccurate
                       </button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
           
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
               Help us improve our predictions by providing feedback on the accuracy of our stock predictions.
             </p>
           </div>
-        </div>
-      )}
-    </div>
+        </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 });
 

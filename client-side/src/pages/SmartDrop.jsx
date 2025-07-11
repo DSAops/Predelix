@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { UploadCloud, PhoneCall, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Users, ArrowLeft, Package, Download, Brain, Target, TrendingUp, Search, Eye, Filter, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, DatabaseIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
+import { motion } from 'motion/react';
 import { useSmartDropState } from '../hooks/useSmartDropState';
 import SmartDropStatistics from '../components/SmartDropStatistics';
 import SmartDropDashboard from '../components/SmartDropDashboard';
+import { SectionTransition } from '../components/PageTransition';
+import { OptimizedCard } from '../components/OptimizedComponents';
+import { useDebounce, useSmoothScroll } from '../hooks/usePerformance';
 
 // Floating elements for SmartDrop page
 const FloatingSmartDropElements = ({ scrollY }) => {

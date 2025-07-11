@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Eye } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
+import { motion } from 'motion/react';
 import StoreModal from '../components/StoreModal';
 import PredictionChart from '../components/PredictionChart';
 import PredictionDashboard from '../components/PredictionDashboard';
+import { SectionTransition } from '../components/PageTransition';
+import { OptimizedCard } from '../components/OptimizedComponents';
 import { usePredictState } from '../hooks/usePredictState';
 import { feedbackService, localFeedbackStorage } from '../services/feedback.service';
+import { useDebounce, useSmoothScroll } from '../hooks/usePerformance';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -100,7 +104,7 @@ function Predict() {
   const { showLoading, hideLoading } = useLoading();
 
   // Handle feedback from prediction chart
-  const handlePredictionFeedback = async (feedback) => {
+  const handlePredictionFeedback = useCallback(async (feedback) => {
     setFeedbackData(prev => [...prev, feedback]);
     
     // Save to localStorage immediately
@@ -130,7 +134,7 @@ function Predict() {
     } catch (error) {
       console.warn('Failed to submit feedback to server, saved locally:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let ticking = false;
@@ -162,7 +166,7 @@ function Predict() {
     }
   }, []); // Empty dependency array - only run on mount
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = useCallback((event) => {
     const uploadedFile = event.target.files[0];
     if (uploadedFile) {
       showLoading("Processing file...");
@@ -173,7 +177,7 @@ function Predict() {
         hideLoading();
       }, 1000);
     }
-  };
+  }, [showLoading, hideLoading, setFile]);
 
   const handlePredict = async () => {
     if (!file) return;
