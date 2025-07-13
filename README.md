@@ -12,8 +12,10 @@
 - [🤝 Contributing](#-contributing)
 - [🔭 Ongoing Development](#-ongoing-development)
 - [👥 Team & Credits](#-team--credits)
-- [📬 Contact](#-contact)
+- [📈 Charts](#charts)
 - [📸 Snapshots](#snapshots)
+- [📬 Contact](#-contact)
+
 
 ---
 
@@ -212,6 +214,10 @@ Track progress here:
 ## 📬 Contact
 Need a demo or have questions?
 📧 Email us at: officialanuj004@gmail.com
+
+## charts
+![WhatsApp Image 2025-07-13 at 23 05 44_2b1a6b80](https://github.com/user-attachments/assets/4ad574f2-7841-4725-977c-20faf2fb431e)
+
 
 ---
 ## Snapshots
