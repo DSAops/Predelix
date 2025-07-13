@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Store, Package, Calendar, TrendingUp, BarChart3 } from 'lucide-react';
 
 export default function StoreModal({ storeId, products, onClose }) {
   const totalProducts = Object.keys(products).length;
   const totalPredictions = Object.values(products).reduce((sum, rows) => sum + rows.length, 0);
 
+  // Lock body scroll when modal opens
+  useEffect(() => {
+    // Save current body overflow style and scroll position
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+    const scrollPosition = window.scrollY;
+    
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.width = '100%';
+    
+    // Clean up function to restore original body style
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      window.scrollTo(0, scrollPosition);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-slideInUp">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 pt-80" style={{ position: 'fixed' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden animate-slideInUp" style={{ maxHeight: '80vh', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
         {/* Enhanced Header */}
         <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-6">
           <div className="flex items-center justify-between">
@@ -48,7 +73,7 @@ export default function StoreModal({ storeId, products, onClose }) {
         </div>
 
         {/* Enhanced Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 240px)' }}>
           <div className="grid gap-6">
             {Object.entries(products).map(([productId, rows], index) => (
               <div 
@@ -139,11 +164,31 @@ export default function StoreModal({ storeId, products, onClose }) {
       {/* Custom Styles */}
       <style>{`
         @keyframes slideInUp {
-          0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+          0% { opacity: 0; transform: translateY(-30px) scale(0.95); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .animate-slideInUp { 
           animation: slideInUp 0.4s ease-out forwards; 
+        }
+        
+        /* Style scrollbars for better UX */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 157, 224, 0.3);
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 157, 224, 0.5);
         }
       `}</style>
     </div>
