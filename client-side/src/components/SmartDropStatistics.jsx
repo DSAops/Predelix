@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Phone, Clock, Users, TrendingUp, CheckCircle, XCircle, Activity, Target, Zap, Award, Calendar, BarChart3 } from 'lucide-react';
 
 const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false }) => {
@@ -252,6 +253,184 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
         </div>
       )}
 
+      {/* Time Savings Visualization */}
+      {safeResponses.length > 0 && (
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-300">
+          <h4 className="text-xl font-bold text-sky-700 mb-6 flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Time Savings Visualization
+          </h4>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Productivity Comparison Chart */}
+            <div>
+              <h5 className="text-lg font-semibold text-gray-800 mb-4">Productivity Comparison</h5>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={[
+                  { 
+                    method: 'Manual Process', 
+                    timePerCall: 4,
+                    callsPerHour: 15,
+                    totalTime: statistics.totalCalls * 4
+                  },
+                  { 
+                    method: 'SmartDrop AI', 
+                    timePerCall: 0.75,
+                    callsPerHour: 80,
+                    totalTime: statistics.totalCalls * 0.75
+                  }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                  <XAxis dataKey="method" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e0e7ff', 
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    formatter={(value, name) => {
+                      if (name === 'timePerCall') return [`${value} min`, 'Time per Call'];
+                      if (name === 'callsPerHour') return [`${value} calls`, 'Calls per Hour'];
+                      return [value, name];
+                    }}
+                  />
+                  <Bar dataKey="timePerCall" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Cumulative Time Savings */}
+            <div>
+              <h5 className="text-lg font-semibold text-gray-800 mb-4">Cumulative Savings Over Time</h5>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={Array.from({ length: Math.min(10, statistics.totalCalls) }, (_, i) => ({
+                  call: i + 1,
+                  saved: (i + 1) * 3.25,
+                  manual: (i + 1) * 4,
+                  automated: (i + 1) * 0.75
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                  <XAxis dataKey="call" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e0e7ff', 
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    formatter={(value) => [`${value} min`, 'Time Saved']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="saved" 
+                    stroke="#10b981" 
+                    fill="#10b981" 
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Efficiency Metrics */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-semibold text-blue-800">Speed Increase</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600 mb-1">5.3x</div>
+              <div className="text-sm text-blue-600">Faster than manual calling</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                  <Award className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-semibold text-green-800">Labor Savings</span>
+              </div>
+              <div className="text-2xl font-bold text-green-600 mb-1">${Math.round(statistics.timesSaved * 0.5)}</div>
+              <div className="text-sm text-green-600">Estimated cost reduction</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-semibold text-purple-800">ROI</span>
+              </div>
+              <div className="text-2xl font-bold text-purple-600 mb-1">{Math.round((statistics.timesSaved * 0.5) / Math.max(1, statistics.totalCalls * 0.1) * 100)}%</div>
+              <div className="text-sm text-purple-600">Return on investment</div>
+            </div>
+          </div>
+
+          {/* Time Breakdown Visual */}
+          <div className="mt-8">
+            <h5 className="text-lg font-semibold text-gray-800 mb-4">Time Allocation Breakdown</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Manual Process Breakdown */}
+              <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-xl border border-red-200">
+                <h6 className="font-semibold text-red-800 mb-4">Manual Process (4 min/call)</h6>
+                <ResponsiveContainer width="100%" height={150}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Dialing & Setup', value: 1.5, color: '#ef4444' },
+                        { name: 'Conversation', value: 2.0, color: '#f87171' },
+                        { name: 'Documentation', value: 0.5, color: '#fca5a5' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={60}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}min`}
+                    >
+                      {[{ color: '#ef4444' }, { color: '#f87171' }, { color: '#fca5a5' }].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} min`, 'Time']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Automated Process Breakdown */}
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-6 rounded-xl border border-cyan-200">
+                <h6 className="font-semibold text-cyan-800 mb-4">SmartDrop AI (0.75 min/call)</h6>
+                <ResponsiveContainer width="100%" height={150}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Auto Dialing', value: 0.1, color: '#06b6d4' },
+                        { name: 'AI Conversation', value: 0.5, color: '#22d3ee' },
+                        { name: 'Auto Recording', value: 0.15, color: '#67e8f9' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={60}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}min`}
+                    >
+                      {[{ color: '#06b6d4' }, { color: '#22d3ee' }, { color: '#67e8f9' }].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} min`, 'Time']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recent Activity */}
       {safeResponses.length > 0 && (
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-400">
@@ -261,7 +440,7 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
           </h4>
           
           <div className="space-y-3">
-            {responses.slice(-5).reverse().map((response, index) => (
+            {safeResponses.slice(-5).reverse().map((response, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">

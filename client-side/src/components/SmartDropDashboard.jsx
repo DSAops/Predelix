@@ -409,6 +409,205 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
         </div>
       </div>
 
+      {/* Time Savings Analysis */}
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8">
+        <h3 className="text-2xl font-bold text-sky-700 mb-8 flex items-center gap-3">
+          <Clock className="w-7 h-7 text-cyan-600" />
+          Time Savings Analysis
+        </h3>
+        
+        {/* Time Savings Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-blue-800">Total Time Saved</span>
+            </div>
+            <div className="text-2xl font-bold text-blue-600 mb-1">{formatTime(metrics.totalTimeSaved)}</div>
+            <div className="text-sm text-blue-600">vs Manual Calling</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-green-800">Efficiency Gain</span>
+            </div>
+            <div className="text-2xl font-bold text-green-600 mb-1">{Math.round((metrics.totalTimeSaved / Math.max(1, metrics.totalCalls * 0.75)) * 100)}%</div>
+            <div className="text-sm text-green-600">Time Reduction</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-purple-800">Cost Savings</span>
+            </div>
+            <div className="text-2xl font-bold text-purple-600 mb-1">${Math.round(metrics.estimatedCostSavings)}</div>
+            <div className="text-sm text-purple-600">Labor Cost Saved</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-xl border border-orange-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-orange-800">Productivity</span>
+            </div>
+            <div className="text-2xl font-bold text-orange-600 mb-1">{Math.round(metrics.totalCalls / Math.max(1, metrics.totalTimeSaved / 60))}x</div>
+            <div className="text-sm text-orange-600">Calls per Hour</div>
+          </div>
+        </div>
+
+        {/* Time Savings Comparison Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Manual vs Automated Time Comparison */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Manual vs Automated Comparison</h4>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={[
+                { 
+                  method: 'Manual Calls', 
+                  timeMinutes: metrics.totalCalls * 4, // 4 minutes per manual call
+                  calls: metrics.totalCalls,
+                  color: '#ef4444'
+                },
+                { 
+                  method: 'SmartDrop AI', 
+                  timeMinutes: metrics.totalCalls * 0.75, // 45 seconds per automated call
+                  calls: metrics.totalCalls,
+                  color: '#06b6d4'
+                }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                <XAxis dataKey="method" stroke="#64748b" />
+                <YAxis stroke="#64748b" label={{ value: 'Time (minutes)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e0e7ff', 
+                    borderRadius: '8px' 
+                  }}
+                  formatter={(value, name) => [`${value} minutes`, 'Total Time']}
+                />
+                <Bar dataKey="timeMinutes" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Cumulative Time Savings Over Calls */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-800 mb-4">Cumulative Time Savings</h4>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={Array.from({ length: Math.min(metrics.totalCalls, 20) }, (_, i) => ({
+                callNumber: i + 1,
+                timeSaved: (i + 1) * 3.25, // 3.25 minutes saved per call
+                manualTime: (i + 1) * 4,
+                automatedTime: (i + 1) * 0.75
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                <XAxis dataKey="callNumber" stroke="#64748b" />
+                <YAxis stroke="#64748b" label={{ value: 'Time (minutes)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e0e7ff', 
+                    borderRadius: '8px' 
+                  }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="timeSaved" 
+                  stroke="#10b981" 
+                  fill="#10b981" 
+                  fillOpacity={0.6}
+                  name="Time Saved"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Time Breakdown Analysis */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-gray-50 to-slate-100 p-6 rounded-xl">
+            <h5 className="font-semibold text-gray-800 mb-3">Manual Process</h5>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Dialing & Setup</span>
+                <span className="text-sm font-medium">1.5 min</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Conversation</span>
+                <span className="text-sm font-medium">2.0 min</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Documentation</span>
+                <span className="text-sm font-medium">0.5 min</span>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="text-gray-800">Total per Call</span>
+                  <span className="text-red-600">4.0 min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-cyan-50 to-blue-100 p-6 rounded-xl">
+            <h5 className="font-semibold text-gray-800 mb-3">SmartDrop AI</h5>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Auto Dialing</span>
+                <span className="text-sm font-medium">0.1 min</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">AI Conversation</span>
+                <span className="text-sm font-medium">0.5 min</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Auto Recording</span>
+                <span className="text-sm font-medium">0.15 min</span>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="text-gray-800">Total per Call</span>
+                  <span className="text-cyan-600">0.75 min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl">
+            <h5 className="font-semibold text-gray-800 mb-3">Savings Summary</h5>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Time per Call</span>
+                <span className="text-sm font-medium text-green-600">+3.25 min</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Calls</span>
+                <span className="text-sm font-medium">{metrics.totalCalls}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Efficiency</span>
+                <span className="text-sm font-medium text-green-600">81% faster</span>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="text-gray-800">Total Saved</span>
+                  <span className="text-green-600">{formatTime(metrics.totalTimeSaved)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Efficiency Metrics */}
