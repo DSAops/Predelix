@@ -212,9 +212,7 @@ function AppContent() {
               path="/about"
               element={
                 <ProtectedRoute>
-                  <PageLoader minLoadTime={300}>
-                    <About />
-                  </PageLoader>
+                  <About key={location.pathname} />
                 </ProtectedRoute>
               }
             />

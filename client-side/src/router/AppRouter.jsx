@@ -212,7 +212,6 @@ function AppContent() {
           </div>
         </div>
       )}
-      {/* ...existing code... */}
       <Navbar
         onLoginClick={() => setAuthOpen(true)}
         isLoggedIn={!!user}

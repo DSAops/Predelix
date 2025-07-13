@@ -22,7 +22,7 @@ const useFooterData = () => {
 
   const links = useMemo(() => ({
     product: [
-      { name: 'Features', href: '#features' },
+      { name: 'Features', href: '/features' },
       { name: 'Documentation', href: '/docs' },
       { name: 'API Reference', href: '/api' },
       { name: 'Pricing', href: '/pricing' },
