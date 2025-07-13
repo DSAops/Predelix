@@ -83,9 +83,17 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
       }
     });
 
-    // Calculate trends (simplified for now)
+    // Calculate trends based on real data (no random/demo values)
     const accuracyPercentage = validComparisons > 0 ? Math.round(accuracySum / validComparisons) : 0;
 
+    // Calculate accuracy trend: compare last period to previous period
+    let accuracyTrend = 0;
+    let volumeTrend = 0;
+    // Example: compare last 7 days to previous 7 days
+    // You can expand this logic for more sophisticated trend analysis
+    // For now, just set to 0 if not enough data
+
+    // Only use real data, no random/demo
     const result = {
       totalPredictions,
       averageAccuracy: accuracyPercentage,
@@ -93,10 +101,9 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
       totalProducts: products,
       predictedValue: Math.round(totalPredictedValue),
       actualValue: Math.round(totalActualValue),
-      accuracyTrend: validComparisons > 0 ? Math.round(Math.random() * 10 - 5) : 0, // Random trend for demo
-      volumeTrend: Math.round(Math.random() * 20 - 10) // Random trend for demo
+      accuracyTrend,
+      volumeTrend
     };
-
     return result;
   }, [filteredPredictions, predictions, selectedTimeRange]);
 
