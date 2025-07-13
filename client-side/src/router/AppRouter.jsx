@@ -234,7 +234,44 @@ function AppContent() {
       />
       <main className="flex-grow pt-[66px]">
         <Routes>
-          {/* ...existing code... */}
+          <Route 
+            path="/" 
+            element={
+              <PageLoader minLoadTime={300}>
+                <Home />
+              </PageLoader>
+            } 
+          />
+          <Route
+            path="/predict"
+            element={
+              <ProtectedRoute requiredRole="shopkeeper">
+                <PageLoader minLoadTime={300}>
+                  <Predict />
+                </PageLoader>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute>
+                <PageLoader minLoadTime={300}>
+                  <About />
+                </PageLoader>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/smartdrop"
+            element={
+              <ProtectedRoute requiredRole="delivery_person">
+                <PageLoader minLoadTime={300}>
+                  <SmartDrop />
+                </PageLoader>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />
