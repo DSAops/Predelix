@@ -1,3 +1,4 @@
+// Backend server URL
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Eye } from 'lucide-react';
@@ -12,6 +13,7 @@ import { OptimizedCard } from '../components/OptimizedComponents';
 import { usePredictState } from '../hooks/usePredictState';
 import { feedbackService, localFeedbackStorage } from '../services/feedback.service';
 import { useDebounce, useSmoothScroll } from '../hooks/usePerformance';
+const serverUrl = 'https://predelix.onrender.com';
 
 // Floating elements for Predict page - Now with varied colors
 const FloatingPredictElements = ({ scrollY }) => {
@@ -70,6 +72,44 @@ function groupPredictionsByStoreAndProduct(predictions) {
 }
 
 function Predict() {
+  // Actual data upload state
+  const [actualDataFile, setActualDataFile] = useState(null);
+
+  const handleActualDataFileChange = (event) => {
+    const uploadedFile = event.target.files[0];
+    if (uploadedFile) {
+      setActualDataFile(uploadedFile);
+      handleUploadActualData(uploadedFile);
+    }
+  };
+
+  const handleUploadActualData = async (selectedFile) => {
+    if (!selectedFile) {
+      alert('No file selected to upload for training.');
+      return;
+    }
+    setLoading(true);
+    showLoading("Uploading actual data for training...");
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    try {
+      const url = `${serverUrl}/api/train`;
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || result.message || `HTTP ${response.status}`);
+      }
+      alert(`Training successful! MSE: ${result.mse}`);
+    } catch (err) {
+      alert(`Training failed: ${err.message}`);
+      console.error('Training error:', err);
+    }
+    setLoading(false);
+    hideLoading();
+  };
   // Navbar height (px)
   const NAVBAR_HEIGHT = 66; // px (matches py-[13px] + 40px content)
   
@@ -187,7 +227,7 @@ function Predict() {
     formData.append('file', file);
     
     try {
-      const url = 'https://predelix.onrender.com/api/predict';
+      const url = `${serverUrl}/api/predict`;
       
       const response = await fetch(url, {
         method: 'POST',
@@ -425,21 +465,41 @@ function Predict() {
             <span className="font-semibold text-cyan-600 animate-pulse"> machine learning insights</span>
           </p>
           
-          {/* Download CSV Button */}
+          {/* Download CSV & Upload Actual Data Buttons */}
           {predictions && csvBlob && (
-            <div className="mt-8 animate-slideInUp animation-delay-400">
-              <button
-                type="button"
-                onClick={handleDownloadCSV}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative z-10 flex items-center gap-3">
-                  <Download className="w-5 h-5 animate-bounce" />
-                  <span>Download CSV Results</span>
-                  <FileSpreadsheet className="w-5 h-5" />
-                </div>
-              </button>
+            <div className="mt-8 flex flex-col items-center gap-4 animate-slideInUp animation-delay-400">
+              <div className="flex flex-col md:flex-row gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={handleDownloadCSV}
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 via-blue-600 to-sky-600 hover:from-cyan-700 hover:via-blue-700 hover:to-sky-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <Download className="w-5 h-5 animate-bounce" />
+                    <span>Download CSV Results</span>
+                    <FileSpreadsheet className="w-5 h-5" />
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('actual-data-upload-input').click()}
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 via-blue-600 to-sky-600 hover:from-cyan-700 hover:via-blue-700 hover:to-sky-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <UploadCloud className="w-5 h-5 animate-bounce" />
+                    <span>Upload Actual Data</span>
+                  </div>
+                  <input
+                    id="actual-data-upload-input"
+                    type="file"
+                    accept=".csv,.xlsx"
+                    style={{ display: 'none' }}
+                    onChange={handleActualDataFileChange}
+                  />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -715,15 +775,23 @@ function Predict() {
                   <button
                     type="button"
                     onClick={handleDownloadCSV}
-                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download CSV</span>
                   </button>
                   <button
                     type="button"
+                    onClick={handleUploadActualData}
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Upload Actual Data</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleUploadMore}
-                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <UploadCloud className="w-4 h-4" />
                     <span>Upload More</span>
@@ -860,6 +928,9 @@ function Predict() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Upload Actual Data Button Below Table */}
+              {/* Removed Upload Actual Data Button from below table, now in Analysis Complete section */}
 
               {/* Pagination */}
               <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
