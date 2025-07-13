@@ -76,6 +76,40 @@ function Predict() {
   // Actual data upload state
   const [actualDataFile, setActualDataFile] = useState(null);
 
+  // Navbar height (px)
+  const NAVBAR_HEIGHT = 66; // px (matches py-[13px] + 40px content)
+  
+  // Use persisted state for user data
+  const {
+    file, setFile,
+    predictions, setPredictions,
+    csvBlob, setCsvBlob,
+    selectedStore, setSelectedStore,
+    currentPage, setCurrentPage,
+    searchTerm, setSearchTerm,
+    sortField, setSortField,
+    sortDirection, setSortDirection,
+    storeCurrentPage, setStoreCurrentPage,
+    showUploadSection, setShowUploadSection,
+    predictionHistory, setPredictionHistory,
+    activePredictionId, setActivePredictionId,
+    isPredictionDataStale,
+    isFileDataStale,
+    isReturningSession,
+    resetPredictState
+  } = usePredictState();
+  
+  // Non-persisted state (temporary UI state)
+  const [loading, setLoading] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [itemsPerPage] = useState(8);
+  const [storesPerPage] = useState(6);
+  const [feedbackData, setFeedbackData] = useState([]);
+  
+  const { themeColors } = useTheme();
+  const { showLoading, hideLoading } = useLoading();
+  const { openStoreModal, modalState, updateActualStockData } = useModal();
+
   const handleActualDataFileChange = (event) => {
     const uploadedFile = event.target.files[0];
     if (uploadedFile) {
@@ -111,39 +145,6 @@ function Predict() {
     setLoading(false);
     hideLoading();
   };
-  // Navbar height (px)
-  const NAVBAR_HEIGHT = 66; // px (matches py-[13px] + 40px content)
-  
-  // Use persisted state for user data
-  const {
-    file, setFile,
-    predictions, setPredictions,
-    csvBlob, setCsvBlob,
-    selectedStore, setSelectedStore,
-    currentPage, setCurrentPage,
-    searchTerm, setSearchTerm,
-    sortField, setSortField,
-    sortDirection, setSortDirection,
-    storeCurrentPage, setStoreCurrentPage,
-    showUploadSection, setShowUploadSection,
-    predictionHistory, setPredictionHistory,
-    activePredictionId, setActivePredictionId,
-    isPredictionDataStale,
-    isFileDataStale,
-    isReturningSession,
-    resetPredictState
-  } = usePredictState();
-  
-  // Non-persisted state (temporary UI state)
-  const [loading, setLoading] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const [itemsPerPage] = useState(8);
-  const [storesPerPage] = useState(6);
-  const [feedbackData, setFeedbackData] = useState([]);
-  
-  const { themeColors } = useTheme();
-  const { showLoading, hideLoading } = useLoading();
-  const { openStoreModal } = useModal();
 
   // Handle feedback from prediction chart
   const handlePredictionFeedback = useCallback(async (feedback) => {
@@ -177,6 +178,31 @@ function Predict() {
       console.warn('Failed to submit feedback to server, saved locally:', error);
     }
   }, []);
+
+  // Function to update predictions with actual stock data
+  const updatePredictionsWithActualData = useCallback((storeId, productId, date, actualStock) => {
+    if (!predictions) return;
+    
+    setPredictions(prevPredictions => {
+      return prevPredictions.map(pred => {
+        if (pred.store_id.toString() === storeId.toString() && 
+            pred.product_id.toString() === productId.toString() && 
+            pred.date === date) {
+          return { ...pred, actual_stock: actualStock };
+        }
+        return pred;
+      });
+    });
+  }, [predictions, setPredictions]);
+  
+  // Make the function available to the ModalContext
+  useEffect(() => {
+    window.updatePredictionsWithActualData = updatePredictionsWithActualData;
+    
+    return () => {
+      delete window.updatePredictionsWithActualData;
+    };
+  }, [updatePredictionsWithActualData]);
 
   useEffect(() => {
     let ticking = false;
@@ -346,19 +372,49 @@ function Predict() {
       };
 
       // Helper function to generate random variation in actual stock compared to predicted
-      const generateActualStock = (predicted, variancePercentage = 10) => {
+      const generateActualStock = (predicted, variancePercentage = 10, ensureActual = false) => {
         // For some entries, we'll have null actual stock to simulate pending data
-        if (Math.random() > 0.8 && getRecentDate(0) === today.toISOString().split('T')[0]) {
+        if (!ensureActual && Math.random() > 0.8 && getRecentDate(0) === today.toISOString().split('T')[0]) {
           return null; // About 20% of today's predictions don't have actual data yet
         }
         
-        const maxVariance = Math.floor(predicted * (variancePercentage / 100));
-        const variance = Math.floor(Math.random() * maxVariance * 2) - maxVariance;
-        return Math.max(0, predicted + variance); // Ensure we don't get negative stock
+        // Generate pattern-based variations for more interesting demo data
+        // We'll create three types of variations:
+        // 1. Normal variations (within expected range)
+        // 2. Outlier variations (significant deviations)
+        // 3. Trend-based variations (consistently above or below predictions)
+        
+        // Determine variation type
+        const variationType = Math.random();
+        let actualStock;
+        
+        if (variationType > 0.85) {
+          // Outlier case - much higher or lower than predicted (15% of cases)
+          const outlierDirection = Math.random() > 0.5 ? 1 : -1;
+          const outlierFactor = 2 + Math.random() * 1.5; // Between 2x and 3.5x the normal variance
+          const maxVariance = Math.floor(predicted * (variancePercentage / 100));
+          actualStock = Math.max(0, predicted + (outlierDirection * maxVariance * outlierFactor));
+        } 
+        else if (variationType > 0.6) {
+          // Trend-based variation - consistently above or below predictions (25% of cases)
+          // This simulates stores that consistently order too much or too little
+          const trendBias = variancePercentage / 100 * (Math.random() > 0.5 ? 1 : -1);
+          const smallRandom = Math.random() * 0.05 - 0.025; // Small additional randomness
+          actualStock = Math.max(0, Math.round(predicted * (1 + trendBias + smallRandom)));
+        }
+        else {
+          // Normal variation - standard minor differences (60% of cases)
+          const varianceDirection = Math.random() > 0.5 ? 1 : -1;
+          const maxVariance = Math.floor(predicted * (variancePercentage / 100));
+          const variance = Math.floor(Math.random() * maxVariance) * varianceDirection;
+          actualStock = Math.max(0, predicted + variance);
+        }
+          
+        return Math.round(actualStock); // Round and ensure we don't get negative stock
       };
 
       const samplePredictions = [
-        // Recent data (last 7 days) for better dashboard display
+        // Recent data (last 7 days) with interesting variations between predicted and actual stock
         { store_id: 2, product_id: 450, date: getRecentDate(1), predicted_stock: 78, actual_stock: 73, sales: 28 },
         { store_id: 20, product_id: 512, date: getRecentDate(1), predicted_stock: 135, actual_stock: 128, sales: 96 },
         { store_id: 30, product_id: 434, date: getRecentDate(2), predicted_stock: 72, actual_stock: 67, sales: 58 },
@@ -370,18 +426,44 @@ function Predict() {
         { store_id: 79, product_id: 136, date: getRecentDate(5), predicted_stock: 108, actual_stock: 105, sales: 78 },
         { store_id: 90, product_id: 519, date: getRecentDate(5), predicted_stock: 98, actual_stock: 101, sales: 70 },
         
-        // More recent predictions with some having no actual data yet (for today)
-        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: generateActualStock(85), sales: 45 },
+        // Added store with significant differences between predicted and actual (under-predicted)
+        { store_id: 15, product_id: 601, date: getRecentDate(1), predicted_stock: 120, actual_stock: 145, sales: 65 },
+        { store_id: 15, product_id: 602, date: getRecentDate(2), predicted_stock: 85, actual_stock: 110, sales: 45 },
+        { store_id: 15, product_id: 603, date: getRecentDate(3), predicted_stock: 92, actual_stock: 115, sales: 52 },
+        
+        // Added store with significant differences between predicted and actual (over-predicted)
+        { store_id: 25, product_id: 701, date: getRecentDate(1), predicted_stock: 180, actual_stock: 150, sales: 95 },
+        { store_id: 25, product_id: 702, date: getRecentDate(2), predicted_stock: 95, actual_stock: 75, sales: 50 },
+        { store_id: 25, product_id: 703, date: getRecentDate(3), predicted_stock: 120, actual_stock: 90, sales: 80 },
+        
+        // Today's predictions - mix of with actual data and without
+        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: generateActualStock(85, 10, true), sales: 45 },
         { store_id: 2, product_id: 452, date: getRecentDate(1), predicted_stock: 92, actual_stock: 89, sales: 52 },
-        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: generateActualStock(140), sales: 98 },
+        { store_id: 2, product_id: 453, date: getRecentDate(0), predicted_stock: 77, actual_stock: generateActualStock(77, 15, true), sales: 40 },
+        
+        { store_id: 15, product_id: 604, date: getRecentDate(0), predicted_stock: 110, actual_stock: generateActualStock(110, 20, true), sales: 70 },
+        { store_id: 15, product_id: 605, date: getRecentDate(0), predicted_stock: 95, actual_stock: 118, sales: 50 },
+        
+        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: generateActualStock(140, 8, false), sales: 98 },
         { store_id: 20, product_id: 514, date: getRecentDate(1), predicted_stock: 125, actual_stock: 120, sales: 87 },
+        { store_id: 20, product_id: 515, date: getRecentDate(0), predicted_stock: 135, actual_stock: generateActualStock(135, 12, true), sales: 90 },
+        
+        { store_id: 25, product_id: 704, date: getRecentDate(0), predicted_stock: 150, actual_stock: generateActualStock(150, 15, true), sales: 85 },
+        { store_id: 25, product_id: 705, date: getRecentDate(0), predicted_stock: 90, actual_stock: 65, sales: 55 },
+        
         { store_id: 30, product_id: 435, date: getRecentDate(2), predicted_stock: 75, actual_stock: 71, sales: 55 },
         { store_id: 30, product_id: 436, date: getRecentDate(3), predicted_stock: 68, actual_stock: 65, sales: 48 },
-        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: generateActualStock(158), sales: 102 },
+        { store_id: 30, product_id: 437, date: getRecentDate(0), predicted_stock: 82, actual_stock: generateActualStock(82, 10, true), sales: 62 },
+        
+        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: generateActualStock(158, 10, true), sales: 102 },
         { store_id: 32, product_id: 551, date: getRecentDate(1), predicted_stock: 144, actual_stock: 140, sales: 95 },
+        { store_id: 32, product_id: 552, date: getRecentDate(0), predicted_stock: 160, actual_stock: generateActualStock(160, 10, true), sales: 105 },
+        
         { store_id: 48, product_id: 234, date: getRecentDate(2), predicted_stock: 66, actual_stock: 62, sales: 41 },
         { store_id: 48, product_id: 235, date: getRecentDate(3), predicted_stock: 59, actual_stock: 56, sales: 35 },
-        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: generateActualStock(72), sales: 63 },
+        { store_id: 48, product_id: 236, date: getRecentDate(0), predicted_stock: 70, actual_stock: generateActualStock(70, 18, false), sales: 45 },
+        
+        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: generateActualStock(72, 10, false), sales: 63 },
         { store_id: 62, product_id: 342, date: getRecentDate(1), predicted_stock: 65, actual_stock: 61, sales: 57 },
       ];
 
@@ -446,6 +528,56 @@ function Predict() {
       setSearchTerm('');
       setSortField('');
       setStoreCurrentPage(1);
+
+      // Ensure all predictions have proper actual stock data for better comparison
+      const updatedPredictions = samplePredictions.map(pred => {
+        // Make sure all predictions have actual stock data for better demo experience
+        // If actual_stock is null, generate a realistic value
+        if (pred.actual_stock === null) {
+          const daysDiff = new Date(today) - new Date(pred.date);
+          const daysPast = Math.floor(daysDiff / (1000 * 60 * 60 * 24));
+          
+          // Only generate actual stock for past dates (today and before)
+          if (daysPast >= 0) {
+            // More variance for older dates (more likely to have been counted)
+            const variancePercentage = 10 + (daysPast * 2); // Increases variance with age
+            pred.actual_stock = generateActualStock(pred.predicted_stock, variancePercentage, true);
+          }
+        }
+        return pred;
+      });
+      
+      // Update our state with the enhanced data that includes all actual stock values
+      setPredictions(updatedPredictions);
+      
+      // Generate and update actual stock data for the selected store in StoreModal, if any
+      if (modalState && modalState.storeModal && modalState.storeModal.isOpen && modalState.storeModal.storeId) {
+        const { storeModal } = modalState;
+        const storeId = parseInt(storeModal.storeId);
+        
+        // Find predictions for this store with actual stock data
+        const storeActualData = updatedPredictions
+          .filter(p => p.store_id === storeId && p.actual_stock !== null)
+          .map(p => ({
+            storeId: p.store_id,
+            productId: p.product_id,
+            date: p.date,
+            actualStock: p.actual_stock
+          }));
+        
+        // Update each product's actual stock data in the modal
+        if (storeActualData.length > 0) {
+          storeActualData.forEach(item => {
+            updateActualStockData(
+              item.storeId, 
+              item.productId, 
+              item.date, 
+              item.actualStock
+            );
+          });
+          console.log(`Updated actual stock data for store ${storeId} with ${storeActualData.length} entries`);
+        }
+      }
       
       hideLoading();
       

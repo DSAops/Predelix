@@ -37,12 +37,44 @@ export const ModalProvider = ({ children }) => {
       }
     }));
   };
+  
+  // Function to update actual stock data in the modal
+  const updateActualStockData = (storeId, productId, date, actualStock) => {
+    setModalState(prev => {
+      // Create deep copy of products to avoid direct state mutation
+      const updatedProducts = JSON.parse(JSON.stringify(prev.storeModal.products));
+      
+      // Find and update the specific product and date entry
+      if (updatedProducts && updatedProducts[productId]) {
+        const productRows = updatedProducts[productId];
+        const rowToUpdate = productRows.find(row => row.date === date);
+        
+        if (rowToUpdate) {
+          rowToUpdate.actual_stock = actualStock;
+        }
+      }
+      
+      return {
+        ...prev,
+        storeModal: {
+          ...prev.storeModal,
+          products: updatedProducts
+        }
+      };
+    });
+    
+    // Also notify any external handlers if they exist
+    if (window.updatePredictionsWithActualData) {
+      window.updatePredictionsWithActualData(storeId, productId, date, actualStock);
+    }
+  };
 
   // Value object to be provided to consumers
   const value = {
     modalState,
     openStoreModal,
-    closeStoreModal
+    closeStoreModal,
+    updateActualStockData
   };
 
   return (
