@@ -273,6 +273,9 @@ function Predict() {
     showLoading("Loading demo data...");
     
     try {
+      // Step 1: Simulate fetching demo CSV file
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       // Fetch the demo CSV file from the public folder
       const response = await fetch('/sample_sales_data.csv');
       if (!response.ok) {
@@ -285,14 +288,133 @@ function Predict() {
       const blob = new Blob([csvText], { type: 'text/csv' });
       const demoFile = new File([blob], 'sample_sales_data.csv', { type: 'text/csv' });
       
-      // Set the file as if it was uploaded normally
+      // Step 2: Set the file and show it's loaded
       setFile(demoFile);
+      hideLoading();
+      showLoading("Processing demo file...");
+      
+      // Simulate file processing time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Step 3: Make prediction request (simulate API call)
+      hideLoading();
+      showLoading("Generating AI predictions...");
+      
+      // Simulate API processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate sample predictions based on the demo data
+      const today = new Date();
+      const getRecentDate = (daysAgo) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - daysAgo);
+        return date.toISOString().split('T')[0];
+      };
+
+      const samplePredictions = [
+        // Recent data (last 7 days) for better dashboard display
+        { store_id: 2, product_id: 450, date: getRecentDate(1), predicted_stock: 78, actual_stock: 73, sales: 28 },
+        { store_id: 20, product_id: 512, date: getRecentDate(1), predicted_stock: 135, actual_stock: 128, sales: 96 },
+        { store_id: 30, product_id: 434, date: getRecentDate(2), predicted_stock: 72, actual_stock: 67, sales: 58 },
+        { store_id: 32, product_id: 549, date: getRecentDate(2), predicted_stock: 152, actual_stock: 145, sales: 99 },
+        { store_id: 48, product_id: 233, date: getRecentDate(3), predicted_stock: 63, actual_stock: 59, sales: 38 },
+        { store_id: 62, product_id: 340, date: getRecentDate(3), predicted_stock: 69, actual_stock: 66, sales: 60 },
+        { store_id: 68, product_id: 130, date: getRecentDate(4), predicted_stock: 89, actual_stock: 87, sales: 77 },
+        { store_id: 77, product_id: 363, date: getRecentDate(4), predicted_stock: 85, actual_stock: 90, sales: 40 },
+        { store_id: 79, product_id: 136, date: getRecentDate(5), predicted_stock: 108, actual_stock: 105, sales: 78 },
+        { store_id: 90, product_id: 519, date: getRecentDate(5), predicted_stock: 98, actual_stock: 101, sales: 70 },
+        
+        // More recent predictions for better dashboard display
+        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: 82, sales: 45 },
+        { store_id: 2, product_id: 452, date: getRecentDate(1), predicted_stock: 92, actual_stock: 89, sales: 52 },
+        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: 136, sales: 98 },
+        { store_id: 20, product_id: 514, date: getRecentDate(1), predicted_stock: 125, actual_stock: 120, sales: 87 },
+        { store_id: 30, product_id: 435, date: getRecentDate(2), predicted_stock: 75, actual_stock: 71, sales: 55 },
+        { store_id: 30, product_id: 436, date: getRecentDate(3), predicted_stock: 68, actual_stock: 65, sales: 48 },
+        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: 155, sales: 102 },
+        { store_id: 32, product_id: 551, date: getRecentDate(1), predicted_stock: 144, actual_stock: 140, sales: 95 },
+        { store_id: 48, product_id: 234, date: getRecentDate(2), predicted_stock: 66, actual_stock: 62, sales: 41 },
+        { store_id: 48, product_id: 235, date: getRecentDate(3), predicted_stock: 59, actual_stock: 56, sales: 35 },
+        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: 69, sales: 63 },
+        { store_id: 62, product_id: 342, date: getRecentDate(1), predicted_stock: 65, actual_stock: 61, sales: 57 },
+      ];
+
+      console.log('Generated demo predictions:', {
+        count: samplePredictions.length,
+        originalFile: demoFile.name,
+        fileSize: demoFile.size
+      });
+      
+      // Create CSV content for predictions
+      const headers = Object.keys(samplePredictions[0]);
+      let csvContent = headers.join(',') + '\n';
+      samplePredictions.forEach(row => {
+        const values = headers.map(header => row[header] || '');
+        csvContent += values.join(',') + '\n';
+      });
+      
+      const predictionBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create prediction entry with proper history tracking
+      const predictionId = Date.now().toString();
+      const predictionEntry = {
+        id: predictionId,
+        fileName: `predictions_${demoFile.name}`,
+        originalFileName: demoFile.name,
+        uploadDate: new Date().toLocaleString(),
+        predictions: samplePredictions,
+        csvBlob: predictionBlob,
+        recordCount: samplePredictions.length,
+        processingTime: '3.2s',
+        accuracy: '94.7%',
+        source: 'demo'
+      };
+      
+      // Add to history and set as active
+      setPredictionHistory(prev => [predictionEntry, ...prev]);
+      setActivePredictionId(predictionId);
+      setPredictions(samplePredictions);
+      setCsvBlob(predictionBlob);
+      setShowUploadSection(false);
+      
+      // Add some sample feedback data
+      const sampleFeedback = [
+        { store_id: 2, product_id: 450, feedback: 'accurate', timestamp: new Date(getRecentDate(1)).toISOString() },
+        { store_id: 20, product_id: 512, feedback: 'accurate', timestamp: new Date(getRecentDate(1)).toISOString() },
+        { store_id: 30, product_id: 434, feedback: 'inaccurate', timestamp: new Date(getRecentDate(2)).toISOString() },
+        { store_id: 32, product_id: 549, feedback: 'accurate', timestamp: new Date(getRecentDate(2)).toISOString() },
+        { store_id: 48, product_id: 233, feedback: 'accurate', timestamp: new Date(getRecentDate(3)).toISOString() },
+        { store_id: 62, product_id: 340, feedback: 'accurate', timestamp: new Date(getRecentDate(3)).toISOString() },
+        { store_id: 77, product_id: 363, feedback: 'inaccurate', timestamp: new Date(getRecentDate(4)).toISOString() },
+        { store_id: 79, product_id: 136, feedback: 'accurate', timestamp: new Date(getRecentDate(5)).toISOString() },
+        { store_id: 2, product_id: 451, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
+        { store_id: 20, product_id: 513, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
+        { store_id: 30, product_id: 435, feedback: 'inaccurate', timestamp: new Date(getRecentDate(2)).toISOString() },
+        { store_id: 32, product_id: 550, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
+      ];
+      setFeedbackData(sampleFeedback);
+      
+      // Reset form
+      setFile(null);
+      setCurrentPage(1);
+      setSearchTerm('');
+      setSortField('');
+      setStoreCurrentPage(1);
       
       hideLoading();
+      
+      // Show success message
+      setTimeout(() => {
+        console.log('Demo predictions loaded successfully!', {
+          predictions: samplePredictions.length,
+          history: predictionHistory.length + 1
+        });
+      }, 500);
+      
     } catch (error) {
       console.error('Error loading demo data:', error);
-      alert('Failed to load demo data. Please try again.');
       hideLoading();
+      alert('Failed to load demo data. Please try again.');
     }
   };
 
@@ -569,51 +691,51 @@ function Predict() {
           </div>
         )}
 
-        {/* Prediction Dashboard */}
-        {predictions && predictions.length > 0 && (
-          <PredictionDashboard 
-            predictions={predictions} 
-            feedbackData={feedbackData}
-          />
-        )}
-
-        {/* Prediction Chart Section */}
-        {predictions && predictions.length > 0 && (
-          <PredictionChart 
-            predictions={predictions} 
-            onFeedback={handlePredictionFeedback}
-          />
-        )}
-
-        {/* Data Restoration Notification */}
-        {isReturningSession && (file || predictions || selectedStore) && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 animate-slideInUp">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <RefreshCw className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-green-800">Previous Session Restored</h4>
-                <p className="text-sm text-green-600">
-                  Your work has been automatically saved and restored from your last visit.
-                  {isPredictionDataStale() && predictions && (
-                    <span className="text-amber-600 ml-1">(Data is over 30 minutes old - consider refreshing)</span>
-                  )}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={resetPredictState}
-                className="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-md transition-colors duration-200"
-              >
-                Start Fresh
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Enhanced Main Content - Single Column Layout */}
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Prediction Dashboard */}
+          {predictions && predictions.length > 0 && (
+            <PredictionDashboard 
+              predictions={predictions} 
+              feedbackData={feedbackData}
+            />
+          )}
+
+          {/* Prediction Chart Section */}
+          {predictions && predictions.length > 0 && (
+            <PredictionChart 
+              predictions={predictions} 
+              onFeedback={handlePredictionFeedback}
+            />
+          )}
+
+          {/* Data Restoration Notification */}
+          {isReturningSession && (file || predictions || selectedStore) && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 animate-slideInUp">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <RefreshCw className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-green-800">Previous Session Restored</h4>
+                  <p className="text-sm text-green-600">
+                    Your work has been automatically saved and restored from your last visit.
+                    {isPredictionDataStale() && predictions && (
+                      <span className="text-amber-600 ml-1">(Data is over 30 minutes old - consider refreshing)</span>
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetPredictState}
+                  className="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-md transition-colors duration-200"
+                >
+                  Start Fresh
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Upload Section or Upload More Section */}
           {showUploadSection ? (
             <div 

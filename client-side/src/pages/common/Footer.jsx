@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Github, Linkedin, Mail, ExternalLink, Truck, Package, Globe, Zap, Shield, BarChart2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Github, Linkedin, Mail, ExternalLink, Truck, Package, Globe, Zap, Shield, BarChart2, X, Construction } from 'lucide-react';
 
 const useFooterData = () => {
   const creators = useMemo(() => [
@@ -47,6 +47,16 @@ const useFooterData = () => {
 
 export function Footer() {
   const { creators, links } = useFooterData();
+  const [showDevModal, setShowDevModal] = useState(false);
+
+  const handleDevLinkClick = (e) => {
+    e.preventDefault();
+    setShowDevModal(true);
+  };
+
+  const closeModal = () => {
+    setShowDevModal(false);
+  };
   
   return (
     <footer className="bg-gradient-to-br from-white via-cyan-50/30 to-blue-50/30 border-t border-cyan-200/50 mt-auto w-full relative z-50 overflow-hidden">
@@ -112,7 +122,8 @@ export function Footer() {
                   <li key={item.name}>
                     <a
                       href={item.href}
-                      className="group text-sky-600 hover:text-cyan-600 text-sm transition-all duration-300 flex items-center transform hover:translate-x-1"
+                      onClick={item.href.startsWith('/') && !item.href.includes('#') ? handleDevLinkClick : undefined}
+                      className="group text-sky-600 hover:text-cyan-600 text-sm transition-all duration-300 flex items-center transform hover:translate-x-1 cursor-pointer"
                     >
                       <span className="group-hover:font-medium">{item.name}</span>
                       {item.href.startsWith('http') && (
@@ -178,6 +189,53 @@ export function Footer() {
           </div>
         </div>
       </div>
+      
+      {/* Development Modal */}
+      {showDevModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 relative overflow-hidden">
+            {/* Modal Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 to-blue-50"></div>
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-cyan-300/20 to-blue-300/20 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-gradient-to-br from-blue-300/20 to-sky-300/20 rounded-full blur-xl"></div>
+            
+            {/* Modal Content */}
+            <div className="relative p-8 text-center">
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+              >
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
+              
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <Construction className="w-8 h-8 text-white" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Coming Soon!
+              </h3>
+              
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                This page is currently under development. We're working hard to bring you an amazing experience. Stay tuned!
+              </p>
+              
+              <div className="flex items-center justify-center space-x-2 text-sm text-cyan-600 mb-4">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              </div>
+              
+              <button
+                onClick={closeModal}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Custom animations */}
       <style>{`

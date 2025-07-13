@@ -175,7 +175,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
 
   // Set a fixed width and height for the logo wrapper and login button/profile wrapper to prevent layout shift
   return (
-    <nav className={`w-full transition-all duration-300 px-4 py-[13px] grid grid-cols-3 items-center fixed top-0 left-0 z-50 border-b overflow-hidden ${
+    <nav className={`w-full transition-all duration-300 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex items-center justify-between fixed top-0 left-0 z-50 border-b overflow-hidden ${
       isScrolled 
         ? 'bg-white/95 backdrop-blur-xl shadow-xl border-sky-200/50' 
         : 'bg-white/90 backdrop-blur-xl shadow-lg border-cyan-300/40'
@@ -186,21 +186,51 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/30 via-blue-50/20 to-sky-50/30 opacity-50"></div>
       
-      {/* Left Side: Cartoonish Story Animation */}
-      <div className="justify-self-start relative z-10">
-        <div className="w-48 max-w-xs">
-          <CartoonishLogisticsStory />
+      {/* Left Side: Logo and Brand */}
+      <div className="flex items-center gap-3 relative z-10 min-w-0">
+        {/* Animated logo icon */}
+        <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center animate-float1 flex-shrink-0">
+          <Truck className="w-5 h-5 text-white animate-bounce" />
+        </div>
+        <div key={key} className="hidden sm:block">
+          <div 
+            className="text-xl sm:text-2xl font-extrabold relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(to right, #22d3ee, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Predelix
+            {/* Shimmer overlay */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%)',
+                animation: 'shimmer 2s infinite',
+                transform: 'translateX(-100%)',
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Mobile-only cartoonish animation */}
+        <div className="block sm:hidden ml-2">
+          <div className="w-32 max-w-xs">
+            <CartoonishLogisticsStory />
+          </div>
         </div>
       </div>
       
-      {/* Center: Nav Items */}
-      <div className="justify-self-center flex items-center relative z-10">
-        <div className="flex gap-4">
+      {/* Center: Nav Items - Hidden on mobile, shown on larger screens */}
+      <div className="hidden lg:flex items-center relative z-10">
+        <div className="flex gap-2 xl:gap-4">
           {navItems.map((item, idx) => (
             <Link
               key={idx}
               to={item.to}
-              className="group flex items-center px-3 py-2 rounded-lg text-sky-700 font-medium hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:text-cyan-600 transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
+              className="group flex items-center px-3 py-2 rounded-lg text-sky-700 font-medium hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:text-cyan-600 transition-all duration-300 transform hover:scale-105 relative overflow-hidden whitespace-nowrap"
             >
               {/* Animated background on hover */}
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -215,58 +245,78 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
         </div>
       </div>
       
-      {/* Right Side: App Name and Auth */}
-      <div className="justify-self-end flex items-center gap-6 relative z-10">
-        {/* App Name */}
-        <div style={{ width: 140, height: 32 }} className="flex items-center">
-          <div className="relative flex items-center space-x-2">
-            {/* Animated logo icon */}
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center animate-float1">
-              <Truck className="w-5 h-5 text-white animate-bounce" />
-            </div>
-            <div key={key}>
-              <TextRoll
-                className="text-2xl font-extrabold bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 bg-clip-text text-transparent"
-                loop
-                loopDelay={3000}
-              >
-                {['Predelix']}
-              </TextRoll>
-            </div>
-          </div>
+      {/* Desktop-only cartoonish animation */}
+      <div className="hidden sm:block lg:hidden absolute left-1/2 transform -translate-x-1/2 z-10">
+        <div className="w-40 max-w-xs">
+          <CartoonishLogisticsStory />
+        </div>
+      </div>
+      
+      {/* Right Side: Auth Section */}
+      <div className="flex items-center gap-3 relative z-10 min-w-0">
+        {/* Mobile Navigation Menu - Only visible on mobile */}
+        <div className="block lg:hidden">
+          <Popover className="relative">
+            <PopoverButton className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 focus:outline-none shadow-lg hover:shadow-xl">
+              <div className="w-5 h-5 flex flex-col justify-between">
+                <span className="block w-full h-0.5 bg-white"></span>
+                <span className="block w-full h-0.5 bg-white"></span>
+                <span className="block w-full h-0.5 bg-white"></span>
+              </div>
+            </PopoverButton>
+            <PopoverPanel
+              anchor="bottom end"
+              className="mt-2 w-56 rounded-xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-sky-200/50 p-4 z-50 border border-cyan-100/50 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 to-blue-50/50"></div>
+              <div className="relative z-10 space-y-2">
+                {navItems.map((item, idx) => (
+                  <Link
+                    key={idx}
+                    to={item.to}
+                    className="group flex items-center gap-3 w-full px-3 py-2 text-sm text-sky-700 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 rounded-lg"
+                  >
+                    <div className="transform group-hover:scale-110 transition-transform duration-300">
+                      {item.icon}
+                    </div>
+                    <span>{item.title}</span>
+                  </Link>
+                ))}
+              </div>
+            </PopoverPanel>
+          </Popover>
         </div>
         
         {/* Auth Section */}
-        <div className="flex items-center justify-end" style={{ width: 110, height: 40 }}>
+        <div className="flex items-center">
           {!isLoggedIn ? (
           <button
-            className="group relative px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center overflow-hidden"
+            className="group relative px-3 sm:px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 hover:from-cyan-600 hover:via-blue-600 hover:to-sky-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center overflow-hidden"
             onClick={onLoginClick}
-            style={{ minWidth: 100, minHeight: 36 }}
           >
             {/* Animated background shimmer */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10 flex items-center">
-              <LogInIcon className="h-5 w-5 mr-2 animate-pulse" />
-              <span>Login</span>
+              <LogInIcon className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2 animate-pulse" />
+              <span className="hidden sm:inline">Login</span>
             </div>
           </button>
         ) : (
           <Popover className="relative">
-            <PopoverButton className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 focus:outline-none shadow-lg hover:shadow-xl relative overflow-hidden">
+            <PopoverButton className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 focus:outline-none shadow-lg hover:shadow-xl relative overflow-hidden">
               {/* Animated background pulse */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-              <div className="relative z-10 flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-white" />
-                <span className="text-white font-medium text-sm max-w-20 truncate">
-                  {user?.name || 'Namaste'}
+              <div className="relative z-10 flex items-center gap-1 sm:gap-2">
+                <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0" />
+                <span className="text-white font-medium text-xs sm:text-sm max-w-16 sm:max-w-20 truncate">
+                  {user?.name || 'User'}
                 </span>
-                <ChevronDown className="h-4 w-4 text-white/80" />
+                <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-white/80 flex-shrink-0" />
               </div>
             </PopoverButton>
             <PopoverPanel
-              anchor="bottom"
-              className="absolute right-0 mt-2 w-64 rounded-xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-sky-200/50 p-0 z-50 border border-cyan-100/50 overflow-hidden"
+              anchor="bottom end"
+              className="mt-2 w-64 rounded-xl bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-sky-200/50 p-0 z-50 border border-cyan-100/50 overflow-hidden"
             >
               {/* Animated background in dropdown */}
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 to-blue-50/50"></div>
@@ -274,12 +324,12 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                 {/* User Info Header */}
                 <div className="px-4 pt-4 pb-2 border-b border-sky-200/50">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                       <UserCircle className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-sky-800">{user?.name || 'Namaste'}</div>
-                      <div className="text-sm text-sky-600">{user?.email || ''}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sky-800 truncate">{user?.name || 'User'}</div>
+                      <div className="text-sm text-sky-600 truncate">{user?.email || ''}</div>
                     </div>
                   </div>
                 </div>
@@ -290,7 +340,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                     className="group flex items-center gap-3 w-full px-4 py-2 text-sm text-sky-700 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300"
                     onClick={() => {/* Handle profile click */}}
                   >
-                    <UserCircle className="h-4 w-4 group-hover:animate-pulse" />
+                    <UserCircle className="h-4 w-4 group-hover:animate-pulse flex-shrink-0" />
                     <span>Profile</span>
                   </button>
                 </div>
@@ -302,10 +352,10 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                     onClick={() => setShowSettings(!showSettings)}
                   >
                     <div className="flex items-center gap-3">
-                      <Settings className="h-4 w-4 group-hover:animate-spin" />
+                      <Settings className="h-4 w-4 group-hover:animate-spin flex-shrink-0" />
                       <span>Settings</span>
                     </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showSettings ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 flex-shrink-0 ${showSettings ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {/* Settings Dropdown */}
@@ -314,7 +364,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                       {/* Theme Selection */}
                       <div className="px-4 py-2">
                         <div className="flex items-center gap-2 mb-2">
-                          <Palette className="h-4 w-4 text-sky-600" />
+                          <Palette className="h-4 w-4 text-sky-600 flex-shrink-0" />
                           <span className="text-sm font-medium text-sky-700">Theme</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
@@ -324,16 +374,16 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                               <button
                                 key={theme.id}
                                 onClick={() => changeTheme(theme.id)}
-                                className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all duration-300 ${
+                                className={`group flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all duration-300 ${
                                   currentTheme === theme.id
                                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
                                     : 'bg-white/60 text-sky-600 hover:bg-white/80 hover:text-cyan-600'
                                 }`}
                               >
-                                <IconComponent className="h-3 w-3" />
-                                <span>{theme.name}</span>
+                                <IconComponent className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{theme.name}</span>
                                 {currentTheme === theme.id && (
-                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0"></div>
                                 )}
                               </button>
                             );
@@ -350,7 +400,7 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
                     className="group flex items-center gap-3 w-full px-4 py-3 text-sm text-sky-600 hover:text-cyan-600 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-300 font-medium"
                     onClick={onLogout}
                   >
-                    <LogOutIcon className="h-4 w-4 group-hover:animate-bounce" />
+                    <LogOutIcon className="h-4 w-4 group-hover:animate-bounce flex-shrink-0" />
                     <span>Logout</span>
                   </button>
                 </div>
@@ -384,11 +434,16 @@ export function Navbar({ onLoginClick, isLoggedIn, user, onLogout }) {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
         
         .animate-float1 { animation: float1 4s ease-in-out infinite; }
         .animate-float2 { animation: float2 5s ease-in-out infinite; }
         .animate-float3 { animation: float3 6s ease-in-out infinite; }
         .animate-wave { animation: wave 2s ease-in-out infinite; }
+        .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
       `}</style>
     </nav>
