@@ -8,6 +8,8 @@ import Predict from "./pages/Predict";
 import SmartDrop from "./pages/SmartDrop";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useState, useEffect } from 'react';
+import { useDemoModal } from './context/DemoModalContext';
+import DemoAccountModal from './components/DemoAccountModal';
 import LoadingAnimation from './components/LoadingAnimation';
 import PageLoader from './components/PageLoader';
 import RoleSelectionDialog from './components/RoleSelectionDialog';
@@ -80,6 +82,8 @@ function AppContent() {
   const { user, logout, loading, updateRole } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const location = useLocation();
+  // Global demo modal context
+  const { showDemoModal, setShowDemoModal } = useDemoModal();
 
   // Handle initial authentication loading
   useEffect(() => {
@@ -159,6 +163,10 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Global Demo Account Modal - only on /smartdrop */}
+      {location.pathname === '/smartdrop' && showDemoModal && (
+        <DemoAccountModal onClose={() => setShowDemoModal(false)} />
+      )}
       <Navbar
         onLoginClick={() => setAuthOpen(true)}
         isLoggedIn={!!user}

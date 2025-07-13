@@ -2,6 +2,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import config from './config';
 import { ThemeProvider } from './context/ThemeContext';
 import { LoadingProvider, useLoading } from './context/LoadingContext';
+import { DemoModalProvider } from './context/DemoModalContext';
 import LoadingAnimation from './components/LoadingAnimation';
 import './styles/themes.css';
 import AppRouter from './router';
@@ -23,7 +24,9 @@ function App() {
     <GoogleOAuthProvider clientId={config.googleClientId}>
       <ThemeProvider>
         <LoadingProvider>
-          <AppContent />
+          <DemoModalProvider>
+            <AppContent />
+          </DemoModalProvider>
         </LoadingProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>
