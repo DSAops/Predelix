@@ -163,8 +163,8 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Global Demo Account Modal - only on /smartdrop */}
-      {location.pathname === '/smartdrop' && showDemoModal && (
+      {/* Global Demo Account Modal - on /smartdrop */}
+      {(location.pathname === '/smartdrop') && showDemoModal && (
         <DemoAccountModal onClose={() => setShowDemoModal(false)} />
       )}
       <Navbar

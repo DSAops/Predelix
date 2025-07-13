@@ -181,20 +181,20 @@ function About() {
         name: "Devraj Patil",
         role: "Full Stack Developer",
         icon: Code,
-        description: "Backend architecture and AI integration specialist"
-      },
-      {
-        name: "Anuj Sahu",
-        role: "Frontend Developer",
-        icon: Brain,
-        description: "UI/UX design and frontend development expert"
+        description: "UI/UX design and frontend designer"
       },
       {
         name: "Saksham Gupta",
-        role: "Data Engineer",
+        role: "Full Stack Developer",
         icon: Database,
-        description: "Data analytics and machine learning implementation"
-      }
+        description: "Authentication Backend server and frontend developer"
+      },
+      {
+        name: "Anuj Sahu",
+        role: "Full Stack Developer",
+        icon: Brain,
+        description: "Backend Development machine learning implementation."
+      },
     ],
     achievements: [
       { icon: Code, label: "Lines of Code", value: "10K+" },
