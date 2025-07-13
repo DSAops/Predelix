@@ -8,62 +8,70 @@ import {
 } from 'lucide-react';
 
 const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, callHistory = [] }) => {
+  // Top-level robust guards for all incoming props
+  const safeResponses = Array.isArray(responses) ? responses : [];
+  const safeCsvData = (csvData && typeof csvData === 'object' && Array.isArray(csvData?.rows)) ? csvData : { rows: [] };
+  const safeCallHistory = Array.isArray(callHistory) ? callHistory : [];
+
+  // If all data is missing or malformed, show a friendly message and avoid rendering dashboard
+  const noData = safeResponses.length === 0 && safeCsvData.rows.length === 0;
+  if (noData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+        <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-cyan-100">
+          <AlertCircle className="w-10 h-10 text-cyan-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-cyan-700 mb-2">No Delivery Data Available</h2>
+        <p className="text-gray-600 mb-4">Please upload a CSV or start delivery calls to view analytics.</p>
+        <div className="text-sm text-gray-400">If you believe this is an error, please refresh or contact support.</div>
+      </div>
+    );
+  }
   const [selectedTimeRange, setSelectedTimeRange] = useState('today'); // today, week, month, all
   const [refreshing, setRefreshing] = useState(false);
 
   // Calculate comprehensive metrics
   const metrics = useMemo(() => {
-    const totalCalls = responses.length;
-    const successfulCalls = responses.filter(r => 
+    const totalCalls = safeResponses.length;
+    const successfulCalls = safeResponses.filter(r => 
       r.delivery_status === 'confirmed' || 
       r.delivery_status === 'delivered' || 
       r.delivery_status === 'successful'
     ).length;
-    
-    const failedCalls = responses.filter(r => 
+    const failedCalls = safeResponses.filter(r => 
       r.delivery_status === 'failed' || 
       r.delivery_status === 'no_answer' || 
       r.delivery_status === 'unsuccessful'
     ).length;
-    
-    const pendingCalls = responses.filter(r => 
+    const pendingCalls = safeResponses.filter(r => 
       r.delivery_status === 'pending' || 
       r.delivery_status === 'in_progress'
     ).length;
-    
     const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
-    
     // Time calculations
     const averageManualCallTime = 4; // minutes per call
     const totalTimeSaved = totalCalls * averageManualCallTime;
-    
     // Calculate average call duration
-    const callsWithDuration = responses.filter(r => r.call_duration && r.call_duration > 0);
+    const callsWithDuration = safeResponses.filter(r => r.call_duration && r.call_duration > 0);
     const averageCallTime = callsWithDuration.length > 0 
       ? Math.round(callsWithDuration.reduce((sum, r) => sum + parseFloat(r.call_duration || 0), 0) / callsWithDuration.length)
       : 45;
-    
     // Cost savings (estimated at $0.50 per minute of labor)
     const estimatedCostSavings = totalTimeSaved * 0.50;
-    
     // Customer satisfaction (based on successful deliveries)
     const customerSatisfaction = successRate;
-    
     // Efficiency metrics
-    const totalCustomers = csvData?.rows?.length || totalCalls;
+    const totalCustomers = safeCsvData?.rows?.length || totalCalls;
     const completionRate = totalCustomers > 0 ? Math.round((totalCalls / totalCustomers) * 100) : 0;
-    
     // Calculate hourly call volume
-    const callsByHour = responses.reduce((acc, response) => {
+    const callsByHour = safeResponses.reduce((acc, response) => {
       const hour = new Date().getHours(); // In real app, use response timestamp
       acc[hour] = (acc[hour] || 0) + 1;
       return acc;
     }, {});
-    
     const peakHour = Object.entries(callsByHour).reduce((max, [hour, count]) => 
       count > max.count ? { hour, count } : max, { hour: '0', count: 0 }
     );
-
     return {
       totalCalls,
       successfulCalls,
@@ -79,23 +87,20 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
       peakHour: parseInt(peakHour.hour),
       peakHourCalls: peakHour.count
     };
-  }, [responses, csvData]);
+  }, [safeResponses, safeCsvData]);
 
   // Prepare time-series data for charts
   const timeSeriesData = useMemo(() => {
-    if (!responses || responses.length === 0) return [];
-
+    if (!safeResponses || safeResponses.length === 0) return [];
     // Group calls by hour/day depending on time range
     const groupBy = selectedTimeRange === 'today' ? 'hour' : 'day';
     const groups = {};
-
-    responses.forEach(response => {
+    safeResponses.forEach(response => {
       // In a real app, you'd use the actual timestamp from the response
       const now = new Date();
       const key = groupBy === 'hour' 
         ? `${now.getHours()}:00`
         : now.toISOString().split('T')[0];
-      
       if (!groups[key]) {
         groups[key] = {
           time: key,
@@ -105,9 +110,7 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
           pending: 0
         };
       }
-      
       groups[key].total++;
-      
       if (response.delivery_status === 'confirmed' || response.delivery_status === 'delivered') {
         groups[key].successful++;
       } else if (response.delivery_status === 'failed' || response.delivery_status === 'no_answer') {
@@ -116,9 +119,8 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
         groups[key].pending++;
       }
     });
-
     return Object.values(groups).sort((a, b) => a.time.localeCompare(b.time));
-  }, [responses, selectedTimeRange]);
+  }, [safeResponses, selectedTimeRange]);
 
   // Status distribution
   const statusDistribution = useMemo(() => {
@@ -128,8 +130,7 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
       'Pending': { count: 0, color: '#f59e0b' },
       'No Answer': { count: 0, color: '#6b7280' }
     };
-
-    responses.forEach(response => {
+    safeResponses.forEach(response => {
       switch (response.delivery_status) {
         case 'confirmed':
         case 'delivered':
@@ -147,19 +148,17 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
           statuses['Pending'].count++;
       }
     });
-
     return Object.entries(statuses).map(([name, data]) => ({
       name,
       value: data.count,
       color: data.color,
-      percentage: responses.length > 0 ? Math.round((data.count / responses.length) * 100) : 0
+      percentage: safeResponses.length > 0 ? Math.round((data.count / safeResponses.length) * 100) : 0
     }));
-  }, [responses]);
+  }, [safeResponses]);
 
   // Performance insights
   const performanceInsights = useMemo(() => {
     const insights = [];
-
     // Success rate insight
     if (metrics.successRate >= 80) {
       insights.push({
@@ -183,7 +182,6 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
         icon: XCircle
       });
     }
-
     // Time efficiency insight
     if (metrics.totalTimeSaved > 60) {
       insights.push({
@@ -193,7 +191,6 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
         icon: Clock
       });
     }
-
     // Cost efficiency insight
     if (metrics.estimatedCostSavings > 50) {
       insights.push({
@@ -203,7 +200,6 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
         icon: Award
       });
     }
-
     return insights;
   }, [metrics]);
 

@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Phone, Clock, Users, TrendingUp, CheckCircle, XCircle, Activity, Target, Zap, Award, Calendar, BarChart3 } from 'lucide-react';
 
 const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false }) => {
+  // Top-level robust guards for incoming props
+  const safeResponses = Array.isArray(responses) ? responses : [];
+  const safeCsvData = (csvData && typeof csvData === 'object' && Array.isArray(csvData?.rows)) ? csvData : { rows: [] };
   const [animatedStats, setAnimatedStats] = useState({
     totalCalls: 0,
     timesSaved: 0,
@@ -11,27 +14,22 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
 
   // Calculate statistics
   const statistics = useMemo(() => {
-    const totalCalls = responses.length;
-    const successfulCalls = responses.filter(r => r.delivery_status === 'confirmed' || r.delivery_status === 'delivered').length;
-    const unsuccessfulCalls = responses.filter(r => r.delivery_status === 'failed' || r.delivery_status === 'no_answer').length;
-    const pendingCalls = responses.filter(r => r.delivery_status === 'pending').length;
-    
+    const totalCalls = safeResponses.length;
+    const successfulCalls = safeResponses.filter(r => r.delivery_status === 'confirmed' || r.delivery_status === 'delivered').length;
+    const unsuccessfulCalls = safeResponses.filter(r => r.delivery_status === 'failed' || r.delivery_status === 'no_answer').length;
+    const pendingCalls = safeResponses.filter(r => r.delivery_status === 'pending').length;
     const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
-    
     // Estimate time saved (assuming each manual call takes 3-5 minutes)
     const averageManualCallTime = 4; // minutes
     const timesSaved = totalCalls * averageManualCallTime;
-    
     // Calculate average call duration (if available in response data)
-    const callsWithDuration = responses.filter(r => r.call_duration);
+    const callsWithDuration = safeResponses.filter(r => r.call_duration);
     const averageCallTime = callsWithDuration.length > 0 
       ? Math.round(callsWithDuration.reduce((sum, r) => sum + (r.call_duration || 0), 0) / callsWithDuration.length)
       : 45; // Default estimate in seconds
-    
     // Calculate productivity metrics
-    const totalCustomers = csvData?.rows?.length || 0;
+    const totalCustomers = safeCsvData?.rows?.length || 0;
     const completionRate = totalCustomers > 0 ? Math.round((totalCalls / totalCustomers) * 100) : 0;
-    
     return {
       totalCalls,
       successfulCalls,
@@ -43,7 +41,7 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
       totalCustomers,
       completionRate
     };
-  }, [responses, csvData]);
+  }, [safeResponses, safeCsvData]);
 
   // Animate numbers on component mount and when stats change
   useEffect(() => {
@@ -187,7 +185,7 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
       </div>
 
       {/* Detailed Breakdown */}
-      {responses.length > 0 && (
+      {safeResponses.length > 0 && (
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-200">
           <h4 className="text-xl font-bold text-sky-700 mb-6 flex items-center gap-2">
             <Users className="w-5 h-5" />
@@ -255,7 +253,7 @@ const SmartDropStatistics = ({ responses = [], csvData = null, callDone = false 
       )}
 
       {/* Recent Activity */}
-      {responses.length > 0 && (
+      {safeResponses.length > 0 && (
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8 animate-slideInUp animation-delay-400">
           <h4 className="text-xl font-bold text-sky-700 mb-6 flex items-center gap-2">
             <Activity className="w-5 h-5" />
