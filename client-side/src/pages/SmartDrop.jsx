@@ -945,8 +945,17 @@ function SmartDrop() {
             </div>
           )}
 
+          {/* Time Savings Tracker - Only show when we have actual response data */}
+          {responses && responses.length > 0 && (
+            <TimeSavingsTracker 
+              responses={responses} 
+              csvData={csvData} 
+              callDone={callDone}
+            />
+          )}
+
           {/* SmartDrop Dashboard */}
-          {(responses && responses.length > 0) || callDone && (
+          {responses && responses.length > 0 && (
             <SmartDropDashboard 
               responses={responses} 
               csvData={csvData} 
@@ -955,7 +964,7 @@ function SmartDrop() {
           )}
 
           {/* SmartDrop Statistics */}
-          {(responses && responses.length > 0) || callDone && (
+          {responses && responses.length > 0 && (
             <SmartDropStatistics 
               responses={responses} 
               csvData={csvData} 

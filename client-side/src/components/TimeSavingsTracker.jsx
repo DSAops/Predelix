@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, TrendingUp, Zap, Award, DollarSign } from 'lucide-react';
+import { Clock, TrendingUp, Zap, Award, DollarSign, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }) => {
   const [animatedValues, setAnimatedValues] = useState({
     timeSaved: 0,
-    costSaved: 0,
     efficiencyGain: 0
   });
 
@@ -23,9 +22,7 @@ const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }
     const totalManualTime = totalCalls * manualTimePerCall;
     const totalAutomatedTime = totalCalls * automatedTimePerCall;
     
-    // Cost calculations (assuming $30/hour labor cost)
-    const laborCostPerMinute = 0.5; // $30/hour = $0.5/minute
-    const costSaved = totalTimeSaved * laborCostPerMinute;
+    // Cost calculations removed - focusing on time savings only
     
     // Efficiency calculations
     const efficiencyGain = totalManualTime > 0 ? Math.round((totalTimeSaved / totalManualTime) * 100) : 0;
@@ -34,7 +31,6 @@ const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }
       totalCalls,
       timeSavedMinutes: totalTimeSaved,
       timeSavedHours: totalTimeSaved / 60,
-      costSaved,
       efficiencyGain,
       callsPerHour: totalAutomatedTime > 0 ? Math.round((totalCalls * 60) / totalAutomatedTime) : 0,
       manualCallsPerHour: 15 // Standard estimate for manual calls
@@ -55,7 +51,6 @@ const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }
       
       setAnimatedValues({
         timeSaved: Math.round(metrics.timeSavedMinutes * easeProgress),
-        costSaved: Math.round(metrics.costSaved * easeProgress),
         efficiencyGain: Math.round(metrics.efficiencyGain * easeProgress)
       });
       
@@ -74,10 +69,13 @@ const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }
     return `${hours}h ${mins}m`;
   };
 
-  // Don't render if no data
+  // Don't render if no data and calls haven't been made
   if (!callDone && metrics.totalCalls === 0) {
     return null;
   }
+
+  // Show preview message if calls are done but no responses yet
+  const showPreview = callDone && metrics.totalCalls === 0;
 
   return (
     <motion.div 
@@ -91,84 +89,107 @@ const TimeSavingsTracker = ({ responses = [], csvData = null, callDone = false }
           <Clock className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-gray-800">⚡ Live Time Savings Tracker</h3>
-          <p className="text-sm text-gray-600">Real-time efficiency analysis</p>
+          <h3 className="text-xl font-bold text-gray-800">⚡ Time Savings Analysis</h3>
+          <p className="text-sm text-gray-600">
+            {showPreview ? "Waiting for customer responses..." : "Real-time efficiency analysis"}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Time Saved */}
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-cyan-200"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700">Time Saved</span>
+      {showPreview ? (
+        <div className="text-center py-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />
+            <span className="text-lg font-medium text-gray-700">Processing Time Savings...</span>
           </div>
-          <div className="text-2xl font-bold text-blue-600 mb-1">
-            {formatTime(animatedValues.timeSaved)}
+          <p className="text-gray-600 mb-4">
+            Once customer responses are collected, you'll see detailed time savings analysis here.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-50">
+            {/* Preview placeholders */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-cyan-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">Time Saved</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600 mb-1">--:--</div>
+              <div className="text-xs text-gray-500">vs manual process</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700">Efficiency</span>
+              </div>
+              <div className="text-2xl font-bold text-purple-600 mb-1">--%</div>
+              <div className="text-xs text-gray-500">Time reduction</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-orange-600" />
+                <span className="text-sm font-medium text-gray-700">Speed</span>
+              </div>
+              <div className="text-2xl font-bold text-orange-600 mb-1">-.-x</div>
+              <div className="text-xs text-gray-500">vs manual calls</div>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            vs {formatTime(metrics.totalCalls * 4)} manual
-          </div>
-        </motion.div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Time Saved */}
+          <motion.div 
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-cyan-200"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-gray-700">Time Saved</span>
+            </div>
+            <div className="text-2xl font-bold text-blue-600 mb-1">
+              {formatTime(animatedValues.timeSaved)}
+            </div>
+            <div className="text-xs text-gray-500">
+              vs {formatTime(metrics.totalCalls * 4)} manual
+            </div>
+          </motion.div>
 
-        {/* Cost Savings */}
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-green-200"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-gray-700">Cost Saved</span>
-          </div>
-          <div className="text-2xl font-bold text-green-600 mb-1">
-            ${animatedValues.costSaved}
-          </div>
-          <div className="text-xs text-gray-500">
-            Labor cost reduction
-          </div>
-        </motion.div>
+          {/* Efficiency Gain */}
+          <motion.div 
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-purple-200"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium text-gray-700">Efficiency</span>
+            </div>
+            <div className="text-2xl font-bold text-purple-600 mb-1">
+              {animatedValues.efficiencyGain}%
+            </div>
+            <div className="text-xs text-gray-500">
+              Time reduction
+            </div>
+          </motion.div>
 
-        {/* Efficiency Gain */}
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-purple-200"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium text-gray-700">Efficiency</span>
-          </div>
-          <div className="text-2xl font-bold text-purple-600 mb-1">
-            {animatedValues.efficiencyGain}%
-          </div>
-          <div className="text-xs text-gray-500">
-            Time reduction
-          </div>
-        </motion.div>
-
-        {/* Productivity */}
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-orange-200"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-4 h-4 text-orange-600" />
-            <span className="text-sm font-medium text-gray-700">Speed</span>
-          </div>
-          <div className="text-2xl font-bold text-orange-600 mb-1">
-            {Math.round(metrics.callsPerHour / Math.max(1, metrics.manualCallsPerHour) * 10) / 10}x
-          </div>
-          <div className="text-xs text-gray-500">
-            {metrics.callsPerHour} vs {metrics.manualCallsPerHour} calls/hr
-          </div>
-        </motion.div>
-      </div>
+          {/* Productivity */}
+          <motion.div 
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-orange-200"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-medium text-gray-700">Speed</span>
+            </div>
+            <div className="text-2xl font-bold text-orange-600 mb-1">
+              {Math.round(metrics.callsPerHour / Math.max(1, metrics.manualCallsPerHour) * 10) / 10}x
+            </div>
+            <div className="text-xs text-gray-500">
+              {metrics.callsPerHour} vs {metrics.manualCallsPerHour} calls/hr
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Progress indicator */}
       {metrics.totalCalls > 0 && (

@@ -33,20 +33,51 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
   // Calculate comprehensive metrics
   const metrics = useMemo(() => {
     const totalCalls = safeResponses.length;
-    const successfulCalls = safeResponses.filter(r => 
-      r.delivery_status === 'confirmed' || 
-      r.delivery_status === 'delivered' || 
-      r.delivery_status === 'successful'
-    ).length;
-    const failedCalls = safeResponses.filter(r => 
-      r.delivery_status === 'failed' || 
-      r.delivery_status === 'no_answer' || 
-      r.delivery_status === 'unsuccessful'
-    ).length;
-    const pendingCalls = safeResponses.filter(r => 
-      r.delivery_status === 'pending' || 
-      r.delivery_status === 'in_progress'
-    ).length;
+    
+    // More flexible success detection - check for positive delivery confirmations
+    const successfulCalls = safeResponses.filter(r => {
+      const status = (r.delivery_status || r.status || '').toLowerCase();
+      const transcription = (r.transcription || '').toLowerCase();
+      
+      // Check for explicit success statuses
+      if (status.includes('confirmed') || status.includes('delivered') || 
+          status.includes('successful') || status.includes('yes') ||
+          status.includes('received') || status.includes('home')) {
+        return true;
+      }
+      
+      // Check transcription for positive responses
+      if (transcription.includes('yes') || transcription.includes('received') ||
+          transcription.includes('delivered') || transcription.includes('home') ||
+          transcription.includes('here') || transcription.includes('got it')) {
+        return true;
+      }
+      
+      return false;
+    }).length;
+    
+    const failedCalls = safeResponses.filter(r => {
+      const status = (r.delivery_status || r.status || '').toLowerCase();
+      const transcription = (r.transcription || '').toLowerCase();
+      
+      // Check for explicit failure statuses
+      if (status.includes('failed') || status.includes('no_answer') || 
+          status.includes('unsuccessful') || status.includes('no') ||
+          status.includes('not_home') || status.includes('rejected')) {
+        return true;
+      }
+      
+      // Check transcription for negative responses
+      if (transcription.includes('no') || transcription.includes('not home') ||
+          transcription.includes('not received') || transcription.includes('wrong') ||
+          transcription.includes('incorrect')) {
+        return true;
+      }
+      
+      return false;
+    }).length;
+    
+    const pendingCalls = totalCalls - successfulCalls - failedCalls;
     const successRate = totalCalls > 0 ? Math.round((successfulCalls / totalCalls) * 100) : 0;
     // Time calculations
     const averageManualCallTime = 4; // minutes per call
@@ -56,8 +87,7 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
     const averageCallTime = callsWithDuration.length > 0 
       ? Math.round(callsWithDuration.reduce((sum, r) => sum + parseFloat(r.call_duration || 0), 0) / callsWithDuration.length)
       : 45;
-    // Cost savings (estimated at $0.50 per minute of labor)
-    const estimatedCostSavings = totalTimeSaved * 0.50;
+    
     // Customer satisfaction (based on successful deliveries)
     const customerSatisfaction = successRate;
     // Efficiency metrics
@@ -80,7 +110,6 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
       successRate,
       totalTimeSaved,
       averageCallTime,
-      estimatedCostSavings,
       customerSatisfaction,
       completionRate,
       totalCustomers,
@@ -307,70 +336,30 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
             subtitle="Manual work eliminated"
             color="blue"
           />
-          
-          <MetricCard
-            icon={Award}
-            title="Cost Savings"
-            value={`$${Math.round(metrics.estimatedCostSavings)}`}
-            subtitle="Estimated labor savings"
-            color="purple"
-          />
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Call Volume Over Time */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
-          <h3 className="text-xl font-bold text-sky-700 mb-6">Call Volume Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={timeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-              <XAxis dataKey="time" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e0e7ff', 
-                  borderRadius: '8px' 
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="total" 
-                stackId="1"
-                stroke="#06b6d4" 
-                fill="#06b6d4" 
-                fillOpacity={0.6}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Status Distribution */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
-          <h3 className="text-xl font-bold text-sky-700 mb-6">Call Status Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={statusDistribution}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                dataKey="value"
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
-              >
-                {statusDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+      {/* Real-time Status Overview */}
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8">
+        <h3 className="text-xl font-bold text-sky-700 mb-6">Real-time Status Overview</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+            <div className="text-2xl font-bold text-green-700">{metrics.successfulCalls}</div>
+            <div className="text-sm text-green-600">Successful Deliveries</div>
+          </div>
+          <div className="text-center p-6 bg-red-50 rounded-xl border border-red-200">
+            <XCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
+            <div className="text-2xl font-bold text-red-700">{metrics.failedCalls}</div>
+            <div className="text-sm text-red-600">Failed Attempts</div>
+          </div>
+          <div className="text-center p-6 bg-yellow-50 rounded-xl border border-yellow-200">
+            <AlertTriangle className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
+            <div className="text-2xl font-bold text-yellow-700">{metrics.pendingCalls}</div>
+            <div className="text-sm text-yellow-600">Pending/Unknown</div>
+          </div>
         </div>
       </div>
-
-      {/* Performance Insights */}
       <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-8">
         <h3 className="text-xl font-bold text-sky-700 mb-6">Performance Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -685,7 +674,7 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
       </div>
 
       {/* Summary Banner */}
-      <div className="bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 rounded-2xl p-8 text-white">
+      {/* <div className="bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 rounded-2xl p-8 text-white">
         <div className="text-center">
           <h3 className="text-2xl font-bold mb-4">🎉 SmartDrop Impact Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -707,7 +696,7 @@ const SmartDropDashboard = ({ responses = [], csvData = null, callDone = false, 
             while maintaining excellent customer service standards.
           </p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
