@@ -133,20 +133,20 @@ function About() {
       },
       {
         icon: Database,
-        name: "Big Data Analytics",
-        description: "Processing millions of data points for intelligent insights",
+        name: "Data Analytics",
+        description: "Processing and analyzing logistics data for actionable insights",
         color: "from-blue-500 to-cyan-600"
       },
       {
         icon: Network,
-        name: "IoT Integration",
-        description: "Real-time tracking and monitoring across the supply chain",
+        name: "Smart Integration",
+        description: "Seamless connectivity between different logistics systems",
         color: "from-green-500 to-emerald-600"
       },
       {
         icon: Cpu,
-        name: "Cloud Computing",
-        description: "Scalable infrastructure for global logistics operations",
+        name: "Modern Architecture",
+        description: "Scalable cloud-based infrastructure for reliable operations",
         color: "from-orange-500 to-red-600"
       }
     ],
@@ -154,59 +154,53 @@ function About() {
       {
         icon: TrendingUp,
         title: "Predictive Analytics",
-        description: "Forecast demand and optimize inventory with 95% accuracy using advanced machine learning models.",
-        stats: "95% Accuracy"
+        description: "Forecast demand and optimize inventory using machine learning models to improve supply chain efficiency.",
+        stats: "Smart Forecasting"
       },
       {
         icon: Truck,
         title: "Smart Delivery",
-        description: "Automated call systems that reduce manual effort by 80% and increase delivery success rates.",
-        stats: "80% Time Saved"
+        description: "Automated call systems that streamline delivery coordination and improve customer communication.",
+        stats: "Automated Calls"
       },
       {
         icon: MapPin,
-        title: "Route Optimization",
-        description: "AI-powered route planning that reduces fuel costs and delivery times by up to 40%.",
-        stats: "40% Cost Reduction"
+        title: "Route Planning",
+        description: "Intelligent route optimization to help reduce delivery times and operational costs.",
+        stats: "Optimized Routes"
       },
       {
         icon: Clock,
         title: "Real-time Tracking",
-        description: "Live visibility into every shipment with instant updates and proactive problem resolution.",
-        stats: "100% Visibility"
+        description: "Live visibility into shipments with instant updates and proactive problem resolution.",
+        stats: "Live Updates"
       }
     ],
     team: [
       {
-        role: "AI Engineers",
-        count: 15,
-        icon: Brain,
-        description: "Machine learning experts building the future of logistics intelligence"
-      },
-      {
-        role: "Logistics Specialists",
-        count: 12,
-        icon: Truck,
-        description: "Industry veterans optimizing supply chain operations"
-      },
-      {
-        role: "Data Scientists",
-        count: 8,
-        icon: BarChart2,
-        description: "Analytics experts turning data into actionable insights"
-      },
-      {
-        role: "DevOps Engineers",
-        count: 6,
+        name: "Devraj Patil",
+        role: "Full Stack Developer",
         icon: Code,
-        description: "Infrastructure specialists ensuring scalable, reliable systems"
+        description: "Backend architecture and AI integration specialist"
+      },
+      {
+        name: "Anuj Sahu",
+        role: "Frontend Developer",
+        icon: Brain,
+        description: "UI/UX design and frontend development expert"
+      },
+      {
+        name: "Saksham Gupta",
+        role: "Data Engineer",
+        icon: Database,
+        description: "Data analytics and machine learning implementation"
       }
     ],
     achievements: [
-      { icon: Award, label: "AI Innovation Award 2024", value: "Winner" },
-      { icon: Star, label: "Customer Satisfaction", value: "98%" },
-      { icon: Globe, label: "Countries Served", value: "25+" },
-      { icon: Package, label: "Packages Optimized", value: "10M+" }
+      { icon: Code, label: "Lines of Code", value: "10K+" },
+      { icon: Users, label: "Development Hours", value: "500+" },
+      { icon: Globe, label: "Project Status", value: "Beta" },
+      { icon: Rocket, label: "Technologies Used", value: "8+" }
     ]
   }), []);
 
@@ -371,23 +365,23 @@ function About() {
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-                  Our Expert Team
+                  Meet Our Team
                 </h2>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  A diverse group of AI specialists, logistics experts, and engineers 
-                  working together to revolutionize global supply chains.
+                  A dedicated team of developers passionate about transforming logistics 
+                  through innovative technology and smart solutions.
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {companyData.team.map((role, index) => (
-                  <OptimizedCard key={index} className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <role.icon className="w-8 h-8 text-white" />
+              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                {companyData.team.map((member, index) => (
+                  <OptimizedCard key={index} className="p-8 text-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <member.icon className="w-10 h-10 text-white" />
                     </div>
-                    <div className="text-3xl font-bold text-gray-800 mb-2">{role.count}+</div>
-                    <h4 className="text-lg font-bold text-gray-800 mb-2">{role.role}</h4>
-                    <p className="text-gray-600 text-sm leading-relaxed">{role.description}</p>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{member.name}</h3>
+                    <div className="text-cyan-600 font-semibold mb-3">{member.role}</div>
+                    <p className="text-gray-600 text-sm leading-relaxed">{member.description}</p>
                   </OptimizedCard>
                 ))}
               </div>
@@ -404,11 +398,11 @@ function About() {
                   <Rocket className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                  Ready to Transform Your Logistics?
+                  Ready to Explore Our Platform?
                 </h2>
                 <p className="text-xl mb-8 text-cyan-50">
-                  Join thousands of businesses already using Predelix to optimize their supply chains 
-                  and deliver exceptional customer experiences.
+                  Experience how Predelix can help optimize your logistics operations with 
+                  our AI-powered prediction and smart delivery solutions.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <motion.button
@@ -416,7 +410,7 @@ function About() {
                     whileTap={{ scale: 0.95 }}
                     className="px-8 py-4 bg-white text-cyan-600 rounded-xl font-bold hover:bg-gray-50 transition-colors duration-300 flex items-center justify-center"
                   >
-                    Get Started Today
+                    Try Demo
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </motion.button>
                   <motion.button
@@ -425,7 +419,7 @@ function About() {
                     className="px-8 py-4 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-colors duration-300 flex items-center justify-center"
                   >
                     <Heart className="w-5 h-5 mr-2" />
-                    Contact Our Team
+                    Learn More
                   </motion.button>
                 </div>
               </OptimizedCard>
@@ -434,7 +428,6 @@ function About() {
         </SectionTransition>
       </div>
       
-      <Footer />
     </div>
   );
 }

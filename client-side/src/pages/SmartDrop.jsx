@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { useSmartDropState } from '../hooks/useSmartDropState';
 import SmartDropStatistics from '../components/SmartDropStatistics';
 import SmartDropDashboard from '../components/SmartDropDashboard';
+import TimeSavingsTracker from '../components/TimeSavingsTracker';
 import { SectionTransition } from '../components/PageTransition';
 import { OptimizedCard } from '../components/OptimizedComponents';
 import { useDebounce, useSmoothScroll } from '../hooks/usePerformance';
