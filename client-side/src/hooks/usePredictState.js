@@ -14,7 +14,6 @@ export const usePredictState = () => {
     csvBlob: null,
     
     // UI state that should persist
-    selectedStore: null,
     searchTerm: '',
     sortField: '',
     sortDirection: 'asc',
@@ -66,8 +65,6 @@ export const usePredictState = () => {
   
   const setCsvBlob = (csvBlob) => updateState({ csvBlob });
   
-  const setSelectedStore = (selectedStore) => updateState({ selectedStore });
-  
   const setSearchTerm = (searchTerm) => updateState({ searchTerm, currentPage: 1 });
   
   const setSortField = (sortField) => updateState({ sortField });
@@ -98,7 +95,6 @@ export const usePredictState = () => {
     fileMetadata: state.fileMetadata,
     predictions: state.predictions,
     csvBlob: state.csvBlob,
-    selectedStore: state.selectedStore,
     searchTerm: state.searchTerm,
     sortField: state.sortField,
     sortDirection: state.sortDirection,
@@ -112,7 +108,6 @@ export const usePredictState = () => {
     setFile,
     setPredictions,
     setCsvBlob,
-    setSelectedStore,
     setSearchTerm,
     setSortField,
     setSortDirection,

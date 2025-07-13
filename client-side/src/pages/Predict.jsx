@@ -3,8 +3,8 @@ import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Eye } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLoading } from '../context/LoadingContext';
+import { useModal } from '../context/ModalContext';
 import { motion } from 'motion/react';
-import StoreModal from '../components/StoreModal';
 import PredictionChart from '../components/PredictionChart';
 import PredictionDashboard from '../components/PredictionDashboard';
 import { SectionTransition } from '../components/PageTransition';
@@ -64,6 +64,7 @@ function groupPredictionsByStoreAndProduct(predictions) {
     stores[pred.store_id][pred.product_id].push({
       date: pred.date,
       predicted_stock: pred.predicted_stock,
+      actual_stock: pred.actual_stock || null,  // Include actual stock data if available
     });
   });
   return stores;
@@ -102,6 +103,7 @@ function Predict() {
   
   const { themeColors } = useTheme();
   const { showLoading, hideLoading } = useLoading();
+  const { openStoreModal } = useModal();
 
   // Handle feedback from prediction chart
   const handlePredictionFeedback = useCallback(async (feedback) => {
@@ -153,7 +155,7 @@ function Predict() {
 
   // Show restoration notification when component mounts with existing data
   useEffect(() => {
-    if (isReturningSession && (file || predictions || selectedStore)) {
+    if (isReturningSession && (file || predictions)) {
       console.log('Predict page state restored from previous session');
       
       // Check if data is stale and notify user
@@ -311,6 +313,18 @@ function Predict() {
         return date.toISOString().split('T')[0];
       };
 
+      // Helper function to generate random variation in actual stock compared to predicted
+      const generateActualStock = (predicted, variancePercentage = 10) => {
+        // For some entries, we'll have null actual stock to simulate pending data
+        if (Math.random() > 0.8 && getRecentDate(0) === today.toISOString().split('T')[0]) {
+          return null; // About 20% of today's predictions don't have actual data yet
+        }
+        
+        const maxVariance = Math.floor(predicted * (variancePercentage / 100));
+        const variance = Math.floor(Math.random() * maxVariance * 2) - maxVariance;
+        return Math.max(0, predicted + variance); // Ensure we don't get negative stock
+      };
+
       const samplePredictions = [
         // Recent data (last 7 days) for better dashboard display
         { store_id: 2, product_id: 450, date: getRecentDate(1), predicted_stock: 78, actual_stock: 73, sales: 28 },
@@ -324,18 +338,18 @@ function Predict() {
         { store_id: 79, product_id: 136, date: getRecentDate(5), predicted_stock: 108, actual_stock: 105, sales: 78 },
         { store_id: 90, product_id: 519, date: getRecentDate(5), predicted_stock: 98, actual_stock: 101, sales: 70 },
         
-        // More recent predictions for better dashboard display
-        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: 82, sales: 45 },
+        // More recent predictions with some having no actual data yet (for today)
+        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: generateActualStock(85), sales: 45 },
         { store_id: 2, product_id: 452, date: getRecentDate(1), predicted_stock: 92, actual_stock: 89, sales: 52 },
-        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: 136, sales: 98 },
+        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: generateActualStock(140), sales: 98 },
         { store_id: 20, product_id: 514, date: getRecentDate(1), predicted_stock: 125, actual_stock: 120, sales: 87 },
         { store_id: 30, product_id: 435, date: getRecentDate(2), predicted_stock: 75, actual_stock: 71, sales: 55 },
         { store_id: 30, product_id: 436, date: getRecentDate(3), predicted_stock: 68, actual_stock: 65, sales: 48 },
-        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: 155, sales: 102 },
+        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: generateActualStock(158), sales: 102 },
         { store_id: 32, product_id: 551, date: getRecentDate(1), predicted_stock: 144, actual_stock: 140, sales: 95 },
         { store_id: 48, product_id: 234, date: getRecentDate(2), predicted_stock: 66, actual_stock: 62, sales: 41 },
         { store_id: 48, product_id: 235, date: getRecentDate(3), predicted_stock: 59, actual_stock: 56, sales: 35 },
-        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: 69, sales: 63 },
+        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: generateActualStock(72), sales: 63 },
         { store_id: 62, product_id: 342, date: getRecentDate(1), predicted_stock: 65, actual_stock: 61, sales: 57 },
       ];
 
@@ -608,7 +622,7 @@ function Predict() {
                   <button
                     type="button"
                     className="flex flex-col items-center group focus:outline-none"
-                    onClick={() => setSelectedStore({ storeId, products })}
+                    onClick={() => openStoreModal(storeId, products)}
                   >
                     <div className="rounded-full bg-cyan-100 p-6 mb-4 group-hover:bg-cyan-200 transition-colors duration-200">
                       <Store className="w-10 h-10 text-cyan-600 group-hover:scale-110 transition-transform duration-200" />
@@ -1066,15 +1080,6 @@ function Predict() {
           )}
         </div>
       </div>
-      
-      {/* Modal */}
-      {selectedStore && (
-        <StoreModal
-          storeId={selectedStore.storeId}
-          products={selectedStore.products}
-          onClose={() => setSelectedStore(null)}
-        />
-      )}
       
       {/* Custom animations */}
       <style>{`

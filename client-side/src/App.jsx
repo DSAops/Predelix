@@ -3,6 +3,7 @@ import config from './config';
 import { ThemeProvider } from './context/ThemeContext';
 import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { DemoModalProvider } from './context/DemoModalContext';
+import { ModalProvider } from './context/ModalContext';
 import LoadingAnimation from './components/LoadingAnimation';
 import './styles/themes.css';
 import AppRouter from './router';
@@ -25,7 +26,9 @@ function App() {
       <ThemeProvider>
         <LoadingProvider>
           <DemoModalProvider>
-            <AppContent />
+            <ModalProvider>
+              <AppContent />
+            </ModalProvider>
           </DemoModalProvider>
         </LoadingProvider>
       </ThemeProvider>

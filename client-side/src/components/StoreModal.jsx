@@ -31,8 +31,8 @@ export default function StoreModal({ storeId, products, onClose }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 pt-80" style={{ position: 'fixed' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden animate-slideInUp" style={{ maxHeight: '80vh', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-all duration-300" style={{ position: 'fixed' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden animate-slideInUp" style={{ maxHeight: '80vh' }} onClick={(e) => e.stopPropagation()}>
         {/* Enhanced Header */}
         <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-6">
           <div className="flex items-center justify-between">
@@ -73,7 +73,7 @@ export default function StoreModal({ storeId, products, onClose }) {
         </div>
 
         {/* Enhanced Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 240px)' }}>
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 200px)' }}>
           <div className="grid gap-6">
             {Object.entries(products).map(([productId, rows], index) => (
               <div 
@@ -115,6 +115,12 @@ export default function StoreModal({ storeId, products, onClose }) {
                             <span>Predicted Stock</span>
                           </div>
                         </th>
+                        <th className="py-3 px-6 text-left font-semibold text-gray-700">
+                          <div className="flex items-center space-x-2">
+                            <BarChart3 className="w-4 h-4 text-green-600" />
+                            <span>Actual Stock</span>
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -133,6 +139,23 @@ export default function StoreModal({ storeId, products, onClose }) {
                               </span>
                               <span className="text-sm text-gray-500">units</span>
                             </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            {row.actual_stock !== null ? (
+                              <div className="flex items-center space-x-2">
+                                <span className={`font-bold text-lg ${row.actual_stock < row.predicted_stock ? 'text-red-500' : 'text-green-600'}`}>
+                                  {row.actual_stock}
+                                </span>
+                                <span className="text-sm text-gray-500">units</span>
+                                {row.actual_stock !== row.predicted_stock && (
+                                  <span className={`text-xs px-2 py-1 rounded-full ${row.actual_stock < row.predicted_stock ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                                    {Math.abs(row.actual_stock - row.predicted_stock)} {row.actual_stock < row.predicted_stock ? 'less' : 'more'}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 italic">No data yet</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -164,11 +187,11 @@ export default function StoreModal({ storeId, products, onClose }) {
       {/* Custom Styles */}
       <style>{`
         @keyframes slideInUp {
-          0% { opacity: 0; transform: translateY(-30px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { opacity: 0; transform: scale(0.95); }
+          100% { opacity: 1; transform: scale(1); }
         }
         .animate-slideInUp { 
-          animation: slideInUp 0.4s ease-out forwards; 
+          animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
         
         /* Style scrollbars for better UX */
