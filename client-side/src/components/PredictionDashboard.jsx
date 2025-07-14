@@ -1,247 +1,216 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { 
-  TrendingUp, TrendingDown, Target, Activity, BarChart3, PieChart as PieChartIcon, 
-  Calendar, Store, Package, Users, Award, Zap, Clock, CheckCircle, XCircle, 
-  AlertTriangle, Eye, Filter, RefreshCw, Download, ArrowUp, ArrowDown, 
-  DollarSign, ShoppingCart, Truck, Brain, Star, ThumbsUp, ThumbsDown
-} from 'lucide-react';
+import React, { useMemo } from 'react';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { BarChart3, Target, Store, Package, Brain, TrendingUp, Star, ThumbsUp, ThumbsDown } from 'lucide-react';
 
-const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
-  const [selectedTimeRange, setSelectedTimeRange] = useState('all'); // 7d, 30d, 90d, all
-  const [selectedMetric, setSelectedMetric] = useState('accuracy'); // accuracy, volume, trends
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Filter data based on time range
-  const filteredPredictions = useMemo(() => {
-    if (!predictions || predictions.length === 0) return [];
-    
-    const now = new Date();
-    let startDate = new Date();
-    
-    switch (selectedTimeRange) {
-      case '7d':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case '30d':
-        startDate.setDate(now.getDate() - 30);
-        break;
-      case '90d':
-        startDate.setDate(now.getDate() - 90);
-        break;
-      default:
-        return predictions;
-    }
-    
-    return predictions.filter(pred => {
-      const predDate = new Date(pred.date);
-      return predDate >= startDate && predDate <= now;
+const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = [] }) => {
+  // Match predictions and actuals by store_id, product_id, date
+  const matchedPairs = useMemo(() => {
+    if (!Array.isArray(predictions) || !Array.isArray(actuals)) return [];
+    const actualsMap = new Map();
+    actuals.forEach(a => {
+      const key = `${a.store_id}|${a.product_id}|${a.date}`;
+      actualsMap.set(key, a);
     });
-  }, [predictions, selectedTimeRange]);
+    return predictions
+      .map(pred => {
+        const key = `${pred.store_id}|${pred.product_id}|${pred.date}`;
+        const actual = actualsMap.get(key);
+        if (actual) {
+          return {
+            store_id: pred.store_id,
+            product_id: pred.product_id,
+            date: pred.date,
+            predicted_stock: pred.predicted_stock,
+            actual_sales: actual.sales,
+            predictionRecord: pred,
+            actualRecord: actual
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }, [predictions, actuals]);
 
-  // Calculate key metrics
-  const metrics = useMemo(() => {
-    // Use all predictions if filtered predictions is empty but we have predictions
-    const dataToUse = filteredPredictions.length > 0 ? filteredPredictions : predictions;
-    
-    if (!dataToUse || dataToUse.length === 0) {
-      console.log('No data available for metrics calculation');
+  // All unique dates from predictions and actuals
+  const allDates = useMemo(() => {
+    const dates = new Set();
+    predictions.forEach(p => dates.add(p.date));
+    actuals.forEach(a => dates.add(a.date));
+    return Array.from(dates).sort((a, b) => new Date(a) - new Date(b));
+  }, [predictions, actuals]);
+
+  // Aggregate by date for predictions and actuals separately
+  const predictionByDate = useMemo(() => {
+    const byDate = {};
+    predictions.forEach(({ date, predicted_stock }) => {
+      if (!byDate[date]) byDate[date] = { date, predicted: 0, count: 0 };
+      byDate[date].predicted += parseFloat(predicted_stock ?? 0);
+      byDate[date].count++;
+    });
+    return byDate;
+  }, [predictions]);
+
+  const actualsByDate = useMemo(() => {
+    const byDate = {};
+    actuals.forEach(({ date, sales }) => {
+      if (!byDate[date]) byDate[date] = { date, actual: 0, count: 0 };
+      byDate[date].actual += parseFloat(sales ?? 0);
+      byDate[date].count++;
+    });
+    return byDate;
+  }, [actuals]);
+
+  // Combined chart data for all dates
+  const combinedChartData = useMemo(() => {
+    return allDates.map(date => {
+      const pred = predictionByDate[date]?.predicted ?? 0;
+      const predCount = predictionByDate[date]?.count ?? 0;
+      const act = actualsByDate[date]?.actual ?? 0;
+      const actCount = actualsByDate[date]?.count ?? 0;
+      // Find matched pair for accuracy
+      const match = matchedPairs.find(mp => mp.date === date);
       return {
-        totalPredictions: 0,
-        averageAccuracy: 0,
-        totalStores: 0,
-        totalProducts: 0,
-        predictedValue: 0,
-        actualValue: 0,
-        accuracyTrend: 0,
-        volumeTrend: 0
+        date,
+        predicted: predCount ? Math.round(pred / predCount) : 0,
+        actual: actCount ? Math.round(act / actCount) : 0,
+        accuracy: match ? (() => {
+          const predicted = parseFloat(match.predicted_stock ?? 0);
+          const actual = parseFloat(match.actual_sales ?? 0);
+          if (predicted > 0 && actual > 0) {
+            const diff = Math.abs(predicted - actual);
+            const avg = (predicted + actual) / 2;
+            return Math.max(0, Math.round(100 - (diff / avg) * 100));
+          }
+          return 0;
+        })() : 0
       };
-    }
+    });
+  }, [allDates, predictionByDate, actualsByDate, matchedPairs]);
 
-    const totalPredictions = dataToUse.length;
-    const stores = new Set(dataToUse.map(p => p.store_id)).size;
-    const products = new Set(dataToUse.map(p => p.product_id)).size;
-    
-    let accuracySum = 0;
-    let validComparisons = 0;
-    let totalPredictedValue = 0;
-    let totalActualValue = 0;
+  // Overall metrics for predictions and actuals
+  const overallPredictionStats = useMemo(() => {
+    if (!predictions.length) return { total: 0, sum: 0, stores: new Set(), products: new Set() };
+    let sum = 0;
+    const stores = new Set();
+    const products = new Set();
+    predictions.forEach(({ store_id, product_id, predicted_stock }) => {
+      stores.add(store_id);
+      products.add(product_id);
+      sum += parseFloat(predicted_stock ?? 0);
+    });
+    return { total: predictions.length, sum: Math.round(sum), stores, products };
+  }, [predictions]);
 
-    dataToUse.forEach(pred => {
-      // Use predicted_stock if present, else sales
-      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
-      // Use actual_stock if present, else sales
-      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
+  const overallActualStats = useMemo(() => {
+    if (!actuals.length) return { total: 0, sum: 0, stores: new Set(), products: new Set() };
+    let sum = 0;
+    const stores = new Set();
+    const products = new Set();
+    actuals.forEach(({ store_id, product_id, sales }) => {
+      stores.add(store_id);
+      products.add(product_id);
+      sum += parseFloat(sales ?? 0);
+    });
+    return { total: actuals.length, sum: Math.round(sum), stores, products };
+  }, [actuals]);
 
-      totalPredictedValue += predicted;
-      totalActualValue += actual;
-
+  // Metrics
+  const metrics = useMemo(() => {
+    // Show both overall and matched stats
+    let accuracySum = 0, validCount = 0, predictedSum = 0, actualSum = 0;
+    const stores = new Set();
+    const products = new Set();
+    matchedPairs.forEach(({ store_id, product_id, predicted_stock, actual_sales }) => {
+      stores.add(store_id);
+      products.add(product_id);
+      const predicted = parseFloat(predicted_stock ?? 0);
+      const actual = parseFloat(actual_sales ?? 0);
+      predictedSum += predicted;
+      actualSum += actual;
       if (predicted > 0 && actual > 0) {
-        const difference = Math.abs(predicted - actual);
-        const average = (predicted + actual) / 2;
-        const accuracy = Math.max(0, 100 - (difference / average) * 100);
-        accuracySum += accuracy;
-        validComparisons++;
+        const diff = Math.abs(predicted - actual);
+        const avg = (predicted + actual) / 2;
+        const acc = Math.max(0, 100 - (diff / avg) * 100);
+        accuracySum += acc;
+        validCount++;
       }
     });
-
-    // Calculate trends based on real data (no random/demo values)
-    const accuracyPercentage = validComparisons > 0 ? Math.round(accuracySum / validComparisons) : 0;
-
-    // Calculate accuracy trend: compare last period to previous period
-    let accuracyTrend = 0;
-    let volumeTrend = 0;
-    // Example: compare last 7 days to previous 7 days
-    // You can expand this logic for more sophisticated trend analysis
-    // For now, just set to 0 if not enough data
-
-    // Only use real data, no random/demo
-    const result = {
-      totalPredictions,
-      averageAccuracy: accuracyPercentage,
-      totalStores: stores,
-      totalProducts: products,
-      predictedValue: Math.round(totalPredictedValue),
-      actualValue: Math.round(totalActualValue),
-      accuracyTrend,
-      volumeTrend
+    return {
+      totalComparisons: matchedPairs.length,
+      averageAccuracy: validCount ? Math.round(accuracySum / validCount) : 0,
+      totalStores: stores.size,
+      totalProducts: products.size,
+      predictedSum: Math.round(predictedSum),
+      actualSum: Math.round(actualSum),
+      overallPredictions: overallPredictionStats,
+      overallActuals: overallActualStats
     };
-    return result;
-  }, [filteredPredictions, predictions, selectedTimeRange]);
+  }, [matchedPairs, overallPredictionStats, overallActualStats]);
 
-  // Prepare chart data
-  const chartData = useMemo(() => {
-    const dataToUse = filteredPredictions.length > 0 ? filteredPredictions : predictions;
-    if (!dataToUse || dataToUse.length === 0) return [];
+  // Chart Data (group by date) - now uses combinedChartData
+  const chartData = combinedChartData;
 
-    // Group by date
-    const dateGroups = dataToUse.reduce((acc, pred) => {
-      const date = pred.date;
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          predicted: 0,
-          actual: 0,
-          count: 0,
-          accuracy: 0,
-          validAccuracy: 0
-        };
-      }
-
-      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
-      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
-
-      acc[date].predicted += predicted;
-      acc[date].actual += actual;
-      acc[date].count++;
-
-      if (predicted > 0 && actual > 0) {
-        const difference = Math.abs(predicted - actual);
-        const average = (predicted + actual) / 2;
-        const accuracy = Math.max(0, 100 - (difference / average) * 100);
-        acc[date].accuracy += accuracy;
-        acc[date].validAccuracy++;
-      }
-
-      return acc;
-    }, {});
-
-    const result = Object.values(dateGroups)
-      .map(group => ({
-        ...group,
-        predicted: Math.round(group.predicted / group.count),
-        actual: Math.round(group.actual / group.count),
-        accuracy: group.validAccuracy > 0 ? Math.round(group.accuracy / group.validAccuracy) : 0
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    return result;
-  }, [filteredPredictions, predictions]);
-
-  // Store performance data
-  const storePerformance = useMemo(() => {
-    if (!filteredPredictions || filteredPredictions.length === 0) return [];
-
-    const storeGroups = filteredPredictions.reduce((acc, pred) => {
-      const storeId = pred.store_id;
-      if (!acc[storeId]) {
-        acc[storeId] = {
-          storeId,
-          predictions: 0,
-          totalAccuracy: 0,
-          validComparisons: 0,
-          totalPredicted: 0,
-          totalActual: 0
-        };
-      }
-
-      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
-      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
-
-      acc[storeId].predictions++;
-      acc[storeId].totalPredicted += predicted;
-      acc[storeId].totalActual += actual;
-
-      if (predicted > 0 && actual > 0) {
-        const difference = Math.abs(predicted - actual);
-        const average = (predicted + actual) / 2;
-        const accuracy = Math.max(0, 100 - (difference / average) * 100);
-        acc[storeId].totalAccuracy += accuracy;
-        acc[storeId].validComparisons++;
-      }
-
-      return acc;
-    }, {});
-
-    return Object.values(storeGroups)
-      .map(store => ({
-        ...store,
-        accuracy: store.validComparisons > 0 ? Math.round(store.totalAccuracy / store.validComparisons) : 0
-      }))
-      .sort((a, b) => b.accuracy - a.accuracy)
-      .slice(0, 10); // Top 10 stores
-  }, [filteredPredictions]);
-
-  // Accuracy distribution
+  // Accuracy Distribution
   const accuracyDistribution = useMemo(() => {
-    if (!filteredPredictions || filteredPredictions.length === 0) return [];
-
-    const ranges = {
+    if (!matchedPairs.length) return [];
+    const buckets = {
       'Excellent (90-100%)': 0,
       'Good (75-89%)': 0,
       'Fair (60-74%)': 0,
       'Poor (<60%)': 0
     };
-
-    filteredPredictions.forEach(pred => {
-      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
-      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
-
+    matchedPairs.forEach(({ predicted_stock, actual_sales }) => {
+      const predicted = parseFloat(predicted_stock ?? 0);
+      const actual = parseFloat(actual_sales ?? 0);
       if (predicted > 0 && actual > 0) {
-        const difference = Math.abs(predicted - actual);
-        const average = (predicted + actual) / 2;
-        const accuracy = Math.max(0, 100 - (difference / average) * 100);
-
-        if (accuracy >= 90) ranges['Excellent (90-100%)']++;
-        else if (accuracy >= 75) ranges['Good (75-89%)']++;
-        else if (accuracy >= 60) ranges['Fair (60-74%)']++;
-        else ranges['Poor (<60%)']++;
+        const diff = Math.abs(predicted - actual);
+        const avg = (predicted + actual) / 2;
+        const acc = Math.max(0, 100 - (diff / avg) * 100);
+        if (acc >= 90) buckets['Excellent (90-100%)']++;
+        else if (acc >= 75) buckets['Good (75-89%)']++;
+        else if (acc >= 60) buckets['Fair (60-74%)']++;
+        else buckets['Poor (<60%)']++;
       }
     });
-
-    return Object.entries(ranges).map(([name, value]) => ({
+    const total = matchedPairs.length;
+    return Object.entries(buckets).map(([name, value]) => ({
       name,
       value,
-      percentage: Math.round((value / filteredPredictions.length) * 100)
+      percentage: total ? Math.round((value / total) * 100) : 0
     }));
-  }, [filteredPredictions]);
+  }, [matchedPairs]);
 
-  // Feedback summary
+  // Top Stores by accuracy (matched pairs)
+  const topStores = useMemo(() => {
+    if (!matchedPairs.length) return [];
+    const storeStats = {};
+    matchedPairs.forEach(({ store_id, predicted_stock, actual_sales }) => {
+      if (!storeStats[store_id]) storeStats[store_id] = { store_id, count: 0, accuracySum: 0, validCount: 0 };
+      const predicted = parseFloat(predicted_stock ?? 0);
+      const actual = parseFloat(actual_sales ?? 0);
+      storeStats[store_id].count++;
+      if (predicted > 0 && actual > 0) {
+        const diff = Math.abs(predicted - actual);
+        const avg = (predicted + actual) / 2;
+        const acc = Math.max(0, 100 - (diff / avg) * 100);
+        storeStats[store_id].accuracySum += acc;
+        storeStats[store_id].validCount++;
+      }
+    });
+    return Object.values(storeStats)
+      .map(s => ({
+        ...s,
+        accuracy: s.validCount ? Math.round(s.accuracySum / s.validCount) : 0
+      }))
+      .sort((a, b) => b.accuracy - a.accuracy)
+      .slice(0, 5);
+  }, [matchedPairs]);
+
+  // Feedback summary (unchanged)
   const feedbackSummary = useMemo(() => {
     const total = feedbackData.length;
     const accurate = feedbackData.filter(f => f.feedback === 'accurate').length;
     const inaccurate = feedbackData.filter(f => f.feedback === 'inaccurate').length;
-    
     return {
       total,
       accurate,
@@ -249,44 +218,6 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
       accuratePercentage: total > 0 ? Math.round((accurate / total) * 100) : 0
     };
   }, [feedbackData]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    // Simulate refresh delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setRefreshing(false);
-  };
-
-  const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "blue", onClick }) => (
-    <div 
-      className={`bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 bg-gradient-to-br from-${color}-500 to-${color}-600 rounded-xl flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        {trend !== undefined && (
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-            trend > 0 ? 'bg-green-100 text-green-700' : 
-            trend < 0 ? 'bg-red-100 text-red-700' : 
-            'bg-gray-100 text-gray-700'
-          }`}>
-            {trend > 0 ? <ArrowUp className="w-3 h-3" /> : 
-             trend < 0 ? <ArrowDown className="w-3 h-3" /> : null}
-            {Math.abs(trend)}%
-          </div>
-        )}
-      </div>
-      <div className="mb-2">
-        <div className="text-2xl font-bold text-gray-800 mb-1">{value}</div>
-        <div className="text-sm text-gray-600">{title}</div>
-      </div>
-      {subtitle && (
-        <div className="text-xs text-gray-500">{subtitle}</div>
-      )}
-    </div>
-  );
 
   const COLORS = ['#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -301,70 +232,55 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
             </div>
             <div>
               <h2 className="text-3xl font-bold text-sky-700">Prediction Dashboard</h2>
-              <p className="text-sm text-sky-600">Comprehensive analytics and insights</p>
+              <p className="text-sm text-sky-600">Compare backend predictions with uploaded actuals</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Time Range Selector */}
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              <option value="all">All time</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-            </select>
-            
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors duration-200 disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="w-6 h-6 text-green-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.averageAccuracy}%</span>
+            </div>
+            <div className="text-sm text-gray-600">Average Accuracy (matched)</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="w-6 h-6 text-blue-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.totalComparisons}</span>
+            </div>
+            <div className="text-sm text-gray-600">Total Comparisons (matched)</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <Store className="w-6 h-6 text-purple-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.overallPredictions.stores.size}</span>
+            </div>
+            <div className="text-sm text-gray-600">Stores (Predictions)</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <Package className="w-6 h-6 text-orange-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.overallActuals.stores.size}</span>
+            </div>
+            <div className="text-sm text-gray-600">Stores (Actuals)</div>
           </div>
         </div>
-
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
-            icon={Target}
-            title="Average Accuracy"
-            value={`${metrics.averageAccuracy}%`}
-            subtitle="Prediction vs actual performance"
-            trend={metrics.accuracyTrend}
-            color="green"
-          />
-          
-          <MetricCard
-            icon={BarChart3}
-            title="Total Predictions"
-            value={metrics.totalPredictions.toLocaleString()}
-            subtitle={`${selectedTimeRange === 'all' ? 'All time' : `Last ${selectedTimeRange}`}`}
-            trend={metrics.volumeTrend}
-            color="blue"
-          />
-          
-          <MetricCard
-            icon={Store}
-            title="Active Stores"
-            value={metrics.totalStores}
-            subtitle="Stores with predictions"
-            color="purple"
-          />
-          
-          <MetricCard
-            icon={Package}
-            title="Products Tracked"
-            value={metrics.totalProducts}
-            subtitle="Unique products predicted"
-            color="orange"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="w-6 h-6 text-blue-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.overallPredictions.sum}</span>
+            </div>
+            <div className="text-sm text-gray-600">Total Predicted Stock</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="w-6 h-6 text-green-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.overallActuals.sum}</span>
+            </div>
+            <div className="text-sm text-gray-600">Total Actual Sales</div>
+          </div>
         </div>
       </div>
 
@@ -372,81 +288,49 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Accuracy Trend Chart */}
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-sky-700">Accuracy Trend</h3>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">Daily Average</span>
-            </div>
+          <h3 className="text-xl font-bold text-sky-700 mb-4">Accuracy Trend</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="px-2 py-1">Date</th>
+                  <th className="px-2 py-1">Accuracy (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartData.map(row => (
+                  <tr key={row.date}>
+                    <td className="px-2 py-1">{row.date}</td>
+                    <td className="px-2 py-1">{row.accuracy}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-              <XAxis dataKey="date" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e0e7ff', 
-                  borderRadius: '8px' 
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="accuracy" 
-                stroke="#06b6d4" 
-                strokeWidth={3}
-                dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
-
-        {/* Predicted vs Actual Chart */}
+        {/* Predicted vs Actual Chart - Table for now */}
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-sky-700">Predicted vs Actual</h3>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-                <span className="text-gray-600">Predicted</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-gray-600">Actual</span>
-              </div>
-            </div>
+          <h3 className="text-xl font-bold text-sky-700 mb-4">Predicted vs Actual (Sales)</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="px-2 py-1">Date</th>
+                  <th className="px-2 py-1">Predicted Stock</th>
+                  <th className="px-2 py-1">Actual Sales</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartData.map(row => (
+                  <tr key={row.date}>
+                    <td className="px-2 py-1">{row.date}</td>
+                    <td className="px-2 py-1">{row.predicted}</td>
+                    <td className="px-2 py-1">{row.actual}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-              <XAxis dataKey="date" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e0e7ff', 
-                  borderRadius: '8px' 
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="predicted" 
-                stackId="1"
-                stroke="#06b6d4" 
-                fill="#06b6d4" 
-                fillOpacity={0.3}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="actual" 
-                stackId="2"
-                stroke="#10b981" 
-                fill="#10b981" 
-                fillOpacity={0.3}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
@@ -455,8 +339,8 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
         {/* Accuracy Distribution */}
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
           <h3 className="text-xl font-bold text-sky-700 mb-6">Accuracy Distribution</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
+          <div style={{ width: 250, height: 250, margin: '0 auto' }}>
+            <PieChart width={250} height={250}>
               <Pie
                 data={accuracyDistribution}
                 cx="50%"
@@ -472,13 +356,13 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
               </Pie>
               <Tooltip />
             </PieChart>
-          </ResponsiveContainer>
+          </div>
           <div className="mt-4 space-y-2">
             {accuracyDistribution.map((item, index) => (
               <div key={item.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   ></div>
                   <span className="text-gray-600">{item.name}</span>
@@ -493,8 +377,8 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
           <h3 className="text-xl font-bold text-sky-700 mb-6">Top Performing Stores</h3>
           <div className="space-y-4">
-            {storePerformance.slice(0, 5).map((store, index) => (
-              <div key={store.storeId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {topStores.map((store, index) => (
+              <div key={store.store_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
@@ -505,8 +389,8 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
                     {index + 1}
                   </div>
                   <div>
-                    <div className="font-medium">Store {store.storeId}</div>
-                    <div className="text-sm text-gray-600">{store.predictions} predictions</div>
+                    <div className="font-medium">Store {store.store_id}</div>
+                    <div className="text-sm text-gray-600">{store.count} comparisons</div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -528,7 +412,6 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
               </div>
               <div className="text-sm text-green-700">User Satisfaction</div>
             </div>
-            
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                 <ThumbsUp className="w-5 h-5 text-green-600" />
@@ -537,7 +420,6 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
                   <div className="text-xs text-green-600">Accurate</div>
                 </div>
               </div>
-              
               <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
                 <ThumbsDown className="w-5 h-5 text-red-600" />
                 <div>
@@ -546,7 +428,6 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
                 </div>
               </div>
             </div>
-            
             <div className="text-center text-sm text-gray-600">
               Total feedback: {feedbackSummary.total} responses
             </div>
@@ -564,29 +445,26 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
               <span className="font-semibold text-blue-800">Model Performance</span>
             </div>
             <div className="text-2xl font-bold text-blue-800 mb-2">
-              {metrics.averageAccuracy >= 85 ? 'Excellent' : 
-               metrics.averageAccuracy >= 70 ? 'Good' : 
+              {metrics.averageAccuracy >= 85 ? 'Excellent' :
+               metrics.averageAccuracy >= 70 ? 'Good' :
                metrics.averageAccuracy >= 55 ? 'Fair' : 'Needs Improvement'}
             </div>
             <div className="text-sm text-blue-600">
               Current model accuracy is {metrics.averageAccuracy}%
             </div>
           </div>
-          
           <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
             <div className="flex items-center gap-3 mb-4">
               <TrendingUp className="w-6 h-6 text-green-600" />
               <span className="font-semibold text-green-800">Trend Analysis</span>
             </div>
             <div className="text-2xl font-bold text-green-800 mb-2">
-              {metrics.accuracyTrend > 0 ? 'Improving' : 
-               metrics.accuracyTrend < 0 ? 'Declining' : 'Stable'}
+              Stable
             </div>
             <div className="text-sm text-green-600">
-              {Math.abs(metrics.accuracyTrend)}% change from last period
+              No trend calculation in this view
             </div>
           </div>
-          
           <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
             <div className="flex items-center gap-3 mb-4">
               <Star className="w-6 h-6 text-purple-600" />

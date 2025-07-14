@@ -74,6 +74,7 @@ function groupPredictionsByStoreAndProduct(predictions) {
 }
 
 function Predict() {
+  const [actuals, setActuals] = useState([]);
   // Actual data upload state
   const [actualDataFile, setActualDataFile] = useState(null);
 
@@ -137,19 +138,17 @@ function Predict() {
           hideLoading();
           return;
         }
-        // Convert CSV rows to prediction format using sales for both predicted and actual
-        const parsedData = results.data.map(row => ({
+        // Store actuals as a separate array
+        const actualsData = results.data.map(row => ({
           store_id: row.store_id,
           date: row.date,
           product_id: row.product_id,
-          sales: Number(row.sales),
-          predicted_stock: Number(row.sales), // Use sales as predicted
-          actual_stock: Number(row.sales),    // Use sales as actual
+          sales: Number(row.sales)
         }));
-        setPredictions(parsedData);
+        setActuals(actualsData);
         setLoading(false);
         hideLoading();
-        alert('Dashboard updated with uploaded data!');
+        alert('Actual sales data uploaded!');
       },
       error: (err) => {
         alert('Error parsing CSV: ' + err.message);
@@ -776,7 +775,27 @@ function Predict() {
                     type="file"
                     accept=".csv,.xlsx"
                     style={{ display: 'none' }}
-                    onChange={handleActualDataFileChange}
+                    onChange={e => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      // Use PapaParse or similar to parse CSV
+                      const reader = new FileReader();
+                      reader.onload = evt => {
+                        const text = evt.target.result;
+                        // Simple CSV parse (replace with PapaParse for robust solution)
+                        const rows = text.split('\n').map(r => r.split(','));
+                        const headers = rows[0];
+                        const data = rows.slice(1).map(row => {
+                          const obj = {};
+                          headers.forEach((h, i) => {
+                            obj[h.trim()] = row[i]?.trim();
+                          });
+                          return obj;
+                        });
+                        setActuals(data.filter(d => Object.keys(d).length > 1));
+                      };
+                      reader.readAsText(file);
+                    }}
                   />
                 </button>
               </div>
@@ -902,6 +921,7 @@ function Predict() {
           {predictions && predictions.length > 0 && (
             <PredictionDashboard 
               predictions={predictions} 
+              actuals={actuals}
               feedbackData={feedbackData}
             />
           )}
