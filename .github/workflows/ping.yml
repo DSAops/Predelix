@@ -19,7 +19,7 @@ jobs:
         run: |
           for url in \
             "https://predelix.onrender.com" \
-            "https://predelix-43r5.onrender.com/api/auth" \
+            "https://predelix-1-lcaa.onrender.com/api/auth" \
             "https://predelix-242m.onrender.com"; do
             echo "Pinging $url"
             curl --fail --silent --show-error --max-time 15 "$url"
