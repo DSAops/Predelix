@@ -31,10 +31,12 @@ Built for scale and real-world usability, Predelix leverages machine learning, v
 ## 🏆 Problem Statement
 
 > **Transforming retail supply chains: From inventory management to last-mile delivery**
->
-> The complexity of modern retail demands intelligent automation—from predicting product demand to coordinating timely deliveries. Shortages, overstocking, delivery failures, and missed customer communication lead to financial losses and poor customer experience.
->
-> Can AI and predictive analytics create a seamless, efficient, and customer-friendly supply chain?
+Retailers contend with two critical, costly challenges:
+
+Inventory Imbalance: Manual forecasting leads to stockouts (lost sales, unhappy customers) or overstock (excess capital tied up, waste).
+
+Delivery Inefficiency: Unconfirmed delivery windows result in failed drop‑offs, wasted driver time, and poor customer experience.
+These issues occur daily across all stores and delivery zones—especially during peak seasons—eroding profitability and brand loyalty.
 
 ---
 
