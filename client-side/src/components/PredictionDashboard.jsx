@@ -1,154 +1,129 @@
 import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+// import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { BarChart3, Target, Store, Package, Brain, TrendingUp, Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import {PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = [] }) => {
-  // Match predictions and actuals by store_id, product_id, date
+  // Deep robust matching of predictions and actuals by store_id, product_id, date
   const matchedPairs = useMemo(() => {
     if (!Array.isArray(predictions) || !Array.isArray(actuals)) return [];
+    // Build maps for fast lookup
     const actualsMap = new Map();
     actuals.forEach(a => {
       const key = `${a.store_id}|${a.product_id}|${a.date}`;
       actualsMap.set(key, a);
     });
-    return predictions
-      .map(pred => {
-        const key = `${pred.store_id}|${pred.product_id}|${pred.date}`;
-        const actual = actualsMap.get(key);
-        if (actual) {
-          return {
-            store_id: pred.store_id,
-            product_id: pred.product_id,
-            date: pred.date,
-            predicted_stock: pred.predicted_stock,
-            actual_sales: actual.sales,
-            predictionRecord: pred,
-            actualRecord: actual
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }, [predictions, actuals]);
-
-  // All unique dates from predictions and actuals
-  const allDates = useMemo(() => {
-    const dates = new Set();
-    predictions.forEach(p => dates.add(p.date));
-    actuals.forEach(a => dates.add(a.date));
-    return Array.from(dates).sort((a, b) => new Date(a) - new Date(b));
-  }, [predictions, actuals]);
-
-  // Aggregate by date for predictions and actuals separately
-  const predictionByDate = useMemo(() => {
-    const byDate = {};
-    predictions.forEach(({ date, predicted_stock }) => {
-      if (!byDate[date]) byDate[date] = { date, predicted: 0, count: 0 };
-      byDate[date].predicted += parseFloat(predicted_stock ?? 0);
-      byDate[date].count++;
+    const predictionsMap = new Map();
+    predictions.forEach(p => {
+      const key = `${p.store_id}|${p.product_id}|${p.date}`;
+      predictionsMap.set(key, p);
     });
-    return byDate;
-  }, [predictions]);
-
-  const actualsByDate = useMemo(() => {
-    const byDate = {};
-    actuals.forEach(({ date, sales }) => {
-      if (!byDate[date]) byDate[date] = { date, actual: 0, count: 0 };
-      byDate[date].actual += parseFloat(sales ?? 0);
-      byDate[date].count++;
-    });
-    return byDate;
-  }, [actuals]);
-
-  // Combined chart data for all dates
-  const combinedChartData = useMemo(() => {
-    return allDates.map(date => {
-      const pred = predictionByDate[date]?.predicted ?? 0;
-      const predCount = predictionByDate[date]?.count ?? 0;
-      const act = actualsByDate[date]?.actual ?? 0;
-      const actCount = actualsByDate[date]?.count ?? 0;
-      // Find matched pair for accuracy
-      const match = matchedPairs.find(mp => mp.date === date);
+    // Find all keys present in either actuals or predictions
+    const allKeys = new Set([...actualsMap.keys(), ...predictionsMap.keys()]);
+    // Build matched pairs, including missing/extra records
+    return Array.from(allKeys).map(key => {
+      const pred = predictionsMap.get(key);
+      const actual = actualsMap.get(key);
       return {
-        date,
-        predicted: predCount ? Math.round(pred / predCount) : 0,
-        actual: actCount ? Math.round(act / actCount) : 0,
-        accuracy: match ? (() => {
-          const predicted = parseFloat(match.predicted_stock ?? 0);
-          const actual = parseFloat(match.actual_sales ?? 0);
-          if (predicted > 0 && actual > 0) {
-            const diff = Math.abs(predicted - actual);
-            const avg = (predicted + actual) / 2;
-            return Math.max(0, Math.round(100 - (diff / avg) * 100));
-          }
-          return 0;
-        })() : 0
+        store_id: pred?.store_id ?? actual?.store_id,
+        product_id: pred?.product_id ?? actual?.product_id,
+        date: pred?.date ?? actual?.date,
+        predicted_stock: pred?.predicted_stock ?? null,
+        actual_sales: actual?.sales ?? null,
+        predictionRecord: pred ?? null,
+        actualRecord: actual ?? null,
+        hasPrediction: !!pred,
+        hasActual: !!actual
       };
     });
-  }, [allDates, predictionByDate, actualsByDate, matchedPairs]);
-
-  // Overall metrics for predictions and actuals
-  const overallPredictionStats = useMemo(() => {
-    if (!predictions.length) return { total: 0, sum: 0, stores: new Set(), products: new Set() };
-    let sum = 0;
-    const stores = new Set();
-    const products = new Set();
-    predictions.forEach(({ store_id, product_id, predicted_stock }) => {
-      stores.add(store_id);
-      products.add(product_id);
-      sum += parseFloat(predicted_stock ?? 0);
-    });
-    return { total: predictions.length, sum: Math.round(sum), stores, products };
-  }, [predictions]);
-
-  const overallActualStats = useMemo(() => {
-    if (!actuals.length) return { total: 0, sum: 0, stores: new Set(), products: new Set() };
-    let sum = 0;
-    const stores = new Set();
-    const products = new Set();
-    actuals.forEach(({ store_id, product_id, sales }) => {
-      stores.add(store_id);
-      products.add(product_id);
-      sum += parseFloat(sales ?? 0);
-    });
-    return { total: actuals.length, sum: Math.round(sum), stores, products };
-  }, [actuals]);
+  }, [predictions, actuals]);
 
   // Metrics
   const metrics = useMemo(() => {
-    // Show both overall and matched stats
+    if (!matchedPairs.length) return {
+      totalComparisons: 0,
+      matchedCount: 0,
+      unmatchedPredictions: 0,
+      unmatchedActuals: 0,
+      averageAccuracy: 0,
+      totalStores: 0,
+      totalProducts: 0,
+      predictedSum: 0,
+      actualSum: 0
+    };
     let accuracySum = 0, validCount = 0, predictedSum = 0, actualSum = 0;
+    let matchedCount = 0, unmatchedPredictions = 0, unmatchedActuals = 0;
     const stores = new Set();
     const products = new Set();
-    matchedPairs.forEach(({ store_id, product_id, predicted_stock, actual_sales }) => {
+    matchedPairs.forEach(({ store_id, product_id, predicted_stock, actual_sales, hasPrediction, hasActual }) => {
       stores.add(store_id);
       products.add(product_id);
       const predicted = parseFloat(predicted_stock ?? 0);
       const actual = parseFloat(actual_sales ?? 0);
-      predictedSum += predicted;
-      actualSum += actual;
-      if (predicted > 0 && actual > 0) {
-        const diff = Math.abs(predicted - actual);
-        const avg = (predicted + actual) / 2;
-        const acc = Math.max(0, 100 - (diff / avg) * 100);
-        accuracySum += acc;
-        validCount++;
+      if (hasPrediction) predictedSum += predicted;
+      if (hasActual) actualSum += actual;
+      if (hasPrediction && hasActual) {
+        matchedCount++;
+        if (predicted > 0 && actual > 0) {
+          const diff = Math.abs(predicted - actual);
+          const avg = (predicted + actual) / 2;
+          const acc = Math.max(0, 100 - (diff / avg) * 100);
+          accuracySum += acc;
+          validCount++;
+        }
+      } else if (hasPrediction && !hasActual) {
+        unmatchedPredictions++;
+      } else if (!hasPrediction && hasActual) {
+        unmatchedActuals++;
       }
     });
     return {
       totalComparisons: matchedPairs.length,
+      matchedCount,
+      unmatchedPredictions,
+      unmatchedActuals,
       averageAccuracy: validCount ? Math.round(accuracySum / validCount) : 0,
       totalStores: stores.size,
       totalProducts: products.size,
       predictedSum: Math.round(predictedSum),
-      actualSum: Math.round(actualSum),
-      overallPredictions: overallPredictionStats,
-      overallActuals: overallActualStats
+      actualSum: Math.round(actualSum)
     };
-  }, [matchedPairs, overallPredictionStats, overallActualStats]);
+  }, [matchedPairs]);
 
-  // Chart Data (group by date) - now uses combinedChartData
-  const chartData = combinedChartData;
+  // Chart Data (group by date)
+  const chartData = useMemo(() => {
+    if (!matchedPairs.length) return [];
+    const byDate = {};
+    matchedPairs.forEach(({ date, predicted_stock, actual_sales, hasPrediction, hasActual }) => {
+      if (!byDate[date]) byDate[date] = { date, predicted: 0, actual: 0, predCount: 0, actCount: 0, accuracySum: 0, validCount: 0 };
+      const predicted = parseFloat(predicted_stock ?? 0);
+      const actual = parseFloat(actual_sales ?? 0);
+      if (hasPrediction) {
+        byDate[date].predicted += predicted;
+        byDate[date].predCount++;
+      }
+      if (hasActual) {
+        byDate[date].actual += actual;
+        byDate[date].actCount++;
+      }
+      if (hasPrediction && hasActual && predicted > 0 && actual > 0) {
+        const diff = Math.abs(predicted - actual);
+        const avg = (predicted + actual) / 2;
+        const acc = Math.max(0, 100 - (diff / avg) * 100);
+        byDate[date].accuracySum += acc;
+        byDate[date].validCount++;
+      }
+    });
+    return Object.values(byDate)
+      .map(d => ({
+        ...d,
+        predicted: d.predCount ? Math.round(d.predicted / d.predCount) : 0,
+        actual: d.actCount ? Math.round(d.actual / d.actCount) : 0,
+        accuracy: d.validCount ? Math.round(d.accuracySum / d.validCount) : 0
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [matchedPairs]);
 
   // Accuracy Distribution
   const accuracyDistribution = useMemo(() => {
@@ -159,10 +134,12 @@ const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = []
       'Fair (60-74%)': 0,
       'Poor (<60%)': 0
     };
-    matchedPairs.forEach(({ predicted_stock, actual_sales }) => {
+    let validCount = 0;
+    matchedPairs.forEach(({ predicted_stock, actual_sales, hasPrediction, hasActual }) => {
       const predicted = parseFloat(predicted_stock ?? 0);
       const actual = parseFloat(actual_sales ?? 0);
-      if (predicted > 0 && actual > 0) {
+      if (hasPrediction && hasActual && predicted > 0 && actual > 0) {
+        validCount++;
         const diff = Math.abs(predicted - actual);
         const avg = (predicted + actual) / 2;
         const acc = Math.max(0, 100 - (diff / avg) * 100);
@@ -172,29 +149,30 @@ const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = []
         else buckets['Poor (<60%)']++;
       }
     });
-    const total = matchedPairs.length;
     return Object.entries(buckets).map(([name, value]) => ({
       name,
       value,
-      percentage: total ? Math.round((value / total) * 100) : 0
+      percentage: validCount ? Math.round((value / validCount) * 100) : 0
     }));
   }, [matchedPairs]);
 
-  // Top Stores by accuracy (matched pairs)
+  // Top Stores by accuracy
   const topStores = useMemo(() => {
     if (!matchedPairs.length) return [];
     const storeStats = {};
-    matchedPairs.forEach(({ store_id, predicted_stock, actual_sales }) => {
+    matchedPairs.forEach(({ store_id, predicted_stock, actual_sales, hasPrediction, hasActual }) => {
       if (!storeStats[store_id]) storeStats[store_id] = { store_id, count: 0, accuracySum: 0, validCount: 0 };
       const predicted = parseFloat(predicted_stock ?? 0);
       const actual = parseFloat(actual_sales ?? 0);
-      storeStats[store_id].count++;
-      if (predicted > 0 && actual > 0) {
-        const diff = Math.abs(predicted - actual);
-        const avg = (predicted + actual) / 2;
-        const acc = Math.max(0, 100 - (diff / avg) * 100);
-        storeStats[store_id].accuracySum += acc;
-        storeStats[store_id].validCount++;
+      if (hasPrediction && hasActual) {
+        storeStats[store_id].count++;
+        if (predicted > 0 && actual > 0) {
+          const diff = Math.abs(predicted - actual);
+          const avg = (predicted + actual) / 2;
+          const acc = Math.max(0, 100 - (diff / avg) * 100);
+          storeStats[store_id].accuracySum += acc;
+          storeStats[store_id].validCount++;
+        }
       }
     });
     return Object.values(storeStats)
@@ -242,44 +220,28 @@ const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = []
               <Target className="w-6 h-6 text-green-600" />
               <span className="text-lg font-bold text-gray-800">{metrics.averageAccuracy}%</span>
             </div>
-            <div className="text-sm text-gray-600">Average Accuracy (matched)</div>
+            <div className="text-sm text-gray-600">Average Accuracy (matched records)</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-bold text-gray-800">{metrics.totalComparisons}</span>
+              <span className="text-lg font-bold text-gray-800">{metrics.matchedCount}</span>
             </div>
-            <div className="text-sm text-gray-600">Total Comparisons (matched)</div>
+            <div className="text-sm text-gray-600">Matched Records</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-2">
-              <Store className="w-6 h-6 text-purple-600" />
-              <span className="text-lg font-bold text-gray-800">{metrics.overallPredictions.stores.size}</span>
+              <BarChart3 className="w-6 h-6 text-red-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.unmatchedPredictions}</span>
             </div>
-            <div className="text-sm text-gray-600">Stores (Predictions)</div>
+            <div className="text-sm text-gray-600">Predictions with no actuals</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-2">
-              <Package className="w-6 h-6 text-orange-600" />
-              <span className="text-lg font-bold text-gray-800">{metrics.overallActuals.stores.size}</span>
+              <BarChart3 className="w-6 h-6 text-yellow-600" />
+              <span className="text-lg font-bold text-gray-800">{metrics.unmatchedActuals}</span>
             </div>
-            <div className="text-sm text-gray-600">Stores (Actuals)</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <BarChart3 className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-bold text-gray-800">{metrics.overallPredictions.sum}</span>
-            </div>
-            <div className="text-sm text-gray-600">Total Predicted Stock</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <BarChart3 className="w-6 h-6 text-green-600" />
-              <span className="text-lg font-bold text-gray-800">{metrics.overallActuals.sum}</span>
-            </div>
-            <div className="text-sm text-gray-600">Total Actual Sales</div>
+            <div className="text-sm text-gray-600">Actuals with no prediction</div>
           </div>
         </div>
       </div>
@@ -289,47 +251,34 @@ const PredictionDashboard = ({ predictions = [], actuals = [], feedbackData = []
         {/* Accuracy Trend Chart */}
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
           <h3 className="text-xl font-bold text-sky-700 mb-4">Accuracy Trend</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="px-2 py-1">Date</th>
-                  <th className="px-2 py-1">Accuracy (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chartData.map(row => (
-                  <tr key={row.date}>
-                    <td className="px-2 py-1">{row.date}</td>
-                    <td className="px-2 py-1">{row.accuracy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="accuracy" name="Accuracy (%)" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
-        {/* Predicted vs Actual Chart - Table for now */}
+        {/* Predicted vs Actual Chart - Line Graph */}
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-cyan-200/50 p-6">
           <h3 className="text-xl font-bold text-sky-700 mb-4">Predicted vs Actual (Sales)</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="px-2 py-1">Date</th>
-                  <th className="px-2 py-1">Predicted Stock</th>
-                  <th className="px-2 py-1">Actual Sales</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chartData.map(row => (
-                  <tr key={row.date}>
-                    <td className="px-2 py-1">{row.date}</td>
-                    <td className="px-2 py-1">{row.predicted}</td>
-                    <td className="px-2 py-1">{row.actual}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="predicted" name="Predicted Stock" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="actual" name="Actual Sales" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

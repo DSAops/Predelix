@@ -74,8 +74,8 @@ function groupPredictionsByStoreAndProduct(predictions) {
 }
 
 function Predict() {
+  // Actuals: uploaded by user for comparison
   const [actuals, setActuals] = useState([]);
-  // Actual data upload state
   const [actualDataFile, setActualDataFile] = useState(null);
 
   // Navbar height (px)
@@ -112,20 +112,14 @@ function Predict() {
   const { showLoading, hideLoading } = useLoading();
   const { openStoreModal, modalState, updateActualStockData } = useModal();
 
+  // Actuals upload and parse
   const handleActualDataFileChange = (event) => {
     const uploadedFile = event.target.files[0];
-    if (uploadedFile) {
-      setActualDataFile(uploadedFile);
-      handleParseAndUpdateDashboard(uploadedFile);
-    }
-  };
-
-  // Parse CSV and update dashboard
-  const handleParseAndUpdateDashboard = (file) => {
-    if (!file) return;
+    if (!uploadedFile) return;
+    setActualDataFile(uploadedFile);
     setLoading(true);
-    showLoading("Processing uploaded data...");
-    Papa.parse(file, {
+    showLoading("Processing actuals data...");
+    Papa.parse(uploadedFile, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
@@ -138,17 +132,34 @@ function Predict() {
           hideLoading();
           return;
         }
-        // Store actuals as a separate array
-        const actualsData = results.data.map(row => ({
-          store_id: row.store_id,
-          date: row.date,
-          product_id: row.product_id,
+        // Normalize and filter actuals
+        const actualsData = results.data.filter(row =>
+          row.store_id && row.date && row.product_id && row.sales !== undefined && row.sales !== null && row.sales !== ''
+        ).map(row => ({
+          store_id: String(row.store_id).trim(),
+          date: String(row.date).trim(),
+          product_id: String(row.product_id).trim(),
           sales: Number(row.sales)
         }));
         setActuals(actualsData);
         setLoading(false);
         hideLoading();
-        alert('Actual sales data uploaded!');
+        if (actualsData.length === 0) {
+          alert('No valid actual sales data found in file.');
+        } else {
+          alert('Actual sales data uploaded!');
+        }
+        // Debug log for diagnosis
+        console.log('Actuals uploaded:', actualsData);
+        if (predictions && predictions.length > 0) {
+          const normalizedPredictions = predictions.map(row => ({
+            store_id: String(row.store_id).trim(),
+            date: String(row.date).trim(),
+            product_id: String(row.product_id).trim(),
+            predicted_stock: Number(row.predicted_stock)
+          }));
+          console.log('Predictions for comparison:', normalizedPredictions);
+        }
       },
       error: (err) => {
         alert('Error parsing CSV: ' + err.message);
@@ -157,6 +168,11 @@ function Predict() {
       }
     });
   };
+  // Ensure dashboard re-renders when actuals change
+  useEffect(() => {
+    // If actuals are uploaded and predictions exist, force a re-render
+    // This is just to ensure the dashboard updates
+  }, [actuals, predictions]);
   // Remove handleUploadActualData, replaced by handleParseAndUpdateDashboard
 
   // Handle feedback from prediction chart
@@ -260,26 +276,22 @@ function Predict() {
     }
   }, [showLoading, hideLoading, setFile]);
 
+  // Prediction: send file to backend, get response, set predictions
   const handlePredict = async () => {
     if (!file) return;
     setLoading(true);
     showLoading("Analyzing data with AI...");
     const formData = new FormData();
     formData.append('file', file);
-    
     try {
       const url = `${serverUrl}/api/predict`;
-      
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
-      
       if (!response.ok) {
-        // First get the content type to decide how to parse
         const contentType = response.headers.get('content-type');
         let errorText;
-        
         if (contentType && contentType.includes('application/json')) {
           try {
             const errorData = await response.json();
@@ -294,14 +306,10 @@ function Predict() {
             errorText = `HTTP ${response.status}`;
           }
         }
-        
         throw new Error(`Server error: ${response.status} - ${errorText}`);
       }
-      
-      // Always get JSON data for preview
       const data = await response.json();
-      
-      // Create CSV content
+      // CSV for download
       let csvContent = "";
       if (data && data.length > 0) {
         const headers = Object.keys(data[0]);
@@ -311,10 +319,8 @@ function Predict() {
           csvContent += values.join(',') + '\n';
         });
       }
-      
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      
-      // Create prediction entry
+      // History
       const predictionId = Date.now().toString();
       const predictionEntry = {
         id: predictionId,
@@ -324,284 +330,41 @@ function Predict() {
         csvBlob: blob,
         recordCount: data.length
       };
-      
-      // Add to history and set as active
       setPredictionHistory(prev => [predictionEntry, ...prev]);
       setActivePredictionId(predictionId);
       setPredictions(data);
       setCsvBlob(blob);
       setShowUploadSection(false);
-      
-      // Reset form
       setFile(null);
       setCurrentPage(1);
       setSearchTerm('');
       setSortField('');
       setStoreCurrentPage(1);
-      
     } catch (err) {
       setPredictions(null);
       setCsvBlob(null);
       alert(`Prediction failed: ${err.message}`);
       console.error('Prediction error:', err);
     }
-    
     setLoading(false);
     hideLoading();
   };
 
   const handleUploadDemoData = async () => {
+    // Only set demo file for upload, do not process or update predictions
     showLoading("Loading demo data...");
     try {
-      // Fetch the demo CSV file from the public folder
       const response = await fetch('/sample_sales_data.csv');
       if (!response.ok) {
         throw new Error('Failed to load demo data');
       }
       const csvText = await response.text();
-      // Create a File object from the CSV text
       const blob = new Blob([csvText], { type: 'text/csv' });
       const demoFile = new File([blob], 'sample_sales_data.csv', { type: 'text/csv' });
       setFile(demoFile);
       hideLoading();
-      showLoading("Processing demo file...");
-      
-      // Simulate file processing time
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Step 3: Make prediction request (simulate API call)
-      hideLoading();
-      showLoading("Generating AI predictions...");
-      
-      // Simulate API processing time
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Generate sample predictions based on the demo data
-      const today = new Date();
-      const getRecentDate = (daysAgo) => {
-        const date = new Date(today);
-        date.setDate(date.getDate() - daysAgo);
-        return date.toISOString().split('T')[0];
-      };
-
-      // Helper function to generate random variation in actual stock compared to predicted
-      const generateActualStock = (predicted, variancePercentage = 10, ensureActual = false) => {
-        // For some entries, we'll have null actual stock to simulate pending data
-        if (!ensureActual && Math.random() > 0.8 && getRecentDate(0) === today.toISOString().split('T')[0]) {
-          return null; // About 20% of today's predictions don't have actual data yet
-        }
-        
-        // Generate pattern-based variations for more interesting demo data
-        // We'll create three types of variations:
-        // 1. Normal variations (within expected range)
-        // 2. Outlier variations (significant deviations)
-        // 3. Trend-based variations (consistently above or below predictions)
-        
-        // Determine variation type
-        const variationType = Math.random();
-        let actualStock;
-        
-        if (variationType > 0.85) {
-          // Outlier case - much higher or lower than predicted (15% of cases)
-          const outlierDirection = Math.random() > 0.5 ? 1 : -1;
-          const outlierFactor = 2 + Math.random() * 1.5; // Between 2x and 3.5x the normal variance
-          const maxVariance = Math.floor(predicted * (variancePercentage / 100));
-          actualStock = Math.max(0, predicted + (outlierDirection * maxVariance * outlierFactor));
-        } 
-        else if (variationType > 0.6) {
-          // Trend-based variation - consistently above or below predictions (25% of cases)
-          // This simulates stores that consistently order too much or too little
-          const trendBias = variancePercentage / 100 * (Math.random() > 0.5 ? 1 : -1);
-          const smallRandom = Math.random() * 0.05 - 0.025; // Small additional randomness
-          actualStock = Math.max(0, Math.round(predicted * (1 + trendBias + smallRandom)));
-        }
-        else {
-          // Normal variation - standard minor differences (60% of cases)
-          const varianceDirection = Math.random() > 0.5 ? 1 : -1;
-          const maxVariance = Math.floor(predicted * (variancePercentage / 100));
-          const variance = Math.floor(Math.random() * maxVariance) * varianceDirection;
-          actualStock = Math.max(0, predicted + variance);
-        }
-          
-        return Math.round(actualStock); // Round and ensure we don't get negative stock
-      };
-
-      const samplePredictions = [
-        // Recent data (last 7 days) with interesting variations between predicted and actual stock
-        { store_id: 2, product_id: 450, date: getRecentDate(1), predicted_stock: 78, actual_stock: 73, sales: 28 },
-        { store_id: 20, product_id: 512, date: getRecentDate(1), predicted_stock: 135, actual_stock: 128, sales: 96 },
-        { store_id: 30, product_id: 434, date: getRecentDate(2), predicted_stock: 72, actual_stock: 67, sales: 58 },
-        { store_id: 32, product_id: 549, date: getRecentDate(2), predicted_stock: 152, actual_stock: 145, sales: 99 },
-        { store_id: 48, product_id: 233, date: getRecentDate(3), predicted_stock: 63, actual_stock: 59, sales: 38 },
-        { store_id: 62, product_id: 340, date: getRecentDate(3), predicted_stock: 69, actual_stock: 66, sales: 60 },
-        { store_id: 68, product_id: 130, date: getRecentDate(4), predicted_stock: 89, actual_stock: 87, sales: 77 },
-        { store_id: 77, product_id: 363, date: getRecentDate(4), predicted_stock: 85, actual_stock: 90, sales: 40 },
-        { store_id: 79, product_id: 136, date: getRecentDate(5), predicted_stock: 108, actual_stock: 105, sales: 78 },
-        { store_id: 90, product_id: 519, date: getRecentDate(5), predicted_stock: 98, actual_stock: 101, sales: 70 },
-        
-        // Added store with significant differences between predicted and actual (under-predicted)
-        { store_id: 15, product_id: 601, date: getRecentDate(1), predicted_stock: 120, actual_stock: 145, sales: 65 },
-        { store_id: 15, product_id: 602, date: getRecentDate(2), predicted_stock: 85, actual_stock: 110, sales: 45 },
-        { store_id: 15, product_id: 603, date: getRecentDate(3), predicted_stock: 92, actual_stock: 115, sales: 52 },
-        
-        // Added store with significant differences between predicted and actual (over-predicted)
-        { store_id: 25, product_id: 701, date: getRecentDate(1), predicted_stock: 180, actual_stock: 150, sales: 95 },
-        { store_id: 25, product_id: 702, date: getRecentDate(2), predicted_stock: 95, actual_stock: 75, sales: 50 },
-        { store_id: 25, product_id: 703, date: getRecentDate(3), predicted_stock: 120, actual_stock: 90, sales: 80 },
-        
-        // Today's predictions - mix of with actual data and without
-        { store_id: 2, product_id: 451, date: getRecentDate(0), predicted_stock: 85, actual_stock: generateActualStock(85, 10, true), sales: 45 },
-        { store_id: 2, product_id: 452, date: getRecentDate(1), predicted_stock: 92, actual_stock: 89, sales: 52 },
-        { store_id: 2, product_id: 453, date: getRecentDate(0), predicted_stock: 77, actual_stock: generateActualStock(77, 15, true), sales: 40 },
-        
-        { store_id: 15, product_id: 604, date: getRecentDate(0), predicted_stock: 110, actual_stock: generateActualStock(110, 20, true), sales: 70 },
-        { store_id: 15, product_id: 605, date: getRecentDate(0), predicted_stock: 95, actual_stock: 118, sales: 50 },
-        
-        { store_id: 20, product_id: 513, date: getRecentDate(0), predicted_stock: 140, actual_stock: generateActualStock(140, 8, false), sales: 98 },
-        { store_id: 20, product_id: 514, date: getRecentDate(1), predicted_stock: 125, actual_stock: 120, sales: 87 },
-        { store_id: 20, product_id: 515, date: getRecentDate(0), predicted_stock: 135, actual_stock: generateActualStock(135, 12, true), sales: 90 },
-        
-        { store_id: 25, product_id: 704, date: getRecentDate(0), predicted_stock: 150, actual_stock: generateActualStock(150, 15, true), sales: 85 },
-        { store_id: 25, product_id: 705, date: getRecentDate(0), predicted_stock: 90, actual_stock: 65, sales: 55 },
-        
-        { store_id: 30, product_id: 435, date: getRecentDate(2), predicted_stock: 75, actual_stock: 71, sales: 55 },
-        { store_id: 30, product_id: 436, date: getRecentDate(3), predicted_stock: 68, actual_stock: 65, sales: 48 },
-        { store_id: 30, product_id: 437, date: getRecentDate(0), predicted_stock: 82, actual_stock: generateActualStock(82, 10, true), sales: 62 },
-        
-        { store_id: 32, product_id: 550, date: getRecentDate(0), predicted_stock: 158, actual_stock: generateActualStock(158, 10, true), sales: 102 },
-        { store_id: 32, product_id: 551, date: getRecentDate(1), predicted_stock: 144, actual_stock: 140, sales: 95 },
-        { store_id: 32, product_id: 552, date: getRecentDate(0), predicted_stock: 160, actual_stock: generateActualStock(160, 10, true), sales: 105 },
-        
-        { store_id: 48, product_id: 234, date: getRecentDate(2), predicted_stock: 66, actual_stock: 62, sales: 41 },
-        { store_id: 48, product_id: 235, date: getRecentDate(3), predicted_stock: 59, actual_stock: 56, sales: 35 },
-        { store_id: 48, product_id: 236, date: getRecentDate(0), predicted_stock: 70, actual_stock: generateActualStock(70, 18, false), sales: 45 },
-        
-        { store_id: 62, product_id: 341, date: getRecentDate(0), predicted_stock: 72, actual_stock: generateActualStock(72, 10, false), sales: 63 },
-        { store_id: 62, product_id: 342, date: getRecentDate(1), predicted_stock: 65, actual_stock: 61, sales: 57 },
-      ];
-
-      console.log('Generated demo predictions:', {
-        count: samplePredictions.length,
-        originalFile: demoFile.name,
-        fileSize: demoFile.size
-      });
-      
-      // Create CSV content for predictions
-      const headers = Object.keys(samplePredictions[0]);
-      let csvContent = headers.join(',') + '\n';
-      samplePredictions.forEach(row => {
-        const values = headers.map(header => row[header] || '');
-        csvContent += values.join(',') + '\n';
-      });
-      
-      const predictionBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      
-      // Create prediction entry with proper history tracking
-      const predictionId = Date.now().toString();
-      const predictionEntry = {
-        id: predictionId,
-        fileName: `predictions_${demoFile.name}`,
-        originalFileName: demoFile.name,
-        uploadDate: new Date().toLocaleString(),
-        predictions: samplePredictions,
-        csvBlob: predictionBlob,
-        recordCount: samplePredictions.length,
-        processingTime: '3.2s',
-        accuracy: '94.7%',
-        source: 'demo'
-      };
-      
-      // Add to history and set as active
-      setPredictionHistory(prev => [predictionEntry, ...prev]);
-      setActivePredictionId(predictionId);
-      setPredictions(samplePredictions);
-      setCsvBlob(predictionBlob);
-      setShowUploadSection(false);
-      
-      // Add some sample feedback data
-      const sampleFeedback = [
-        { store_id: 2, product_id: 450, feedback: 'accurate', timestamp: new Date(getRecentDate(1)).toISOString() },
-        { store_id: 20, product_id: 512, feedback: 'accurate', timestamp: new Date(getRecentDate(1)).toISOString() },
-        { store_id: 30, product_id: 434, feedback: 'inaccurate', timestamp: new Date(getRecentDate(2)).toISOString() },
-        { store_id: 32, product_id: 549, feedback: 'accurate', timestamp: new Date(getRecentDate(2)).toISOString() },
-        { store_id: 48, product_id: 233, feedback: 'accurate', timestamp: new Date(getRecentDate(3)).toISOString() },
-        { store_id: 62, product_id: 340, feedback: 'accurate', timestamp: new Date(getRecentDate(3)).toISOString() },
-        { store_id: 77, product_id: 363, feedback: 'inaccurate', timestamp: new Date(getRecentDate(4)).toISOString() },
-        { store_id: 79, product_id: 136, feedback: 'accurate', timestamp: new Date(getRecentDate(5)).toISOString() },
-        { store_id: 2, product_id: 451, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
-        { store_id: 20, product_id: 513, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
-        { store_id: 30, product_id: 435, feedback: 'inaccurate', timestamp: new Date(getRecentDate(2)).toISOString() },
-        { store_id: 32, product_id: 550, feedback: 'accurate', timestamp: new Date(getRecentDate(0)).toISOString() },
-      ];
-      setFeedbackData(sampleFeedback);
-      
-      // Reset form
-      setFile(null);
-      setCurrentPage(1);
-      setSearchTerm('');
-      setSortField('');
-      setStoreCurrentPage(1);
-
-      // Ensure all predictions have proper actual stock data for better comparison
-      const updatedPredictions = samplePredictions.map(pred => {
-        // Make sure all predictions have actual stock data for better demo experience
-        // If actual_stock is null, generate a realistic value
-        if (pred.actual_stock === null) {
-          const daysDiff = new Date(today) - new Date(pred.date);
-          const daysPast = Math.floor(daysDiff / (1000 * 60 * 60 * 24));
-          
-          // Only generate actual stock for past dates (today and before)
-          if (daysPast >= 0) {
-            // More variance for older dates (more likely to have been counted)
-            const variancePercentage = 10 + (daysPast * 2); // Increases variance with age
-            pred.actual_stock = generateActualStock(pred.predicted_stock, variancePercentage, true);
-          }
-        }
-        return pred;
-      });
-      
-      // Update our state with the enhanced data that includes all actual stock values
-      setPredictions(updatedPredictions);
-      
-      // Generate and update actual stock data for the selected store in StoreModal, if any
-      if (modalState && modalState.storeModal && modalState.storeModal.isOpen && modalState.storeModal.storeId) {
-        const { storeModal } = modalState;
-        const storeId = parseInt(storeModal.storeId);
-        
-        // Find predictions for this store with actual stock data
-        const storeActualData = updatedPredictions
-          .filter(p => p.store_id === storeId && p.actual_stock !== null)
-          .map(p => ({
-            storeId: p.store_id,
-            productId: p.product_id,
-            date: p.date,
-            actualStock: p.actual_stock
-          }));
-        
-        // Update each product's actual stock data in the modal
-        if (storeActualData.length > 0) {
-          storeActualData.forEach(item => {
-            updateActualStockData(
-              item.storeId, 
-              item.productId, 
-              item.date, 
-              item.actualStock
-            );
-          });
-          console.log(`Updated actual stock data for store ${storeId} with ${storeActualData.length} entries`);
-        }
-      }
-      
-      hideLoading();
-      
-      // Show success message
-      setTimeout(() => {
-        console.log('Demo predictions loaded successfully!', {
-          predictions: samplePredictions.length,
-          history: predictionHistory.length + 1
-        });
-      }, 500);
-      
+      showLoading("Demo file ready. Click 'Generate Predictions' to analyze.");
+      setTimeout(() => hideLoading(), 1000);
     } catch (error) {
       hideLoading();
       alert(`Failed to load demo data: ${error.message}`);
@@ -646,8 +409,7 @@ function Predict() {
     return predictions ? groupPredictionsByStoreAndProduct(predictions) : {};
   }, [predictions]);
 
-  // Only use real backend response for all analytics, charts, and tables
-  // Remove any fallback, hardcoded, or demo data usage
+  // Filtered and sorted predictions
   const filteredAndSortedData = useMemo(() => {
     if (!Array.isArray(predictions) || predictions.length === 0) return [];
     let filtered = predictions.filter(item =>
@@ -711,28 +473,19 @@ function Predict() {
 
   return (
     <div className="min-h-screen theme-gradient-bg flex flex-col overflow-x-hidden transition-all duration-300">
-        {/* Enhanced Background */}
-        <div className="fixed inset-0 pointer-events-none -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_60%,rgba(6,182,212,0.08),rgba(255,255,255,0.9))]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.06),transparent)]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(14,165,233,0.06),transparent)]"></div>
-          
-          {/* Animated background shapes */}
-          <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-cyan-400/8 to-blue-500/8 rounded-full animate-morph-slow"></div>
-          <div className="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gradient-to-br from-blue-400/8 to-sky-500/8 rounded-full animate-morph-medium"></div>
-        </div>
-      
+      {/* Enhanced Background */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_60%,rgba(6,182,212,0.08),rgba(255,255,255,0.9))]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.06),transparent)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(14,165,233,0.06),transparent)]"></div>
+        {/* Animated background shapes */}
+        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-cyan-400/8 to-blue-500/8 rounded-full animate-morph-slow"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gradient-to-br from-blue-400/8 to-sky-500/8 rounded-full animate-morph-medium"></div>
+      </div>
       <FloatingPredictElements scrollY={scrollY} />
-      
-      <div 
-        className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-        style={{ paddingTop: NAVBAR_HEIGHT + 32, paddingBottom: 32 }}
-      >
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: NAVBAR_HEIGHT + 32, paddingBottom: 32 }}>
         {/* Enhanced Header */}
-        <div 
-          className="text-center mb-12 transform transition-all duration-1000"
-          style={{ transform: `translateY(${scrollY * -0.1}px)` }}
-        >
+        <div className="text-center mb-12 transform transition-all duration-1000" style={{ transform: `translateY(${scrollY * -0.1}px)` }}>
           <div className="relative inline-block mb-6">
             <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-xl animate-pulse"></div>
             <h1 className="relative text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-500 bg-clip-text text-transparent mb-4 animate-slideInUp">
@@ -740,10 +493,9 @@ function Predict() {
             </h1>
           </div>
           <p className="text-lg text-sky-600 max-w-3xl mx-auto leading-relaxed animate-slideInUp animation-delay-200">
-            Upload your inventory data and get intelligent predictions for optimal stock levels with 
+            Upload your inventory data and get intelligent predictions for optimal stock levels with
             <span className="font-semibold text-cyan-600 animate-pulse"> machine learning insights</span>
           </p>
-          
           {/* Download CSV & Upload Actual Data Buttons */}
           {predictions && csvBlob && (
             <div className="mt-8 flex flex-col items-center gap-4 animate-slideInUp animation-delay-400">
@@ -775,27 +527,7 @@ function Predict() {
                     type="file"
                     accept=".csv,.xlsx"
                     style={{ display: 'none' }}
-                    onChange={e => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      // Use PapaParse or similar to parse CSV
-                      const reader = new FileReader();
-                      reader.onload = evt => {
-                        const text = evt.target.result;
-                        // Simple CSV parse (replace with PapaParse for robust solution)
-                        const rows = text.split('\n').map(r => r.split(','));
-                        const headers = rows[0];
-                        const data = rows.slice(1).map(row => {
-                          const obj = {};
-                          headers.forEach((h, i) => {
-                            obj[h.trim()] = row[i]?.trim();
-                          });
-                          return obj;
-                        });
-                        setActuals(data.filter(d => Object.keys(d).length > 1));
-                      };
-                      reader.readAsText(file);
-                    }}
+                    onChange={handleActualDataFileChange}
                   />
                 </button>
               </div>
@@ -918,18 +650,25 @@ function Predict() {
         {/* Enhanced Main Content - Single Column Layout */}
         <div className="space-y-8">
           {/* Prediction Dashboard */}
-          {predictions && predictions.length > 0 && (
-            <PredictionDashboard 
-              predictions={predictions} 
-              actuals={actuals}
-              feedbackData={feedbackData}
-            />
-          )}
+  {predictions && predictions.length > 0 && (
+    <PredictionDashboard 
+      predictions={predictions.map(row => ({
+        ...row,
+        store_id: String(row.store_id).trim(),
+        date: String(row.date).trim(),
+        product_id: String(row.product_id).trim(),
+        predicted_stock: Number(row.predicted_stock)
+      }) )}
+      actuals={actuals}
+      feedbackData={feedbackData}
+    />
+  )}
 
           {/* Prediction Chart Section */}
           {predictions && predictions.length > 0 && (
             <PredictionChart 
               predictions={predictions} 
+              actuals={actuals}
               onFeedback={handlePredictionFeedback}
             />
           )}

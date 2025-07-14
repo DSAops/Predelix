@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ThumbsUp, ThumbsDown, Eye, EyeOff, TrendingUp, TrendingDown, CheckCircle, XCircle, BarChart2, Activity, Calendar, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const PredictionChart = memo(({ predictions, onFeedback }) => {
+const PredictionChart = memo(({ predictions, actuals = [], onFeedback }) => {
   const [chartType, setChartType] = useState('line');
   const [selectedStore, setSelectedStore] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -51,88 +51,115 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
     setTimeout(() => setIsLoading(false), 100);
   }, []);
 
-  // Process prediction data for visualization
-  const chartData = useMemo(() => {
-    if (!predictions || predictions.length === 0) return [];
+    // Merge actuals into predictions for robust comparison
+    const chartData = useMemo(() => {
+        if (!predictions || predictions.length === 0) return [];
 
-    // Group by date and aggregate
-    const dateGroups = predictions.reduce((acc, pred) => {
-      const date = pred.date;
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          totalPredicted: 0,
-          totalActual: 0,
-          avgPredicted: 0,
-          avgActual: 0,
-          storeCount: 0,
-          productCount: 0,
-          stores: new Set(),
-          products: new Set(),
-          hasActualData: false
-        };
-      }
-      
-      const predictedStock = parseFloat(pred.predicted_stock || 0);
-      const actualStock = parseFloat(pred.actual_stock || pred.actual_sales || 0);
-      
-      acc[date].totalPredicted += predictedStock;
-      acc[date].totalActual += actualStock;
-      acc[date].stores.add(pred.store_id);
-      acc[date].products.add(pred.product_id);
-      
-      if (actualStock > 0) {
-        acc[date].hasActualData = true;
-      }
-      
-      return acc;
-    }, {});
+        // Build a lookup for actuals by store_id, product_id, date
+        const actualsMap = {};
+        actuals.forEach(row => {
+            const key = `${row.date}|${row.store_id}|${row.product_id}`;
+            actualsMap[key] = Number(row.sales);
+        });
 
-    return Object.values(dateGroups)
-      .map(group => {
-        const recordCount = predictions.filter(p => p.date === group.date).length;
-        return {
-          ...group,
-          avgPredicted: Math.round(group.totalPredicted / recordCount),
-          avgActual: Math.round(group.totalActual / recordCount),
-          storeCount: group.stores.size,
-          productCount: group.products.size
-        };
-      })
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [predictions]);
+        // Group by date, store, product for robust comparison
+        const grouped = {};
+        predictions.forEach(pred => {
+            const key = `${pred.date}|${pred.store_id}|${pred.product_id}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    date: pred.date,
+                    store_id: pred.store_id,
+                    product_id: pred.product_id,
+                    predicted: parseFloat(pred.predicted_stock || 0),
+                    actual: actualsMap[key] !== undefined ? actualsMap[key] : (pred.actual_stock !== undefined ? parseFloat(pred.actual_stock) : (pred.actual_sales !== undefined ? parseFloat(pred.actual_sales) : null))
+                };
+            } else {
+                grouped[key].predicted += parseFloat(pred.predicted_stock || 0);
+                if (actualsMap[key] !== undefined) grouped[key].actual += actualsMap[key];
+                else if (pred.actual_stock !== undefined) grouped[key].actual += parseFloat(pred.actual_stock);
+                else if (pred.actual_sales !== undefined) grouped[key].actual += parseFloat(pred.actual_sales);
+            }
+        });
 
-  // Get store-specific data
-  const storeData = useMemo(() => {
-    if (!predictions || !selectedStore) return [];
-    
-    return predictions
-      .filter(pred => pred.store_id === selectedStore)
-      .map(pred => ({
-        ...pred,
-        predicted_stock: parseFloat(pred.predicted_stock || 0),
-        actual_stock: parseFloat(pred.actual_stock || pred.actual_sales || 0),
-        date: pred.date || new Date().toISOString().split('T')[0],
-        hasActualData: (pred.actual_stock || pred.actual_sales) > 0
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [predictions, selectedStore]);
+        // For chart, group by date and average across products/stores
+        const dateGroups = {};
+        Object.values(grouped).forEach(item => {
+            if (!dateGroups[item.date]) {
+                dateGroups[item.date] = {
+                    date: item.date,
+                    predicted: 0,
+                    actual: 0,
+                    count: 0,
+                    hasActual: false
+                };
+            }
+            dateGroups[item.date].predicted += item.predicted;
+            if (item.actual !== null && !isNaN(item.actual)) {
+                dateGroups[item.date].actual += item.actual;
+                dateGroups[item.date].hasActual = true;
+            }
+            dateGroups[item.date].count += 1;
+        });
 
-  // Get product-specific data across all stores
-  const productData = useMemo(() => {
-    if (!predictions || !selectedProduct) return [];
-    
-    return predictions
-      .filter(pred => pred.product_id === selectedProduct)
-      .map(pred => ({
-        ...pred,
-        predicted_stock: parseFloat(pred.predicted_stock || 0),
-        actual_stock: parseFloat(pred.actual_stock || pred.actual_sales || 0),
-        date: pred.date || new Date().toISOString().split('T')[0],
-        hasActualData: (pred.actual_stock || pred.actual_sales) > 0
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [predictions, selectedProduct]);
+        return Object.values(dateGroups)
+            .map(group => ({
+                date: group.date,
+                predicted: Math.round(group.predicted / group.count),
+                actual: group.hasActual ? Math.round(group.actual / group.count) : null
+            }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [predictions, actuals]);
+
+    // Get store-specific data (compare predicted and actual)
+    const storeData = useMemo(() => {
+        if (!predictions || !selectedStore) return [];
+        // Group by date, product for selected store
+        const filtered = predictions.filter(pred => pred.store_id === selectedStore);
+        const grouped = {};
+        filtered.forEach(pred => {
+            const key = `${pred.date}|${pred.product_id}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    date: pred.date,
+                    product_id: pred.product_id,
+                    predicted: parseFloat(pred.predicted_stock || 0),
+                    actual: pred.actual_stock !== undefined ? parseFloat(pred.actual_stock) : (pred.actual_sales !== undefined ? parseFloat(pred.actual_sales) : null)
+                };
+            } else {
+                grouped[key].predicted += parseFloat(pred.predicted_stock || 0);
+                if (pred.actual_stock !== undefined) grouped[key].actual += parseFloat(pred.actual_stock);
+                else if (pred.actual_sales !== undefined) grouped[key].actual += parseFloat(pred.actual_sales);
+            }
+        });
+        return Object.values(grouped)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [predictions, selectedStore]);
+
+    // Get product-specific data across all stores (compare predicted and actual)
+    const productData = useMemo(() => {
+        if (!predictions || !selectedProduct) return [];
+        // Group by date, store for selected product
+        const filtered = predictions.filter(pred => pred.product_id === selectedProduct);
+        const grouped = {};
+        filtered.forEach(pred => {
+            const key = `${pred.date}|${pred.store_id}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    date: pred.date,
+                    store_id: pred.store_id,
+                    predicted: parseFloat(pred.predicted_stock || 0),
+                    actual: pred.actual_stock !== undefined ? parseFloat(pred.actual_stock) : (pred.actual_sales !== undefined ? parseFloat(pred.actual_sales) : null)
+                };
+            } else {
+                grouped[key].predicted += parseFloat(pred.predicted_stock || 0);
+                if (pred.actual_stock !== undefined) grouped[key].actual += parseFloat(pred.actual_stock);
+                else if (pred.actual_sales !== undefined) grouped[key].actual += parseFloat(pred.actual_sales);
+            }
+        });
+        return Object.values(grouped)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [predictions, selectedProduct]);
 
   // Get unique stores and products
   const { stores, products } = useMemo(() => {
@@ -164,48 +191,40 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
     }
   };
 
-  // Calculate prediction accuracy
-  const accuracy = useMemo(() => {
-    const currentData = getCurrentData();
-    if (!currentData || currentData.length === 0) return null;
+    // Calculate prediction accuracy (compare predicted and actual)
+    const accuracy = useMemo(() => {
+        const currentData = getCurrentData();
+        if (!currentData || currentData.length === 0) return null;
 
-    let validComparisons = 0;
-    let totalAccuracy = 0;
+        let validComparisons = 0;
+        let totalAccuracy = 0;
 
-    currentData.forEach(dataPoint => {
-      const predicted = viewMode === 'all' ? dataPoint.avgPredicted : dataPoint.predicted_stock;
-      const actual = viewMode === 'all' ? dataPoint.avgActual : dataPoint.actual_stock;
-      
-      if (predicted > 0 && actual > 0) {
-        // Calculate accuracy as percentage (closer values = higher accuracy)
-        const difference = Math.abs(predicted - actual);
-        const average = (predicted + actual) / 2;
-        const accuracy = Math.max(0, 100 - (difference / average) * 100);
-        
-        totalAccuracy += accuracy;
-        validComparisons++;
-      }
-    });
+        currentData.forEach(dataPoint => {
+            const predicted = dataPoint.predicted;
+            const actual = dataPoint.actual;
+            if (predicted > 0 && actual > 0) {
+                const difference = Math.abs(predicted - actual);
+                const average = (predicted + actual) / 2;
+                const accuracy = Math.max(0, 100 - (difference / average) * 100);
+                totalAccuracy += accuracy;
+                validComparisons++;
+            }
+        });
 
-    if (validComparisons === 0) return null;
-    
-    return {
-      percentage: Math.round(totalAccuracy / validComparisons),
-      comparisons: validComparisons,
-      total: currentData.length
-    };
-  }, [getCurrentData, viewMode]);
+        if (validComparisons === 0) return null;
+        return {
+            percentage: Math.round(totalAccuracy / validComparisons),
+            comparisons: validComparisons,
+            total: currentData.length
+        };
+    }, [getCurrentData, viewMode]);
 
-  // Check if current data has actual values
-  const hasActualData = useMemo(() => {
-    const currentData = getCurrentData();
-    if (!currentData || currentData.length === 0) return false;
-    
-    return currentData.some(dataPoint => {
-      const actual = viewMode === 'all' ? dataPoint.avgActual : dataPoint.actual_stock;
-      return actual > 0;
-    });
-  }, [getCurrentData, viewMode]);
+    // Check if current data has actual values
+    const hasActualData = useMemo(() => {
+        const currentData = getCurrentData();
+        if (!currentData || currentData.length === 0) return false;
+        return currentData.some(dataPoint => dataPoint.actual !== null && !isNaN(dataPoint.actual));
+    }, [getCurrentData, viewMode]);
 
   // Custom tooltip for feedback
   const CustomTooltip = ({ active, payload, label }) => {
@@ -328,14 +347,14 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Bar 
-                dataKey={viewMode === 'all' ? 'avgPredicted' : 'predicted_stock'} 
+                dataKey="predicted" 
                 fill="#06b6d4" 
                 name="Predicted Stock"
                 radius={[2, 2, 0, 0]}
               />
               {hasActualData && (
                 <Bar 
-                  dataKey={viewMode === 'all' ? 'avgActual' : 'actual_stock'} 
+                  dataKey="actual" 
                   fill="#10b981" 
                   name="Actual Stock"
                   radius={[2, 2, 0, 0]}
@@ -343,7 +362,6 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               )}
             </BarChart>
           );
-        
         case 'area':
           return (
             <AreaChart {...commonProps}>
@@ -354,7 +372,7 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               <Legend />
               <Area 
                 type="monotone" 
-                dataKey={viewMode === 'all' ? 'avgPredicted' : 'predicted_stock'} 
+                dataKey="predicted" 
                 stroke="#06b6d4" 
                 fill="#06b6d4" 
                 fillOpacity={0.3}
@@ -363,7 +381,7 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               {hasActualData && (
                 <Area 
                   type="monotone" 
-                  dataKey={viewMode === 'all' ? 'avgActual' : 'actual_stock'} 
+                  dataKey="actual" 
                   stroke="#10b981" 
                   fill="#10b981" 
                   fillOpacity={0.3}
@@ -372,7 +390,6 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               )}
             </AreaChart>
           );
-        
         default:
           return (
             <LineChart {...commonProps}>
@@ -383,7 +400,7 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               <Legend />
               <Line 
                 type="monotone" 
-                dataKey={viewMode === 'all' ? 'avgPredicted' : 'predicted_stock'} 
+                dataKey="predicted" 
                 stroke="#06b6d4" 
                 strokeWidth={3}
                 dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
@@ -394,7 +411,7 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
               {hasActualData && (
                 <Line 
                   type="monotone" 
-                  dataKey={viewMode === 'all' ? 'avgActual' : 'actual_stock'} 
+                  dataKey="actual" 
                   stroke="#10b981" 
                   strokeWidth={3}
                   dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
@@ -669,8 +686,13 @@ const PredictionChart = memo(({ predictions, onFeedback }) => {
                       {dataPoint.date}
                     </span>
                     <span className="text-lg font-bold text-cyan-600">
-                      {dataPoint.predicted_stock || dataPoint.avgPredicted}
+                      Predicted: {dataPoint.predicted}
                     </span>
+                    {dataPoint.actual !== null && !isNaN(dataPoint.actual) && (
+                      <span className="text-lg font-bold text-green-600 ml-2">
+                        Actual: {dataPoint.actual}
+                      </span>
+                    )}
                   </div>
                   
                   {dataPoint.store_id && (
