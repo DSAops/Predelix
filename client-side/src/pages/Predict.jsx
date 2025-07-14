@@ -1,5 +1,6 @@
 // Backend server URL
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Papa from 'papaparse';
 import { Footer } from './common/Footer';
 import { UploadCloud, BarChart2, DatabaseIcon, RefreshCw, Truck, Package, Globe, Zap, Shield, TrendingUp, Target, Brain, Download, Store, Calendar, ArrowLeft, FileSpreadsheet, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Eye } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -114,37 +115,50 @@ function Predict() {
     const uploadedFile = event.target.files[0];
     if (uploadedFile) {
       setActualDataFile(uploadedFile);
-      handleUploadActualData(uploadedFile);
+      handleParseAndUpdateDashboard(uploadedFile);
     }
   };
 
-  const handleUploadActualData = async (selectedFile) => {
-    if (!selectedFile) {
-      alert('No file selected to upload for training.');
-      return;
-    }
+  // Parse CSV and update dashboard
+  const handleParseAndUpdateDashboard = (file) => {
+    if (!file) return;
     setLoading(true);
-    showLoading("Uploading actual data for training...");
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    try {
-      const url = `${serverUrl}/api/train`;
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || result.message || `HTTP ${response.status}`);
+    showLoading("Processing uploaded data...");
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const requiredColumns = ['store_id', 'date', 'product_id', 'sales'];
+        const headers = results.meta.fields;
+        const missing = requiredColumns.filter(col => !headers.includes(col));
+        if (missing.length > 0) {
+          alert(`Missing columns: ${missing.join(', ')}`);
+          setLoading(false);
+          hideLoading();
+          return;
+        }
+        // Convert CSV rows to prediction format using sales for both predicted and actual
+        const parsedData = results.data.map(row => ({
+          store_id: row.store_id,
+          date: row.date,
+          product_id: row.product_id,
+          sales: Number(row.sales),
+          predicted_stock: Number(row.sales), // Use sales as predicted
+          actual_stock: Number(row.sales),    // Use sales as actual
+        }));
+        setPredictions(parsedData);
+        setLoading(false);
+        hideLoading();
+        alert('Dashboard updated with uploaded data!');
+      },
+      error: (err) => {
+        alert('Error parsing CSV: ' + err.message);
+        setLoading(false);
+        hideLoading();
       }
-      alert(`Training successful! MSE: ${result.mse}`);
-    } catch (err) {
-      alert(`Training failed: ${err.message}`);
-      console.error('Training error:', err);
-    }
-    setLoading(false);
-    hideLoading();
+    });
   };
+  // Remove handleUploadActualData, replaced by handleParseAndUpdateDashboard
 
   // Handle feedback from prediction chart
   const handlePredictionFeedback = useCallback(async (feedback) => {
@@ -1046,14 +1060,14 @@ function Predict() {
                     <Download className="w-4 h-4" />
                     <span>Download CSV</span>
                   </button>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleUploadActualData}
                     className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <UploadCloud className="w-4 h-4" />
                     <span>Upload Actual Data</span>
-                  </button>
+                  </button> */}
                   <button
                     type="button"
                     onClick={handleUploadMore}

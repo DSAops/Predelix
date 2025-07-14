@@ -68,12 +68,14 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
     let totalActualValue = 0;
 
     dataToUse.forEach(pred => {
-      const predicted = parseFloat(pred.predicted_stock || 0);
-      const actual = parseFloat(pred.actual_stock || pred.actual_sales || 0);
-      
+      // Use predicted_stock if present, else sales
+      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
+      // Use actual_stock if present, else sales
+      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
+
       totalPredictedValue += predicted;
       totalActualValue += actual;
-      
+
       if (predicted > 0 && actual > 0) {
         const difference = Math.abs(predicted - actual);
         const average = (predicted + actual) / 2;
@@ -125,14 +127,14 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
           validAccuracy: 0
         };
       }
-      
-      const predicted = parseFloat(pred.predicted_stock || 0);
-      const actual = parseFloat(pred.actual_stock || pred.actual_sales || 0);
-      
+
+      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
+      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
+
       acc[date].predicted += predicted;
       acc[date].actual += actual;
       acc[date].count++;
-      
+
       if (predicted > 0 && actual > 0) {
         const difference = Math.abs(predicted - actual);
         const average = (predicted + actual) / 2;
@@ -140,7 +142,7 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
         acc[date].accuracy += accuracy;
         acc[date].validAccuracy++;
       }
-      
+
       return acc;
     }, {});
 
@@ -172,14 +174,14 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
           totalActual: 0
         };
       }
-      
-      const predicted = parseFloat(pred.predicted_stock || 0);
-      const actual = parseFloat(pred.actual_stock || pred.actual_sales || 0);
-      
+
+      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
+      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
+
       acc[storeId].predictions++;
       acc[storeId].totalPredicted += predicted;
       acc[storeId].totalActual += actual;
-      
+
       if (predicted > 0 && actual > 0) {
         const difference = Math.abs(predicted - actual);
         const average = (predicted + actual) / 2;
@@ -187,7 +189,7 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
         acc[storeId].totalAccuracy += accuracy;
         acc[storeId].validComparisons++;
       }
-      
+
       return acc;
     }, {});
 
@@ -212,14 +214,14 @@ const PredictionDashboard = ({ predictions = [], feedbackData = [] }) => {
     };
 
     filteredPredictions.forEach(pred => {
-      const predicted = parseFloat(pred.predicted_stock || 0);
-      const actual = parseFloat(pred.actual_stock || pred.actual_sales || 0);
-      
+      const predicted = parseFloat(pred.predicted_stock ?? pred.sales ?? 0);
+      const actual = parseFloat(pred.actual_stock ?? pred.sales ?? 0);
+
       if (predicted > 0 && actual > 0) {
         const difference = Math.abs(predicted - actual);
         const average = (predicted + actual) / 2;
         const accuracy = Math.max(0, 100 - (difference / average) * 100);
-        
+
         if (accuracy >= 90) ranges['Excellent (90-100%)']++;
         else if (accuracy >= 75) ranges['Good (75-89%)']++;
         else if (accuracy >= 60) ranges['Fair (60-74%)']++;
